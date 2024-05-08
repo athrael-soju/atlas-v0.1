@@ -60,9 +60,9 @@ export default function Page() {
           </>
         ) : (
           <EmptyScreen
-            submitMessage={async message => {
+            submitMessage={async (message) => {
               // Add user message UI
-              setMessages(currentMessages => [
+              setMessages((currentMessages) => [
                 ...currentMessages,
                 {
                   id: Date.now(),
@@ -72,7 +72,7 @@ export default function Page() {
 
               // Submit and get response message
               const responseMessage = await submitUserMessage(message);
-              setMessages(currentMessages => [
+              setMessages((currentMessages) => [
                 ...currentMessages,
                 responseMessage,
               ]);
@@ -81,9 +81,9 @@ export default function Page() {
         )}
         <ChatScrollAnchor trackVisibility={true} />
       </div>
-      <div className="fixed inset-x-0 bottom-0 w-full bg-gradient-to-b from-muted/30 from-0% to-muted/30 to-50% duration-300 ease-in-out animate-in dark:from-background/10 dark:from-10% dark:to-background/80 peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px]">
+      <div className="fixed inset-x-0 bottom-0 w-full duration-300 ease-in-out peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px] dark:from-10%">
         <div className="mx-auto sm:max-w-2xl sm:px-4">
-          <div className="px-4 py-2 space-y-4 border-t shadow-lg bg-background sm:rounded-t-xl sm:border md:py-4">
+          <div className="mb-4 grid gap-2 sm:gap-4 px-4 sm:px-0">
             <form
               ref={formRef}
               onSubmit={async (e: any) => {
@@ -99,7 +99,7 @@ export default function Page() {
                 if (!value) return;
 
                 // Add user message UI
-                setMessages(currentMessages => [
+                setMessages((currentMessages) => [
                   ...currentMessages,
                   {
                     id: Date.now(),
@@ -110,7 +110,7 @@ export default function Page() {
                 try {
                   // Submit and get response message
                   const responseMessage = await submitUserMessage(value);
-                  setMessages(currentMessages => [
+                  setMessages((currentMessages) => [
                     ...currentMessages,
                     responseMessage,
                   ]);
@@ -120,14 +120,14 @@ export default function Page() {
                 }
               }}
             >
-              <div className="relative flex flex-col w-full px-8 overflow-hidden max-h-60 grow bg-background sm:rounded-md sm:border sm:px-12">
+              <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-secondary px-12 sm:rounded-full sm:px-12">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="absolute left-0 w-8 h-8 p-0 rounded-full top-4 bg-background sm:left-4"
-                      onClick={e => {
+                      className="absolute left-4 top-[14px] size-8 rounded-full bg-background p-0 sm:left-4"
+                      onClick={(e) => {
                         e.preventDefault();
                         window.location.reload();
                       }}
@@ -143,7 +143,7 @@ export default function Page() {
                   tabIndex={0}
                   onKeyDown={onKeyDown}
                   placeholder="Send a message."
-                  className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
+                  className="min-h-[60px] w-full bg-transparent placeholder:text-muted-foreground resize-none px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
                   autoFocus
                   spellCheck={false}
                   autoComplete="off"
@@ -151,15 +151,15 @@ export default function Page() {
                   name="message"
                   rows={1}
                   value={inputValue}
-                  onChange={e => setInputValue(e.target.value)}
+                  onChange={(e) => setInputValue(e.target.value)}
                 />
-                <div className="absolute right-0 top-4 sm:right-4">
+                <div className="absolute right-4 top-[13px] sm:right-4">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         type="submit"
                         size="icon"
-                        disabled={inputValue === ''}
+                        className="bg-transparent shadow-none text-secondary-foreground rounded-full hover:bg-secondary-foreground/25"
                       >
                         <IconArrowElbow />
                         <span className="sr-only">Send message</span>
@@ -170,7 +170,7 @@ export default function Page() {
                 </div>
               </div>
             </form>
-            <FooterText className="hidden sm:block" />
+            {/* <FooterText className="hidden sm:block" /> */}
           </div>
         </div>
       </div>
