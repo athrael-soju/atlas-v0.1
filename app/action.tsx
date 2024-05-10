@@ -13,17 +13,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
-async function getContextForUserMessage(content: string) {
+async function getContextForUserMessage(content: string, userEmail: string) {
   'use server';
-
-  if (process.env.ENABLE_RAG === 'false') {
-    return '';
-  }
-
-  const userEmail = 'athrael.soju@gmail.com';
-
   const topK = 100;
-  const topN = 50;
+  const topN = 10;
   const context = await getContext(userEmail, content, topK, topN);
   return context.values;
 }
@@ -41,7 +34,10 @@ export async function submitUserMessage(content: string) {
       content,
     },
   ]);
-  //content = await getContextForUserMessage(content);
+  if (process.env.ENABLE_RAG === 'true') {
+    const userEmail = 'athrael.soju@gmail.com';
+    content = await getContextForUserMessage(content, userEmail);
+  }
 
   const reply = createStreamableUI(
     <BotMessage className="items-center">{spinner}</BotMessage>

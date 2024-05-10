@@ -10,14 +10,14 @@ export async function getContext(
 ) {
   // Embed the user message
   const embeddingResults = await embedMessage(userEmail, content);
-  console.info('Embedding: ', embeddingResults);
+  //console.info('Embedding: ', embeddingResults);
 
   // Query Pinecone for results
   const queryResults = await query(userEmail, embeddingResults, topK);
-  console.info('Query: ', queryResults);
+  //console.info('Query: ', queryResults);
 
   // Rerank the results
   const rerankingResults = await rerank(content, queryResults.context, topN);
-  console.info('Reranking: ', rerankingResults);
+  //console.info('Reranking: ', rerankingResults);
   return rerankingResults;
 }
