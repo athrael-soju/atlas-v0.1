@@ -4,6 +4,8 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { FileEntry, FileUploadResponse } from '@/lib/types';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const data = await request.formData();
   const file = data.get('file') as File;
