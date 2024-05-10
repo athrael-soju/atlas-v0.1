@@ -26,8 +26,8 @@ export function runOpenAICompletion<
 >(
   openai: OpenAI,
   params: T & {
-    functions: TFunctions;
-  },
+    functions?: TFunctions;
+  }
 ) {
   let text = '';
   let hasFunction = false;
@@ -36,7 +36,9 @@ export function runOpenAICompletion<
   let onTextContent: (text: string, isFinal: boolean) => void = () => {};
 
   const functionsMap: Record<string, TFunctions[number]> = {};
-  for (const fn of params.functions) {
+  const functionsList = params.functions || [];
+
+  for (const fn of functionsList) {
     functionsMap[fn.name] = fn;
   }
 
@@ -44,21 +46,26 @@ export function runOpenAICompletion<
 
   const { functions, ...rest } = params;
 
-  (async () => {
-    consumeStream(
-      OpenAIStream(
-        (await openai.chat.completions.create({
-          ...rest,
-          stream: true,
-          functions: functions.map(fn => ({
+  const requestParams = {
+    ...rest,
+    stream: true,
+    functions:
+      functionsList.length > 0
+        ? functionsList.map((fn) => ({
             name: fn.name,
             description: fn.description,
             parameters: zodToJsonSchema(fn.parameters) as Record<
               string,
               unknown
             >,
-          })),
-        })) as any,
+          }))
+        : undefined,
+  };
+
+  (async () => {
+    consumeStream(
+      OpenAIStream(
+        (await openai.chat.completions.create(requestParams as any)) as any,
         {
           async experimental_onFunctionCall(functionCallPayload) {
             hasFunction = true;
@@ -71,12 +78,12 @@ export function runOpenAICompletion<
             // this is necessary if someone uses a .default in their schema
             const zodSchema = functionsMap[functionCallPayload.name].parameters;
             const parsedArgs = zodSchema.safeParse(
-              functionCallPayload.arguments,
+              functionCallPayload.arguments
             );
 
             if (!parsedArgs.success) {
               throw new Error(
-                `Invalid function call in message. Expected a function call object`,
+                `Invalid function call in message. Expected a function call object`
               );
             }
 
@@ -91,14 +98,14 @@ export function runOpenAICompletion<
             if (hasFunction) return;
             onTextContent(text, true);
           },
-        },
-      ),
+        }
+      )
     );
   })();
 
   return {
     onTextContent: (
-      callback: (text: string, isFinal: boolean) => void | Promise<void>,
+      callback: (text: string, isFinal: boolean) => void | Promise<void>
     ) => {
       onTextContent = callback;
     },
@@ -113,8 +120,8 @@ export function runOpenAICompletion<
                 : never
               : never
             : never
-        >,
-      ) => void | Promise<void>,
+        >
+      ) => void | Promise<void>
     ) => {
       onFunctionCall[name] = callback;
     },
@@ -132,13 +139,13 @@ export const formatNumber = (value: number) =>
   }).format(value);
 
 export const runAsyncFnWithoutBlocking = (
-  fn: (...args: any) => Promise<any>,
+  fn: (...args: any) => Promise<any>
 ) => {
   fn();
 };
 
 export const sleep = (ms: number) =>
-  new Promise(resolve => setTimeout(resolve, ms));
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 // Fake data
 export function getStockPrice(name: string) {
