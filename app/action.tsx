@@ -35,7 +35,7 @@ export async function submitUserMessage(content: string) {
     },
   ]);
   if (process.env.ENABLE_RAG === 'true') {
-    const userEmail = 'athrael.soju@gmail.com';
+    const userEmail = process.env.USERNAME as string;
     content = await getContextForUserMessage(content, userEmail);
   }
 
@@ -50,9 +50,9 @@ export async function submitUserMessage(content: string) {
       ? tools[profile as keyof typeof tools]
       : [];
   const prompt = prompts[profile as keyof typeof prompts].content;
-  console.log('Prompt: ', prompt);
+
   const completion = runOpenAICompletion(openai, {
-    model: 'gpt-3.5-turbo',
+    model: process.env.OPENAI_API_MODEL ?? 'gpt-3.5-turbo',
     stream: true,
     messages: [
       {

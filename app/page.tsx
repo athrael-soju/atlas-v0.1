@@ -28,7 +28,7 @@ export default function Page() {
   const { formRef, onKeyDown } = useEnterSubmit();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-
+  const userEmail = process.env.USERNAME as string;
   const handleFileChange: React.Dispatch<React.SetStateAction<string[]>> = (
     newFiles: React.SetStateAction<string[]>
   ) => {
@@ -134,7 +134,7 @@ export default function Page() {
                     onChange={handleFileChange}
                     fileExtension="pdf"
                     className="your-custom-class"
-                    userEmail="athrael.soju@gmail.com"
+                    userEmail={userEmail}
                   />
                 </div>
               </div>
