@@ -14,10 +14,11 @@ export async function getContext(
 
   // Query Pinecone for results
   const queryResults = await query(userEmail, embeddingResults, topK);
-  //console.info('Query: ', queryResults);
 
-  // Rerank the results
-  const rerankingResults = await rerank(content, queryResults.context, topN);
+  // Rerank the results if Pinecone returns any
+  const rerankingResults = queryResults.content
+    ? await rerank(content, queryResults.context, topN)
+    : [];
   //console.info('Reranking: ', rerankingResults);
   return rerankingResults;
 }

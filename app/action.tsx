@@ -15,8 +15,8 @@ const openai = new OpenAI({
 
 async function getContextForUserMessage(content: string, userEmail: string) {
   'use server';
-  const topK = process.env.PINECONE_TOPK as unknown as number;
-  const topN = process.env.COHERE_TOPN as unknown as number;
+  const topK = parseInt(process.env.PINECONE_TOPK as string);
+  const topN = parseInt(process.env.COHERE_TOPN as string);
   const context = await getContext(userEmail, content, topK, topN);
   return context.values;
 }
@@ -34,7 +34,7 @@ export async function submitUserMessage(content: string) {
     },
   ]);
   if (process.env.ENABLE_RAG === 'true') {
-    const userEmail = process.env.NEXT_PUBLIC_USERNAME as string;
+    const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
     content = await getContextForUserMessage(content, userEmail);
   }
 
