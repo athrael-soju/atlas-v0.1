@@ -1,15 +1,15 @@
-import React, {  useRef, useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { handleFiles } from '@/app/services/client/handle-files'
-import { cn } from '@/lib/utils'
+import React, { useRef, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { handleFiles } from '@/app/services/client/atlas-forge';
+import { cn } from '@/lib/utils';
 
 interface DropzoneProps {
-  onChange: React.Dispatch<React.SetStateAction<string[]>>
-  className?: string
-  fileExtension?: string
-  userEmail: string
+  onChange: React.Dispatch<React.SetStateAction<string[]>>;
+  className?: string;
+  fileExtension?: string;
+  userEmail: string;
 }
 
 export function Dropzone({
@@ -19,41 +19,41 @@ export function Dropzone({
   userEmail,
   ...props
 }: Readonly<DropzoneProps>) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [fileInfo, setFileInfo] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [progress, setProgress] = useState(0)
-  const [uploadComplete, setUploadComplete] = useState(false)
-  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [fileInfo, setFileInfo] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [uploadComplete, setUploadComplete] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
 
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
 
   const onAllFilesUploaded = () => {
-    setProgress(100)
-    setUploadComplete(true)
-  }
+    setProgress(100);
+    setUploadComplete(true);
+  };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-    const { files } = e.dataTransfer
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const { files } = e.dataTransfer;
     await handleFiles(
       files,
       userEmail,
@@ -61,14 +61,14 @@ export function Dropzone({
       setError,
       setFileInfo,
       onAllFilesUploaded
-    )
-  }
+    );
+  };
 
   const handleFileInputChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    resetProgressAndError()
-    const { files } = e.target
+    resetProgressAndError();
+    const { files } = e.target;
     if (files) {
       await handleFiles(
         files,
@@ -77,19 +77,19 @@ export function Dropzone({
         setError,
         setFileInfo,
         onAllFilesUploaded
-      )
+      );
     }
-  }
+  };
 
   const resetProgressAndError = () => {
-    setProgress(0)
-    setError(null)
-    setUploadComplete(false)
-  }
+    setProgress(0);
+    setError(null);
+    setUploadComplete(false);
+  };
 
   const handleButtonClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
   return (
     <Card
@@ -137,5 +137,5 @@ export function Dropzone({
         <Progress value={progress} className="w-full" />
       </CardContent>
     </Card>
-  )
+  );
 }
