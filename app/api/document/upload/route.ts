@@ -9,7 +9,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const data = await request.formData();
   const file = data.get('file') as File;
   const userId = data.get('userId') as string;
-
+  
   const fsProvider = process.env.FILESYSTEM_PROVIDER as string;
   let response: any;
   switch (fsProvider) {

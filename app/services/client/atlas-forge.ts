@@ -13,6 +13,8 @@ export const addDocuments = async (
   onAllFilesUploaded: () => void
 ): Promise<void> => {
   setProgress(0);
+
+  // TODO: Consider uploading all files in one post request and return a list of responses on which the remaining processing can be done.
   const uploadPromises = Array.from(files).map(async (file, index) => {
     try {
       // File can be stored on the server, or in a cloud storage service like S3
@@ -23,7 +25,10 @@ export const addDocuments = async (
       );
       // Parsing can be done using a free library on the server, or a paid service like Unstructured.io
       setFileInfo(`Parsing document: ${file.name}...`);
-      const parseResponse = await parseDocument(uploadResponse.file, 'auto'); // 'hi_res' strategy is best used for images
+      const parseResponse = await parseDocument(
+        uploadResponse.file,
+        process.env.UNSTRUCTURED_PARSING_STRATEGY as string
+      ); // 'hi_res' strategy is best used for images
       setProgress((prevProgress) =>
         Math.min(prevProgress + 100 / files.length / 5, 100)
       );
