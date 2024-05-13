@@ -19,6 +19,7 @@ import { IconArrowElbow, IconPlus } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
+import { Dropzone } from '@/components/ui/dropzone';
 
 export default function Page() {
   const [messages, setMessages] = useUIState<typeof AI>();
@@ -26,6 +27,13 @@ export default function Page() {
   const [inputValue, setInputValue] = useState('');
   const { formRef, onKeyDown } = useEnterSubmit();
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const userEmail = process.env.USERNAME as string;
+  const handleFileChange: React.Dispatch<React.SetStateAction<string[]>> = (
+    newFiles: React.SetStateAction<string[]>
+  ) => {
+    setUploadedFiles(newFiles);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -120,6 +128,16 @@ export default function Page() {
                 }
               }}
             >
+              <div className="p-5">
+                <div>
+                  <Dropzone
+                    onChange={handleFileChange}
+                    fileExtension="pdf"
+                    className="your-custom-class"
+                    userEmail={userEmail}
+                  />
+                </div>
+              </div>
               <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-secondary px-12 sm:rounded-full sm:px-12">
                 <Tooltip>
                   <TooltipTrigger asChild>
