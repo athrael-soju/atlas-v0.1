@@ -16,6 +16,7 @@ export interface UploadResponse {
 }
 
 export interface FileUploadResponse {
-  fileWrittenToDisk: boolean;
+  filesystem: string;
+  uploaded: boolean;
   path: string;
 }

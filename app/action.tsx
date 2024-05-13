@@ -15,8 +15,8 @@ const openai = new OpenAI({
 
 async function getContextForUserMessage(content: string, userEmail: string) {
   'use server';
-  const topK = 100;
-  const topN = 10;
+  const topK = process.env.PINECONE_TOPK as unknown as number;
+  const topN = process.env.COHERE_TOPN as unknown as number;
   const context = await getContext(userEmail, content, topK, topN);
   return context.values;
 }
@@ -25,7 +25,6 @@ export async function submitUserMessage(content: string) {
   'use server';
 
   // TODO:  User message is submitted to the AI.
-  console.info('User: ', content);
   const aiState = getMutableAIState<typeof AI>();
   aiState.update([
     ...aiState.get(),
@@ -35,7 +34,7 @@ export async function submitUserMessage(content: string) {
     },
   ]);
   if (process.env.ENABLE_RAG === 'true') {
-    const userEmail = process.env.USERNAME as string;
+    const userEmail = process.env.NEXT_PUBLIC_USERNAME as string;
     content = await getContextForUserMessage(content, userEmail);
   }
 

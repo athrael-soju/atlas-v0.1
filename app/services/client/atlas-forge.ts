@@ -1,10 +1,10 @@
-import { uploadFile } from '@/app/services/client/fs-file-service';
+import { upload } from '@/app/services/client/document';
 import { parseDocument } from '@/app/services/client/unstructured';
 import { embedDocument } from './openai';
 import { upsert } from '@/app/services/client/pinecone';
 import { SetStateAction, Dispatch } from 'react';
 
-export const handleFiles = async (
+export const addDocuments = async (
   files: FileList,
   userEmail: string,
   setProgress: Dispatch<SetStateAction<number>>,
@@ -17,7 +17,7 @@ export const handleFiles = async (
     try {
       // File can be stored on the server, or in a cloud storage service like S3
       setFileInfo(`Uploading document: ${file.name}...`);
-      const uploadResponse = await uploadFile(file, userEmail);
+      const uploadResponse = await upload(file, userEmail);
       setProgress((prevProgress) =>
         Math.min(prevProgress + 100 / files.length / 5, 100)
       );

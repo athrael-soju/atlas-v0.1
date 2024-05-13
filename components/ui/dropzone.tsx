@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { handleFiles } from '@/app/services/client/atlas-forge';
+import { addDocuments } from '@/app/services/client/atlas-forge';
 import { cn } from '@/lib/utils';
 
 interface DropzoneProps {
@@ -54,7 +54,7 @@ export function Dropzone({
     e.stopPropagation();
     setIsDragging(false);
     const { files } = e.dataTransfer;
-    await handleFiles(
+    await addDocuments(
       files,
       userEmail,
       setProgress,
@@ -70,7 +70,7 @@ export function Dropzone({
     resetProgressAndError();
     const { files } = e.target;
     if (files) {
-      await handleFiles(
+      await addDocuments(
         files,
         userEmail,
         setProgress,
