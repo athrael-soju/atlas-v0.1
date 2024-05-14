@@ -10,7 +10,7 @@ export async function writeFile(file: File): Promise<FileUploadResponse> {
   await fs.writeFile(path, buffer);
 
   const response = {
-    filesystem: 'local',
+    filesystem: 'server',
     uploaded: true,
     path: path,
   };

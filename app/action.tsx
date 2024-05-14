@@ -18,26 +18,33 @@ async function getContextForUserMessage(content: string, userEmail: string) {
   const topK = parseInt(process.env.PINECONE_TOPK as string);
   const topN = parseInt(process.env.COHERE_TOPN as string);
   const context = await getContext(userEmail, content, topK, topN);
+
   return context.values;
 }
 
 export async function submitUserMessage(content: string) {
   'use server';
 
+  let context = '';
   // TODO:  User message is submitted to the AI.
+  console.info('User: ', content);
+
   const aiState = getMutableAIState<typeof AI>();
+  if (process.env.ENABLE_RAG === 'true') {
+    const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
+    context = await getContextForUserMessage(content, userEmail);
+  }
   aiState.update([
     ...aiState.get(),
     {
       role: 'user',
       content,
     },
+    {
+      role: 'system',
+      content: `Context: ${context}`,
+    },
   ]);
-  if (process.env.ENABLE_RAG === 'true') {
-    const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
-    content = await getContextForUserMessage(content, userEmail);
-  }
-
   const reply = createStreamableUI(
     <BotMessage className="items-center">{spinner}</BotMessage>
   );

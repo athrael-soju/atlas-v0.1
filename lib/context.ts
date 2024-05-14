@@ -14,9 +14,10 @@ export async function getContext(
 
   // Query Pinecone for results
   const queryResults = await query(userEmail, embeddingResults, topK);
+  console.info('Query: ', queryResults.context);
 
   // Rerank the results if Pinecone returns any
-  const rerankingResults = queryResults.content
+  const rerankingResults = queryResults.context
     ? await rerank(content, queryResults.context, topN)
     : [];
   //console.info('Reranking: ', rerankingResults);
