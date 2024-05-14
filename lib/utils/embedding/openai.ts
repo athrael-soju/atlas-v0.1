@@ -1,7 +1,5 @@
 import OpenAI, { ClientOptions } from 'openai';
 
-export const runtime = 'edge';
-
 const embeddingApiModel =
   process.env.OPENAI_API_EMBEDDING_MODEL || 'text-embedding-3-large';
 
