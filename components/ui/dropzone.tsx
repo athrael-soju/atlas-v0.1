@@ -83,7 +83,6 @@ export function Dropzone({
       ];
 
       const onUpdate = (message: string) => {
-        console.log(message);
         if (allowedStates.some((state) => message.startsWith(state))) {
           setProgress((prev) => prev + 20.0 / files.length);
         } else if (message.startsWith('Success')) {
