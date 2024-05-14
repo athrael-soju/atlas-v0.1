@@ -1,8 +1,6 @@
 import { FileEntry, FileActionResponse } from '@/lib/types';
 import { writeFile, deleteFile } from '@/lib/utils/storage/server';
 
-export const runtime = 'nodejs';
-
 export async function handleFileUpload(
   file: File,
   userId: string

@@ -2,9 +2,9 @@ import { NextRequest } from 'next/server';
 import {
   handleFileUpload,
   handleFileDeletion,
-} from '@/lib/utils/storage/file-storage-handler';
+} from '@/lib/utils/storage/handler';
 import { parseDocument } from '@/lib/utils/parsing/unstructured';
-import { embedDocument } from '@/lib/utils/embedding/openai/document';
+import { embedDocument } from '@/lib/utils/embedding/openai';
 import { upsertDocument } from '@/lib/utils/indexing/pinecone';
 import { EmbeddingResponse, FileActionResponse } from '@/lib/types';
 
