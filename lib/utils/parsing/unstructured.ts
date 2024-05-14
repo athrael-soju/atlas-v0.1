@@ -1,8 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { FileEntry } from '@/lib/types';
 import { UnstructuredClient } from 'unstructured-client';
 import * as fs from 'fs';
-
-export const runtime = 'nodejs';
 
 const apiKey = process.env.UNSTRUCTURED_API as string;
 
@@ -13,8 +11,7 @@ const client = new UnstructuredClient({
   serverURL: process.env.UNSTRUCTURED_SERVER_URL, // Optional if you have access to the SaaS platform
 });
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
-  const { file, parsingStrategy } = await req.json();
+export async function parseDocument(file: FileEntry, parsingStrategy: string) {
   const fileData = fs.readFileSync(file.path);
   let parsedDataResponse = await client.general.partition({
     files: {
@@ -26,8 +23,5 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     maxCharacters: 1024,
     overlap: 150,
   });
-  return NextResponse.json({
-    message: 'Unstructured Partition Parsed Successfully',
-    file: parsedDataResponse?.elements,
-  });
+  return parsedDataResponse?.elements || [];
 }

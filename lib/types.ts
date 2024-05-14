@@ -7,16 +7,13 @@ export interface FileEntry {
   contentType: string;
 }
 
-export interface UploadResponse {
-  file: FileEntry;
-  fileWrittenToDisk: boolean;
-  fileWrittenToKV: [];
+export interface FileActionResponse {
   message: string;
-  userId: string;
+  file: FileEntry;
 }
 
-export interface FileUploadResponse {
-  filesystem: string;
-  uploaded: boolean;
-  path: string;
+export interface EmbeddingResponse {
+  message: string;
+  chunks: any[];
+  embeddings: any[];
 }
