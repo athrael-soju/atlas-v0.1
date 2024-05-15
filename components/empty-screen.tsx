@@ -34,17 +34,19 @@ export function EmptyScreen({
         </p>
         <p className="mb-2 leading-normal text-muted-foreground">
           The demo is built with
-          <ExternalLink href="https://nextjs.org">Next.js</ExternalLink> and the{' '}
-          <ExternalLink href="https://sdk.vercel.ai/docs">Atlas</ExternalLink>.
+          <ExternalLink href="https://nextjs.org">
+            Next.js
+          </ExternalLink> and{' '}
+          <ExternalLink href="https://sdk.vercel.ai/docs">Vercel</ExternalLink>.
         </p>
         <p className="mb-2 leading-normal text-muted-foreground">
-          It uses
+          It uses{' '}
           <ExternalLink href="https://vercel.com/blog/ai-sdk-3-generative-ui">
             a powerful RAG Engine
           </ExternalLink>
           to generate responses to your questions.
         </p>
-        <p className="leading-normal text-muted-foreground">Try an example:</p>
+        {/* <p className="leading-normal text-muted-foreground">Try an example:</p>
         <div className="mt-4 flex flex-col items-start space-y-2 mb-4">
           {exampleMessages.map((message, index) => (
             <Button
@@ -59,7 +61,7 @@ export function EmptyScreen({
               {message.heading}
             </Button>
           ))}
-        </div>
+        </div> */}
       </div>
       <p className="leading-normal text-muted-foreground text-[0.8rem] text-center max-w-96 ml-auto mr-auto">
         Note: Data and latency are simulated for illustrative purposes and
