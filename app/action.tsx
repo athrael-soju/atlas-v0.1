@@ -5,27 +5,32 @@ import OpenAI from 'openai';
 
 import { spinner, BotMessage } from '@/components/llm-stocks';
 import { runOpenAICompletion } from '@/lib/utils';
-import { getContext } from '@/lib/context';
+import { retrieve } from '@/app/services/client/atlas';
 import { prompts } from '@/lib/prompts';
 import { tools } from '@/lib/stocks/tools';
 import { checkIfCalled, confirmPurchase } from '@/lib/stocks/functions';
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
+const onUpdate = (message: string) => {
+  console.info('State', message);
+};
+
 async function getContextForUserMessage(content: string, userEmail: string) {
   'use server';
+  // TODO: move call to client?
   const topK = parseInt(process.env.PINECONE_TOPK as string);
   const topN = parseInt(process.env.COHERE_TOPN as string);
-  const context = await getContext(userEmail, content, topK, topN);
-
+  const context = await retrieve(userEmail, content, topK, topN, onUpdate);
   return context.values;
 }
 
 export async function submitUserMessage(content: string) {
   'use server';
 
-  let context = '';
+  let context;
   // TODO:  User message is submitted to the AI.
   console.info('User: ', content);
 

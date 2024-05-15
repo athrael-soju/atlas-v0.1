@@ -10,6 +10,22 @@ if (!process.env.OPENAI_API_KEY) {
 const options: ClientOptions = { apiKey: process.env.OPENAI_API_KEY };
 const openai = new OpenAI(options);
 
+export async function embedMessage(userEmail: string, content: string) {
+  const messageToEmbed = `Date: ${Date.now().toLocaleString}. User: ${userEmail}. Message: ${content}. Metadata: ${''}`;
+  const response = await openai.embeddings.create({
+    model: embeddingApiModel,
+    input: messageToEmbed,
+    encoding_format: 'float',
+  });
+
+  const embeddingValues = response.data[0].embedding;
+
+  return {
+    message: 'Message embeddings generated successfully',
+    values: embeddingValues,
+  };
+}
+
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -14,6 +14,26 @@ const getIndex = async () => {
   return client.index(indexName);
 };
 
+export async function query(userEmail: string, embeddings: any, topK: number) {
+  const response = await queryByNamespace(userEmail, topK, embeddings.values);
+
+  const context = response.matches.map((item: any) => ({
+    text: item.metadata.text,
+    filename: item.metadata.filename,
+    filetype: item.metadata.filetype,
+    languages: item.metadata.languages,
+    pageNumber: item.metadata.page_number,
+    parentId: item.metadata.parent_id,
+    userEmail: item.metadata.user_email,
+  }));
+
+  return {
+    message: 'Pinecone query successful',
+    namespace: userEmail,
+    context,
+  };
+}
+
 const queryByNamespace = async (
   namespace: string,
   topK: number,
@@ -49,9 +69,4 @@ export const upsertDocument = async (
     await index.namespace(userEmail).upsert(chunk);
   }
   return { success: true };
-};
-
-export const pinecone = {
-  queryByNamespace,
-  upsertDocument,
 };

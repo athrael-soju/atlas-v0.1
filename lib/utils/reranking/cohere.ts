@@ -1,16 +1,10 @@
 import { CohereClient } from 'cohere-ai';
-import { RerankResponse, RerankResponseResultsItem } from 'cohere-ai/api';
 
 const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY ?? '',
 });
 
-export const runtime = 'edge';
-
-export async function POST(req: Request): Promise<Response> {
-  const formData = await req.json();
-  const { content, queryResults, topN } = formData;
-
+export async function rerank(content: string, queryResults: any, topN: number) {
   const rerank = await cohere.rerank({
     model: 'rerank-multilingual-v3.0',
     documents: queryResults,
@@ -27,13 +21,13 @@ export async function POST(req: Request): Promise<Response> {
     topN: topN,
     returnDocuments: true,
   });
-  
+
   const formattedResults = await formatResults(rerank.results);
 
-  return Response.json({
+  return {
     message: 'Reranking successful',
     values: formattedResults,
-  });
+  };
 }
 
 async function formatResults(data: any[]) {
