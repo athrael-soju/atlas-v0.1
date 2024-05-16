@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-
 import { rerank } from '@/lib/utils/reranking/cohere';
 import { embedMessage } from '@/lib/utils/embedding/openai';
 import { query } from '@/lib/utils/indexing/pinecone';
@@ -24,22 +23,19 @@ async function retrieve(
     sendUpdate(`Embedding...`);
     const embeddingResults = await embedMessage(userEmail, content);
 
-    sendUpdate(`Querying:...`);
+    sendUpdate(`Querying...`);
     const queryResults = await query(userEmail, embeddingResults, topK);
 
     sendUpdate(`Reranking...`);
     const rerankingResults = queryResults.context
       ? await rerank(content, queryResults.context, topN)
       : [];
-    return { success: true, result: rerankingResults };
+
+    sendUpdate(`Query Success!`);
+    return { success: true, userEmail, content: rerankingResults };
   } catch (error: any) {
-    sendUpdate(`Error retrieving conext for ${content}: ${error.message}`);
-    return {
-      success: false,
-      userEmail: userEmail,
-      content: content,
-      error: error.message,
-    };
+    sendUpdate(`Error retrieving context for ${content}: ${error.message}`);
+    return { success: false, userEmail, content: error.message };
   }
 }
 
@@ -53,7 +49,6 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     if (!userEmail) {
       return new Response(JSON.stringify({ error: 'User email is required' }), {
-        headers: { 'Content-Type': 'application/json' },
         status: 400,
       });
     }
@@ -61,10 +56,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (!content) {
       return new Response(
         JSON.stringify({ error: 'No content in user message' }),
-        {
-          headers: { 'Content-Type': 'application/json' },
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
@@ -74,7 +66,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
         const response = await retrieve(userEmail, content, topK, topN, send);
 
-        send(`Query Success!`);
+        send(`Final Result: ${JSON.stringify(response.content.values)}`);
         controller.close();
       },
     });
@@ -89,10 +81,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   } catch (error: any) {
     return new Response(
       JSON.stringify({ error: `Failed to process request: ${error.message}` }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

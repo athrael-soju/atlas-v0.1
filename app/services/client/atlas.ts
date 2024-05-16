@@ -42,6 +42,7 @@ export const process = async (
 };
 
 export const retrieve = async (
+  serverUrl: string,
   userEmail: string,
   content: string,
   topK: number,
@@ -54,35 +55,39 @@ export const retrieve = async (
   formData.append('topK', topK.toString());
   formData.append('topN', topN.toString());
 
-  const response = await fetch('http://localhost:3000/api/atlas/retrieve', {
+  const response = await fetch(`${serverUrl}/api/atlas/retrieve`, {
     method: 'POST',
     body: formData,
   });
 
   if (!response.ok) {
-    throw new Error('Failed to upload files');
+    throw new Error('Failed to retrieve context');
   }
 
-  const reader = response.body?.getReader();
+  const reader = response.body
+    ?.pipeThrough(new TextDecoderStream())
+    .getReader();
   if (!reader) {
     throw new Error('Failed to read response body');
   }
 
-  const decoder = new TextDecoder();
   let done = false;
   while (!done) {
     const { value, done: readerDone } = await reader.read();
     done = readerDone;
 
     if (value) {
-      const chunk = decoder.decode(value, { stream: true });
-      chunk.split('\n\n').forEach((message) => {
+      value.split('\n\n').forEach((message) => {
         if (message.startsWith('data: ')) {
           const data = message.replace('data: ', '');
-          onUpdate(data);
+          if (data.startsWith('Final Result:')) {
+            const result = JSON.parse(data.replace('Final Result:', '').trim());
+            onUpdate(result);
+          } else {
+            onUpdate(data);
+          }
         }
       });
     }
   }
-  return response;
 };

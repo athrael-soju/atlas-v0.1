@@ -14,17 +14,24 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
-const onUpdate = (message: string) => {
-  console.info('State', message);
-};
-
 async function getContextForUserMessage(content: string, userEmail: string) {
   'use server';
-  // TODO: move call to client?
+  const serverUrl = process.env.SERVER_URL || 'http://localhost:3000';
   const topK = parseInt(process.env.PINECONE_TOPK as string);
   const topN = parseInt(process.env.COHERE_TOPN as string);
-  const context = await retrieve(userEmail, content, topK, topN, onUpdate);
-  return context.values;
+
+  let finalContext;
+  const onUpdate = (message: string) => {
+    console.info('State', message);
+    if (message !== undefined) {
+      finalContext = message;
+    }
+  };
+
+  await retrieve(serverUrl, userEmail, content, topK, topN, onUpdate);
+
+  // Return the final context after all updates are done
+  return finalContext;
 }
 
 export async function submitUserMessage(content: string) {
@@ -33,7 +40,6 @@ export async function submitUserMessage(content: string) {
   let context;
   // TODO:  User message is submitted to the AI.
   console.info('User: ', content);
-
   const aiState = getMutableAIState<typeof AI>();
   if (process.env.ENABLE_RAG === 'true') {
     const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
