@@ -1,5 +1,8 @@
 # Atlas 1.0
 
+## Architecture
+![image](https://github.com/athrael-soju/next-ai-src/assets/25455658/3c1f3c78-f484-4bd2-8149-3f73312e0545)
+
 ## Features
 
 - [Next.js](https://nextjs.org) App Router + React Server Components
