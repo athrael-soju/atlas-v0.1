@@ -14,26 +14,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
-async function getContextForUserMessage(content: string, userEmail: string) {
-  'use server';
-  const serverUrl = process.env.SERVER_URL || 'http://localhost:3000';
-  const topK = parseInt(process.env.PINECONE_TOPK as string);
-  const topN = parseInt(process.env.COHERE_TOPN as string);
-
-  let finalContext;
-  const onUpdate = (message: string) => {
-    console.info('State', message);
-    if (message !== undefined) {
-      finalContext = message;
-    }
-  };
-
-  await retrieve(serverUrl, userEmail, content, topK, topN, onUpdate);
-
-  // Return the final context after all updates are done
-  return finalContext;
-}
-
 export async function submitUserMessage(content: string) {
   'use server';
 
@@ -43,7 +23,18 @@ export async function submitUserMessage(content: string) {
   const aiState = getMutableAIState<typeof AI>();
   if (process.env.ENABLE_RAG === 'true') {
     const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
-    context = await getContextForUserMessage(content, userEmail);
+    const serverUrl = process.env.SERVER_URL || 'http://localhost:3000';
+    const topK = parseInt(process.env.PINECONE_TOPK as string);
+    const topN = parseInt(process.env.COHERE_TOPN as string);
+
+    const onUpdate = (message: string) => {
+      console.info('State', message);
+      if (message !== undefined) {
+        context = message;
+      }
+    };
+
+    await retrieve(serverUrl, userEmail, content, topK, topN, onUpdate);
   }
   aiState.update([
     ...aiState.get(),
