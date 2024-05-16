@@ -28,7 +28,6 @@ export async function submitUserMessage(content: string) {
     const topN = parseInt(process.env.COHERE_TOPN as string);
 
     const onUpdate = (message: string) => {
-      console.info('State', message);
       if (message !== undefined) {
         context = message;
       }
