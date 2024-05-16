@@ -3,6 +3,33 @@
 ## Architecture
 ![image](https://github.com/athrael-soju/next-ai-src/assets/25455658/3c1f3c78-f484-4bd2-8149-3f73312e0545)
 
+## Mermaid Chart
+```
+flowchart TD
+    A[Start: User Login] --> B{User Selects}
+    B --> |Data Load| C1[Document Uploaded]
+    B --> |Data Query| D1[User Prompt]
+
+    subgraph Atlas High Level Architecture
+        subgraph Feature1 [Data Load]
+            C1 --> C2[Document Storage] 
+            C2 --> C3{{Document Parsing}}
+            C3 --> C4{{Chunk Embedding}}
+            C4 --> C5[(Chunk Indexing)]
+        end
+        subgraph Feature2 [Data Query]
+            D1 --> D2{{Document Embedding}}
+            D2 --> D3[(Semantic Search)]
+            D2 --> D4[(Keyword Search)]
+            D2 --> D5{{Web Crawl}}
+            D3 --> D6{{Re-ranking Results}}
+            D4 --> D6
+            D5 --> D6
+            D6 --> D7{{LLM Inference}}
+        end
+    end
+```
+
 ## Features
 
 - [Next.js](https://nextjs.org) App Router + React Server Components
