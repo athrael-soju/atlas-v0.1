@@ -2,8 +2,8 @@ import React, { useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { handleFiles } from '@/app/services/client/atlas-forge';
 import { cn } from '@/lib/utils';
+import { process } from '@/app/services/client/atlas';
 
 interface DropzoneProps {
   onChange: React.Dispatch<React.SetStateAction<string[]>>;
@@ -22,7 +22,7 @@ export function Dropzone({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileInfo, setFileInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState<number>(0);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -44,24 +44,22 @@ export function Dropzone({
     setIsDragging(false);
   };
 
-  const onAllFilesUploaded = () => {
-    setProgress(100);
-    setUploadComplete(true);
-  };
-
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
     const { files } = e.dataTransfer;
-    await handleFiles(
-      files,
-      userEmail,
-      setProgress,
-      setError,
-      setFileInfo,
-      onAllFilesUploaded
-    );
+    await handleUpload(files);
+  };
+
+  const handleFileInfo = (info: string) => {
+    setFileInfo(info);
+  };
+
+  const resetProgressAndError = () => {
+    setProgress(0);
+    setFileInfo(null);
+    setError(null);
   };
 
   const handleFileInputChange = async (
@@ -70,21 +68,34 @@ export function Dropzone({
     resetProgressAndError();
     const { files } = e.target;
     if (files) {
-      await handleFiles(
-        files,
-        userEmail,
-        setProgress,
-        setError,
-        setFileInfo,
-        onAllFilesUploaded
-      );
+      await handleUpload(files);
     }
   };
 
-  const resetProgressAndError = () => {
-    setProgress(0);
-    setError(null);
-    setUploadComplete(false);
+  const handleUpload = async (files: FileList) => {
+    try {
+      const allowedStates = [
+        'Uploading',
+        'Parsing',
+        'Embedding',
+        'Upserting',
+        'Cleaning up',
+      ];
+
+      const onUpdate = (message: string) => {
+        if (allowedStates.some((state) => message.startsWith(state))) {
+          setProgress((prev) => prev + 20.0 / files.length);
+        } else if (message.startsWith('Success')) {
+          setProgress(100);
+        }
+
+        handleFileInfo(message);
+      };
+
+      await process(files, userEmail, onUpdate);
+    } catch (error) {
+      setError((error as Error).message);
+    }
   };
 
   const handleButtonClick = () => {
@@ -112,7 +123,7 @@ export function Dropzone({
         <input
           ref={fileInputRef}
           type="file"
-          accept={`.${fileExtension}`}
+          accept={fileExtension ? `.${fileExtension}` : undefined}
           onChange={handleFileInputChange}
           className="hidden"
           multiple
@@ -123,8 +134,7 @@ export function Dropzone({
           className="text-xs"
           onClick={handleButtonClick}
         >
-          <strong>Click Here</strong>
-          {', '} or Drag Files to Upload
+          <strong>Click Here</strong>, or Drag Files to Upload
         </Button>
         {fileInfo && (
           <p
