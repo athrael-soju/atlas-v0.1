@@ -17,7 +17,7 @@ export async function parse(
       maxChunkSize,
       overlap
     );
-  } else if (provider === 'server') {
+  } else if (provider === 'local') {
     return await parseLocal(file, minChunkSize, maxChunkSize, overlap);
   } else {
     throw new Error(`Unsupported parsing provider: ${provider}`);

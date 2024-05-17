@@ -32,7 +32,7 @@ async function retrieve(
       : [];
 
     sendUpdate('Query Success!');
-    return { success: true, userEmail, content: rerankingResults };
+    return { success: true, userEmail, content: rerankingResults.values };
   } catch (error: any) {
     sendUpdate(`Error retrieving context for ${content}: ${error.message}`);
     return { success: false, userEmail, content: error.message };

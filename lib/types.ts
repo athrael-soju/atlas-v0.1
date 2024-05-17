@@ -25,5 +25,6 @@ export interface Document {
 
 export interface Chunk {
   id: string;
+  metadata: any;
   text: string;
 }

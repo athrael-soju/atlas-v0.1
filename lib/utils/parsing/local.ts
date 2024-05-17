@@ -17,12 +17,22 @@ export async function parseLocal(
     file.contentType
   );
   const documentId = randomUUID();
+
+  const metadata = {
+    filename: file.name,
+    filetype: file.contentType,
+    languages: 'n/a',
+    page_number: 'n/a',
+    parent_id: 'n/a',
+  };
+
   const result = await chunkDocument(
     documentId,
     documentContents.documentContent,
     minChunkSize,
     maxChunkSize,
-    overlap
+    overlap,
+    metadata
   );
   return result.document.chunks;
 }
@@ -72,7 +82,8 @@ async function chunkDocument(
   content: string,
   minChunkSize: number,
   maxChunkSize: number,
-  overlap: number // Not yet supported
+  overlap: number, // Not yet supported
+  metadata: any
 ): Promise<{ document: Document }> {
   try {
     const document: Document = {
@@ -83,16 +94,16 @@ async function chunkDocument(
     // Pick a chunking strategy (this will depend on the use case and the desired chunk size!)
     const chunks = chunkTextByMultiParagraphs(
       content,
-      maxChunkSize,
-      minChunkSize
+      minChunkSize,
+      maxChunkSize
     );
-
     // Combine the chunks
     // Construct the id prefix using the documentId and the chunk index
     for (let i = 0; i < chunks.length; i++) {
       document.chunks.push({
         id: `${document.documentId}:${i}`,
         text: chunks[i],
+        metadata: metadata,
       });
     }
 
@@ -105,8 +116,8 @@ async function chunkDocument(
 
 function chunkTextByMultiParagraphs(
   text: string,
-  maxChunkSize = 1500,
-  minChunkSize = 500
+  minChunkSize: number,
+  maxChunkSize: number
 ): string[] {
   const chunks: string[] = [];
   let currentChunk = '';

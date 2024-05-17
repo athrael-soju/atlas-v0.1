@@ -15,6 +15,8 @@ const maxChunkSize = parseInt(process.env.MAX_CHUNK_SIZE as string) || 1024;
 const minChunkSize = parseInt(process.env.MIN_CHUNK_SIZE as string) || 256;
 const overlap = parseInt(process.env.OVERLAP as string) || 128;
 
+const chunkBatch = parseInt(process.env.CHUNK_BATCH as string) || 150;
+
 async function processFile(
   file: File,
   userEmail: string,
@@ -38,7 +40,6 @@ async function processFile(
       parsingStrategy
     );
 
-
     sendUpdate(`Embedding: '${file.name}'`);
     const embedResponse: EmbeddingResponse = await embedDocument(
       parseResponse,
@@ -46,7 +47,7 @@ async function processFile(
     );
 
     sendUpdate(`Upserting: '${file.name}'`);
-    await upsertDocument(embedResponse.embeddings, userEmail, 150);
+    await upsertDocument(embedResponse.embeddings, userEmail, chunkBatch);
 
     sendUpdate(`Cleaning up: '${file.name}'`);
     await handleFileDeletion(uploadResponse.file, userEmail);
