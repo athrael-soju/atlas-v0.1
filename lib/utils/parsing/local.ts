@@ -23,12 +23,12 @@ export async function parseLocal(
     filetype: file.contentType,
     languages: 'n/a',
     page_number: 'n/a',
-    parent_id: 'n/a',
+    parent_id: file.id,
   };
 
   const result = await chunkDocument(
     documentId,
-    documentContents.documentContent,
+    documentContents.pages,
     minChunkSize,
     maxChunkSize,
     overlap,
@@ -41,9 +41,13 @@ async function processFile(
   fileName: string,
   fileData: Buffer,
   fileType: string
-): Promise<{ documentContent: string; wordCount: number; error?: string }> {
+): Promise<{
+  pages: { pageNumber: number; text: string }[];
+  wordCount: number;
+  error?: string;
+}> {
   try {
-    let documentContent = '';
+    let pages: { pageNumber: number; text: string }[] = [];
     if (fileType === 'application/pdf') {
       const pdfData = await pdfParse(fileData, {
         pagerender: function (page: any) {
@@ -52,22 +56,31 @@ async function processFile(
               normalizeWhitespace: true,
             })
             .then(function (textContent: { items: any[] }) {
-              return textContent.items
+              const pageText = textContent.items
                 .map(function (item) {
                   return item.str;
                 })
                 .join(' ');
+              pages.push({ pageNumber: page.pageNumber, text: pageText });
+              return pageText;
             });
         },
       });
-      documentContent = pdfData.text;
     } else {
-      documentContent = fileData.toString('utf8');
+      fileData
+        .toString('utf8')
+        .split('\f')
+        .forEach((pageText: string, index: number) => {
+          pages.push({ pageNumber: index + 1, text: pageText });
+        });
     }
 
-    const wordCount = documentContent.split(/\s+/).length;
+    const wordCount = pages.reduce(
+      (acc, page) => acc + page.text.split(/\s+/).length,
+      0
+    );
 
-    return { documentContent, wordCount };
+    return { pages, wordCount };
   } catch (error: any) {
     console.error(
       'An error occurred while processing the document:',
@@ -79,7 +92,7 @@ async function processFile(
 
 async function chunkDocument(
   documentId: string,
-  content: string,
+  pages: { pageNumber: number; text: string }[],
   minChunkSize: number,
   maxChunkSize: number,
   overlap: number, // Not yet supported
@@ -91,20 +104,19 @@ async function chunkDocument(
       chunks: [],
     };
 
-    // Pick a chunking strategy (this will depend on the use case and the desired chunk size!)
-    const chunks = chunkTextByMultiParagraphs(
-      content,
-      minChunkSize,
-      maxChunkSize
-    );
-    // Combine the chunks
-    // Construct the id prefix using the documentId and the chunk index
-    for (let i = 0; i < chunks.length; i++) {
-      document.chunks.push({
-        id: `${document.documentId}:${i}`,
-        text: chunks[i],
-        metadata: metadata,
-      });
+    for (let page of pages) {
+      const chunks = chunkTextByMultiParagraphs(
+        page.text,
+        minChunkSize,
+        maxChunkSize
+      );
+      for (let i = 0; i < chunks.length; i++) {
+        document.chunks.push({
+          id: `${document.documentId}:${document.chunks.length}`,
+          text: chunks[i],
+          metadata: { ...metadata, page_number: page.pageNumber },
+        });
+      }
     }
 
     return { document };
@@ -128,7 +140,6 @@ function chunkTextByMultiParagraphs(
     if (endIndex >= text.length) {
       endIndex = text.length;
     } else {
-      // Just using this to find the nearest paragraph boundary
       const paragraphBoundary = text.indexOf('\n\n', endIndex);
       if (paragraphBoundary !== -1) {
         endIndex = paragraphBoundary;
