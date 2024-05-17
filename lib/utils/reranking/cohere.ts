@@ -5,7 +5,7 @@ const cohere = new CohereClient({
 });
 
 export async function rerank(content: string, queryResults: any, topN: number) {
-  const rerank = await cohere.rerank({
+  const rerankResult = await cohere.rerank({
     model: 'rerank-multilingual-v3.0',
     documents: queryResults,
     rankFields: [
@@ -22,7 +22,7 @@ export async function rerank(content: string, queryResults: any, topN: number) {
     returnDocuments: true,
   });
 
-  const formattedResults = await formatResults(rerank.results);
+  const formattedResults = formatResults(rerankResult.results);
 
   return {
     message: 'Reranking successful',
@@ -30,7 +30,7 @@ export async function rerank(content: string, queryResults: any, topN: number) {
   };
 }
 
-async function formatResults(data: any[]) {
+function formatResults(data: any[]) {
   return data
     .map((item) => {
       return `Filename: ${item.document.filename}, Filetype: ${item.document.filetype}, Languages: ${item.document.languages.join(', ')}, Page Number: ${item.document.pageNumber}, Text: ${item.document.text}, User Email: ${item.document.userEmail}, Relevance Score: ${item.relevanceScore}`;

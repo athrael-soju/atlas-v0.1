@@ -1,5 +1,6 @@
 import { FileEntry, FileActionResponse } from '@/lib/types';
 import { writeFile, deleteFile } from '@/lib/utils/storage/server';
+import { uploadToS3, deleteFromS3 } from '@/lib/utils/storage/s3';
 
 export async function handleFileUpload(
   file: File,
@@ -7,10 +8,15 @@ export async function handleFileUpload(
 ): Promise<FileActionResponse> {
   try {
     if (!file || !userId) {
-      throw new Error('Missing file or userId');
+      throw new StorageError('Missing file or userId');
     }
 
-    const fsProvider = process.env.FILESYSTEM_PROVIDER as string;
+    const fsProvider = process.env.FILESYSTEM_PROVIDER;
+
+    if (!fsProvider) {
+      throw new StorageError('FILESYSTEM_PROVIDER is not set');
+    }
+
     let fileData: FileEntry;
 
     switch (fsProvider) {
@@ -18,24 +24,20 @@ export async function handleFileUpload(
         fileData = await writeFile(file, userId);
         break;
       case 's3':
-        throw new Error('S3 filesystem provider not implemented');
+        fileData = await uploadToS3(file, userId);
       default:
-        throw new Error('Unsupported filesystem provider');
+        throw new StorageError(
+          `Unsupported filesystem provider: ${fsProvider}`
+        );
     }
 
     return {
       message: 'File upload successful',
       file: fileData,
     };
-  } catch (error: unknown) {
-    let errorMessage = 'An unknown error occurred';
-
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (typeof error === 'string') {
-      errorMessage = error;
-    }
-    throw new Error(errorMessage);
+  } catch (error: any) {
+    console.error(`Error uploading file: ${error.message}`);
+    throw new StorageError(error.message);
   }
 }
 
@@ -43,24 +45,35 @@ export async function handleFileDeletion(
   file: FileEntry,
   userId: string
 ): Promise<FileActionResponse> {
-  if (!file || !userId) {
-    throw new Error('Missing file or userId');
+  try {
+    if (!file || !userId) {
+      throw new StorageError('Missing file or userId');
+    }
+
+    const fsProvider = process.env.FILESYSTEM_PROVIDER;
+
+    if (!fsProvider) {
+      throw new StorageError('FILESYSTEM_PROVIDER is not set');
+    }
+
+    switch (fsProvider) {
+      case 'server':
+        await deleteFile(file, userId);
+        break;
+      case 's3':
+        await deleteFromS3(file, userId);
+      default:
+        throw new StorageError(
+          `Unsupported filesystem provider: ${fsProvider}`
+        );
+    }
+
+    return {
+      message: 'File deletion successful',
+      file: file,
+    };
+  } catch (error: any) {
+    console.error(`Error deleting file: ${error.message}`);
+    throw new StorageError(error.message);
   }
-
-  const fsProvider = process.env.FILESYSTEM_PROVIDER as string;
-
-  switch (fsProvider) {
-    case 'server':
-      await deleteFile(file, userId);
-      break;
-    case 's3':
-      throw new Error('S3 filesystem provider not implemented');
-    default:
-      throw new Error('Unsupported filesystem provider');
-  }
-
-  return {
-    message: 'File deletion successful',
-    file: file,
-  };
 }

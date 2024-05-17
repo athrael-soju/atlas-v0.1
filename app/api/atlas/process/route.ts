@@ -100,7 +100,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         //     .map((result) => `${result.fileName}: ${result.error}`)
         //     .join(', ')}`
         // );
-        send(`Success: ${success.length}. Failed: ${failed.length}`);
+        send(`Success ${success.length}. Failed: ${failed.length}`);
         controller.close();
       },
     });

@@ -14,6 +14,14 @@ const getIndex = async () => {
   return client.index(indexName);
 };
 
+function chunkArray(array: any[], chunkSize: number): any[][] {
+  const result: any[][] = [];
+  for (let i = 0; i < array.length; i += chunkSize) {
+    result.push(array.slice(i, i + chunkSize));
+  }
+  return result;
+}
+
 export async function query(userEmail: string, embeddings: any, topK: number) {
   const response = await queryByNamespace(userEmail, topK, embeddings.values);
 
@@ -45,18 +53,10 @@ const queryByNamespace = async (
     vector: embeddedMessage,
     includeValues: false,
     includeMetadata: true,
-    //filter: { genre: { $eq: 'action' } },
+    // filter: { genre: { $eq: 'action' } },
   });
   return result;
 };
-
-function chunkArray(array: any[], chunkSize: number): any[][] {
-  const result: any[][] = [];
-  for (let i = 0; i < array.length; i += chunkSize) {
-    result.push(array.slice(i, i + chunkSize));
-  }
-  return result;
-}
 
 export const upsertDocument = async (
   data: any[],

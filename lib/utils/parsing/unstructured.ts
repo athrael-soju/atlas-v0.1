@@ -4,7 +4,7 @@ import * as fs from 'fs';
 
 const apiKey = process.env.UNSTRUCTURED_API as string;
 
-const client = new UnstructuredClient({
+const unstructuredClient = new UnstructuredClient({
   security: {
     apiKeyAuth: apiKey,
   },
@@ -13,7 +13,7 @@ const client = new UnstructuredClient({
 
 export async function parseDocument(file: FileEntry, parsingStrategy: string) {
   const fileData = fs.readFileSync(file.path);
-  let parsedDataResponse = await client.general.partition({
+  let parsedDataResponse = await unstructuredClient.general.partition({
     files: {
       content: fileData,
       fileName: file.name,

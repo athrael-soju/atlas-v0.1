@@ -10,8 +10,30 @@ if (!process.env.OPENAI_API_KEY) {
 const options: ClientOptions = { apiKey: process.env.OPENAI_API_KEY };
 const openai = new OpenAI(options);
 
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const transformObjectValues = (
+  obj: Record<string, any>
+): Record<string, any> => {
+  return Object.entries(obj).reduce(
+    (acc, [key, value]) => {
+      if (typeof value === 'object' && value !== null) {
+        acc[key] = Object.entries(value).map(
+          ([k, v]) => `${k}:${JSON.stringify(v)}`
+        );
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, any>
+  );
+};
+
 export async function embedMessage(userEmail: string, content: string) {
-  const messageToEmbed = `Date: ${Date.now().toLocaleString}. User: ${userEmail}. Message: ${content}. Metadata: ${''}`;
+  const messageToEmbed = `Date: ${new Date().toLocaleString()}. User: ${userEmail}. Message: ${content}. Metadata: ${''}`;
   const response = await openai.embeddings.create({
     model: embeddingApiModel,
     input: messageToEmbed,
@@ -26,16 +48,12 @@ export async function embedMessage(userEmail: string, content: string) {
   };
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export async function embedDocument(data: any[], userEmail: string) {
   const chunkIdList: string[] = [];
 
   const embeddings = await Promise.all(
     data.map(async (item: any) => {
-      delay(13); // Temporary fix for rate limiting 5000 RPM
+      await delay(13); // Temporary fix for rate limiting 5000 RPM
       const response = await openai.embeddings.create({
         model: embeddingApiModel,
         input: item.text,
@@ -63,21 +81,3 @@ export async function embedDocument(data: any[], userEmail: string) {
     embeddings: embeddings || [],
   };
 }
-
-const transformObjectValues = (
-  obj: Record<string, any>
-): Record<string, any> => {
-  return Object.entries(obj).reduce(
-    (acc, [key, value]) => {
-      if (typeof value === 'object' && value !== null) {
-        acc[key] = Object.entries(value).map(
-          ([k, v]) => `${k}:${JSON.stringify(v)}`
-        );
-      } else {
-        acc[key] = value;
-      }
-      return acc;
-    },
-    {} as Record<string, any>
-  );
-};
