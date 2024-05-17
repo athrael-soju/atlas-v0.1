@@ -1,5 +1,5 @@
 import { FileEntry, FileActionResponse } from '@/lib/types';
-import { writeFile, deleteFile } from '@/lib/utils/storage/server';
+import { writeFile, deleteFile } from '@/lib/utils/storage/local';
 import { uploadToS3, deleteFromS3 } from '@/lib/utils/storage/s3';
 
 export async function handleFileUpload(

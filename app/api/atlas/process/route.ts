@@ -1,21 +1,26 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import {
   handleFileUpload,
   handleFileDeletion,
 } from '@/lib/utils/storage/handler';
-import { parseDocument } from '@/lib/utils/parsing/unstructured';
+import { parse } from '@/lib/utils/parsing/handler';
 import { embedDocument } from '@/lib/utils/embedding/openai';
 import { upsertDocument } from '@/lib/utils/indexing/pinecone';
 import { EmbeddingResponse, FileActionResponse } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
+const provider = process.env.PARSING_PROVIDER || 'unstructured.io';
+const maxChunkSize = parseInt(process.env.MAX_CHUNK_SIZE as string) || 1024;
+const minChunkSize = parseInt(process.env.MIN_CHUNK_SIZE as string) || 256;
+const overlap = parseInt(process.env.OVERLAP as string) || 128;
+
 async function processFile(
   file: File,
   userEmail: string,
   parsingStrategy: string,
   sendUpdate: (message: string) => void
-) {
+): Promise<{ success: boolean; fileName: string; error?: string }> {
   try {
     sendUpdate(`Uploading: '${file.name}'`);
     const uploadResponse: FileActionResponse = await handleFileUpload(
@@ -24,10 +29,15 @@ async function processFile(
     );
 
     sendUpdate(`Parsing: '${file.name}'`);
-    const parseResponse = await parseDocument(
+    const parseResponse = await parse(
+      provider,
+      minChunkSize,
+      maxChunkSize,
+      overlap,
       uploadResponse.file,
       parsingStrategy
     );
+
 
     sendUpdate(`Embedding: '${file.name}'`);
     const embedResponse: EmbeddingResponse = await embedDocument(
@@ -55,7 +65,7 @@ async function processFile(
 function sendUpdate(
   controller: ReadableStreamDefaultController,
   message: string
-) {
+): void {
   controller.enqueue(`data: ${message}\n\n`);
 }
 
@@ -66,17 +76,14 @@ export async function POST(req: NextRequest): Promise<Response> {
     const userEmail = data.get('userEmail') as string;
 
     if (!userEmail) {
-      return new Response(JSON.stringify({ error: 'User email is required' }), {
-        headers: { 'Content-Type': 'application/json' },
-        status: 400,
-      });
+      return NextResponse.json(
+        { error: 'User email is required' },
+        { status: 400 }
+      );
     }
 
     if (!files.length) {
-      return new Response(JSON.stringify({ error: 'No files uploaded' }), {
-        headers: { 'Content-Type': 'application/json' },
-        status: 400,
-      });
+      return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
     }
 
     const parsingStrategy = process.env
@@ -92,15 +99,10 @@ export async function POST(req: NextRequest): Promise<Response> {
           )
         );
 
-        const success = results.filter((result) => result.success);
-        const failed = results.filter((result) => !result.success);
+        const success = results.filter((result) => result.success).length;
+        const failed = results.filter((result) => !result.success).length;
 
-        // send(
-        //   `Processing complete: ${success.map((result) => result.fileName)}. Failed: ${failed
-        //     .map((result) => `${result.fileName}: ${result.error}`)
-        //     .join(', ')}`
-        // );
-        send(`Success ${success.length}. Failed: ${failed.length}`);
+        send(`Success: ${success}. Failed: ${failed}`);
         controller.close();
       },
     });
@@ -113,12 +115,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       },
     });
   } catch (error: any) {
-    return new Response(
-      JSON.stringify({ error: `Failed to process request: ${error.message}` }),
-      {
-        headers: { 'Content-Type': 'application/json' },
-        status: 500,
-      }
+    return NextResponse.json(
+      { error: `Failed to process request: ${error.message}` },
+      { status: 500 }
     );
   }
 }

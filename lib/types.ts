@@ -17,3 +17,13 @@ export interface EmbeddingResponse {
   chunks: any[];
   embeddings: any[];
 }
+
+export interface Document {
+  documentId: string;
+  chunks: Chunk[];
+}
+
+export interface Chunk {
+  id: string;
+  text: string;
+}

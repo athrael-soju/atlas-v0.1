@@ -4,22 +4,25 @@
  * @constraint {{import('next').NextConfig}}
  */
 function defineNextConfig(config) {
-  return config
+  return config;
 }
 
 const getCorsHeaders = () => {
-  const headers = {}
+  const headers = {};
 
-  headers['Access-Control-Allow-Origin'] = '*'
-  headers['Access-Control-Allow-Credentials'] = 'true'
-  headers['Access-Control-Allow-Methods'] = 'GET,OPTIONS,PATCH,DELETE,POST,PUT'
+  headers['Access-Control-Allow-Origin'] = '*';
+  headers['Access-Control-Allow-Credentials'] = 'true';
+  headers['Access-Control-Allow-Methods'] = 'GET,OPTIONS,PATCH,DELETE,POST,PUT';
   headers['Access-Control-Allow-Headers'] =
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization';
 
-  return Object.entries(headers).map(([key, value]) => ({ key, value }))
-}
+  return Object.entries(headers).map(([key, value]) => ({ key, value }));
+};
 
 export default defineNextConfig({
+  experimental: {
+    serverComponentsExternalPackages: ['pdf-parse'],
+  },
   reactStrictMode: true,
   swcMinify: true,
   publicRuntimeConfig: {},
@@ -27,8 +30,8 @@ export default defineNextConfig({
     return [
       {
         source: '/api/(.*)',
-        headers: getCorsHeaders()
-      }
-    ]
-  }
-})
+        headers: getCorsHeaders(),
+      },
+    ];
+  },
+});

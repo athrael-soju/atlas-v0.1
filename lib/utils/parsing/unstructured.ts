@@ -11,7 +11,12 @@ const unstructuredClient = new UnstructuredClient({
   serverURL: process.env.UNSTRUCTURED_SERVER_URL, // Optional if you have access to the SaaS platform
 });
 
-export async function parseDocument(file: FileEntry, parsingStrategy: string) {
+export async function parseUnstructured(
+  file: FileEntry,
+  parsingStrategy: string,
+  chunkSize: number,
+  overlap: number
+) {
   const fileData = fs.readFileSync(file.path);
   let parsedDataResponse = await unstructuredClient.general.partition({
     files: {
@@ -20,8 +25,8 @@ export async function parseDocument(file: FileEntry, parsingStrategy: string) {
     },
     strategy: parsingStrategy,
     chunkingStrategy: 'by_title',
-    maxCharacters: 1024,
-    overlap: 150,
+    maxCharacters: chunkSize,
+    overlap: overlap,
   });
   return parsedDataResponse?.elements || [];
 }
