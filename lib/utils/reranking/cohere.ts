@@ -6,7 +6,7 @@ const cohere = new CohereClient({
 
 export async function rerank(content: string, queryResults: any, topN: number) {
   const rerankResults = await cohere.rerank({
-    model: 'rerank-multilingual-v3.0',
+    model: process.env.COHERE_API_MODEL || 'rerank-multilingual-v3.0',
     documents: queryResults,
     rankFields: [
       'text',

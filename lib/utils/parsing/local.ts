@@ -3,6 +3,7 @@ import pdfParse from 'pdf-parse';
 import { FileEntry } from '@/lib/types';
 import { Document } from '@/lib/types';
 import { randomUUID } from 'crypto';
+import { franc } from 'franc';
 
 export async function parseLocal(
   file: FileEntry,
@@ -21,8 +22,6 @@ export async function parseLocal(
   const metadata = {
     filename: file.name,
     filetype: file.contentType,
-    languages: 'n/a',
-    page_number: 'n/a',
     parent_id: file.id,
   };
 
@@ -42,12 +41,12 @@ async function processFile(
   fileData: Buffer,
   fileType: string
 ): Promise<{
-  pages: { pageNumber: number; text: string }[];
+  pages: { pageNumber: number; text: string; language: string }[];
   wordCount: number;
   error?: string;
 }> {
   try {
-    let pages: { pageNumber: number; text: string }[] = [];
+    let pages: { pageNumber: number; text: string; language: string }[] = [];
     if (fileType === 'application/pdf') {
       const pdfData = await pdfParse(fileData, {
         pagerender: function (page: any) {
@@ -61,7 +60,12 @@ async function processFile(
                   return item.str;
                 })
                 .join(' ');
-              pages.push({ pageNumber: page.pageNumber, text: pageText });
+              const language = franc(pageText);
+              pages.push({
+                pageNumber: page.pageNumber,
+                text: pageText,
+                language,
+              });
               return pageText;
             });
         },
@@ -71,7 +75,8 @@ async function processFile(
         .toString('utf8')
         .split('\f')
         .forEach((pageText: string, index: number) => {
-          pages.push({ pageNumber: index + 1, text: pageText });
+          const language = franc(pageText);
+          pages.push({ pageNumber: index + 1, text: pageText, language });
         });
     }
 
@@ -92,7 +97,7 @@ async function processFile(
 
 async function chunkDocument(
   documentId: string,
-  pages: { pageNumber: number; text: string }[],
+  pages: { pageNumber: number; text: string; language: string }[],
   minChunkSize: number,
   maxChunkSize: number,
   overlap: number, // Not yet supported
@@ -114,7 +119,11 @@ async function chunkDocument(
         document.chunks.push({
           id: `${document.documentId}:${document.chunks.length}`,
           text: chunks[i],
-          metadata: { ...metadata, page_number: page.pageNumber },
+          metadata: {
+            ...metadata,
+            page_number: page.pageNumber,
+            languages: page.language,
+          },
         });
       }
     }
