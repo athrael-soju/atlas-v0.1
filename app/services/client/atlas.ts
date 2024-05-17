@@ -1,21 +1,10 @@
-export const process = async (
-  files: FileList,
-  userEmail: string,
-  onUpdate: (message: string) => void
+const readStream = async (
+  response: Response,
+  onUpdate: (message: string) => void,
+  isFinalResult: boolean = false
 ) => {
-  const formData = new FormData();
-  Array.from(files).forEach((file) => {
-    formData.append('files', file);
-  });
-  formData.append('userEmail', userEmail);
-
-  const response = await fetch('/api/atlas/process', {
-    method: 'POST',
-    body: formData,
-  });
-
   if (!response.ok) {
-    throw new Error('Failed to upload files');
+    throw new Error('Failed to process the request');
   }
 
   const reader = response.body?.getReader();
@@ -34,11 +23,33 @@ export const process = async (
       chunk.split('\n\n').forEach((message) => {
         if (message.startsWith('data: ')) {
           const data = message.replace('data: ', '');
-          onUpdate(data);
+          if (isFinalResult && data.startsWith('Final Result:')) {
+            const result = JSON.parse(data.replace('Final Result:', '').trim());
+            onUpdate(result);
+          } else {
+            onUpdate(data);
+          }
         }
       });
     }
   }
+};
+
+export const process = async (
+  files: FileList,
+  userEmail: string,
+  onUpdate: (message: string) => void
+) => {
+  const formData = new FormData();
+  Array.from(files).forEach((file) => formData.append('files', file));
+  formData.append('userEmail', userEmail);
+
+  const response = await fetch('/api/atlas/process', {
+    method: 'POST',
+    body: formData,
+  });
+
+  await readStream(response, onUpdate);
 };
 
 export const retrieve = async (
@@ -60,34 +71,5 @@ export const retrieve = async (
     body: formData,
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to retrieve context');
-  }
-
-  const reader = response.body
-    ?.pipeThrough(new TextDecoderStream())
-    .getReader();
-  if (!reader) {
-    throw new Error('Failed to read response body');
-  }
-
-  let done = false;
-  while (!done) {
-    const { value, done: readerDone } = await reader.read();
-    done = readerDone;
-
-    if (value) {
-      value.split('\n\n').forEach((message) => {
-        if (message.startsWith('data: ')) {
-          const data = message.replace('data: ', '');
-          if (data.startsWith('Final Result:')) {
-            const result = JSON.parse(data.replace('Final Result:', '').trim());
-            onUpdate(result);
-          } else {
-            onUpdate(data);
-          }
-        }
-      });
-    }
-  }
+  await readStream(response, onUpdate, true);
 };
