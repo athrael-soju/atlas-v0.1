@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { rerank } from '@/lib/utils/reranking/cohere';
 import { embedMessage } from '@/lib/utils/embedding/openai';
 import { query } from '@/lib/utils/indexing/pinecone';
@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 function sendUpdate(
   controller: ReadableStreamDefaultController,
   message: string
-) {
+): void {
   controller.enqueue(`data: ${message}\n\n`);
 }
 
@@ -18,21 +18,21 @@ async function retrieve(
   topK: number,
   topN: number,
   sendUpdate: (message: string) => void
-) {
+): Promise<{ success: boolean; userEmail: string; content: any }> {
   try {
-    sendUpdate(`Embedding...`);
+    sendUpdate('Embedding...');
     const embeddingResults = await embedMessage(userEmail, content);
 
-    sendUpdate(`Querying...`);
+    sendUpdate('Querying...');
     const queryResults = await query(userEmail, embeddingResults, topK);
 
-    sendUpdate(`Reranking...`);
+    sendUpdate('Reranking...');
     const rerankingResults = queryResults.context
       ? await rerank(content, queryResults.context, topN)
       : [];
 
-    sendUpdate(`Query Success!`);
-    return { success: true, userEmail, content: rerankingResults };
+    sendUpdate('Query Success!');
+    return { success: true, userEmail, content: rerankingResults.values };
   } catch (error: any) {
     sendUpdate(`Error retrieving context for ${content}: ${error.message}`);
     return { success: false, userEmail, content: error.message };
@@ -48,14 +48,15 @@ export async function POST(req: NextRequest): Promise<Response> {
     const topN = Number(data.get('topN'));
 
     if (!userEmail) {
-      return new Response(JSON.stringify({ error: 'User email is required' }), {
-        status: 400,
-      });
+      return NextResponse.json(
+        { error: 'User email is required' },
+        { status: 400 }
+      );
     }
 
     if (!content) {
-      return new Response(
-        JSON.stringify({ error: 'No content in user message' }),
+      return NextResponse.json(
+        { error: 'No content in user message' },
         { status: 400 }
       );
     }
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
         const response = await retrieve(userEmail, content, topK, topN, send);
 
-        send(`Final Result: ${JSON.stringify(response.content.values)}`);
+        send(`Final Result: ${JSON.stringify(response.content)}`);
         controller.close();
       },
     });
@@ -79,8 +80,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       },
     });
   } catch (error: any) {
-    return new Response(
-      JSON.stringify({ error: `Failed to process request: ${error.message}` }),
+    return NextResponse.json(
+      { error: `Failed to process request: ${error.message}` },
       { status: 500 }
     );
   }

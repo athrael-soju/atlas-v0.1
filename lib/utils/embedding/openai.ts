@@ -50,7 +50,6 @@ export async function embedMessage(userEmail: string, content: string) {
 
 export async function embedDocument(data: any[], userEmail: string) {
   const chunkIdList: string[] = [];
-
   const embeddings = await Promise.all(
     data.map(async (item: any) => {
       await delay(13); // Temporary fix for rate limiting 5000 RPM
