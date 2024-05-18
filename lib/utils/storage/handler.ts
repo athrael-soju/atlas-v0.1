@@ -11,7 +11,7 @@ export async function handleFileUpload(
       throw new StorageError('Missing file or userId');
     }
 
-    const fsProvider = process.env.FILESYSTEM_PROVIDER;
+    const fsProvider = process.env.FILESYSTEM_PROVIDER || 'local';
 
     if (!fsProvider) {
       throw new StorageError('FILESYSTEM_PROVIDER is not set');
@@ -20,7 +20,7 @@ export async function handleFileUpload(
     let fileData: FileEntry;
 
     switch (fsProvider) {
-      case 'server':
+      case 'local':
         fileData = await writeFile(file, userId);
         break;
       case 's3':
@@ -50,14 +50,14 @@ export async function handleFileDeletion(
       throw new StorageError('Missing file or userId');
     }
 
-    const fsProvider = process.env.FILESYSTEM_PROVIDER;
+    const fsProvider = process.env.FILESYSTEM_PROVIDER || 'local';
 
     if (!fsProvider) {
       throw new StorageError('FILESYSTEM_PROVIDER is not set');
     }
 
     switch (fsProvider) {
-      case 'server':
+      case 'local':
         await deleteFile(file, userId);
         break;
       case 's3':

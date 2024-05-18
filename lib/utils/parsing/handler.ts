@@ -1,5 +1,5 @@
-import { parseUnstructured } from '@/lib/utils/parsing/unstructured';
-import { parseLocal } from '@/lib/utils/parsing/local';
+import { parseUnstructured } from '@/lib/utils/parsing/providers/unstructured';
+import { parseLocal } from '@/lib/utils/parsing/providers/local';
 import { FileEntry } from '@/lib/types';
 
 export async function parse(
@@ -18,7 +18,7 @@ export async function parse(
       overlap
     );
   } else if (provider === 'local') {
-    return await parseLocal(file, minChunkSize, maxChunkSize, overlap);
+    return await parseLocal(file, minChunkSize, maxChunkSize);
   } else {
     throw new Error(`Unsupported parsing provider: ${provider}`);
   }
