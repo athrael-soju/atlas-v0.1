@@ -1,19 +1,18 @@
+// parseLocal.ts
 import fs from 'fs/promises';
 import pdfParse from 'pdf-parse';
 import { FileEntry } from '@/lib/types';
 import { Document } from '@/lib/types';
 import { randomUUID } from 'crypto';
 import { franc } from 'franc';
-import { chunkTextByMultiParagraphs } from './chunking-strategies/static';
-import { chunkTextDynamically } from './chunking-strategies/dynamic';
-
-const chunkingStrategy = process.env.CHUNKING_STRATEGY || 'static';
+import { getChunkingStrategy } from './strategy-selector';
 
 export async function parseLocal(
   file: FileEntry,
   minChunkSize: number,
   maxChunkSize: number,
-  overlap: number
+  overlap: number,
+  customDelimiter?: string
 ): Promise<any[]> {
   const fileData = await fs.readFile(file.path);
   const documentContents = await processFile(
@@ -35,7 +34,8 @@ export async function parseLocal(
     minChunkSize,
     maxChunkSize,
     overlap,
-    metadata
+    metadata,
+    customDelimiter
   );
   return result.document.chunks;
 }
@@ -55,7 +55,9 @@ async function processFile(
       await pdfParse(fileData, {
         pagerender: function (page: any) {
           return page
-            .getTextContent({ normalizeWhitespace: true })
+            .getTextContent({
+              normalizeWhitespace: true,
+            })
             .then(function (textContent: { items: any[] }) {
               const pageText = textContent.items
                 .map(function (item) {
@@ -102,35 +104,30 @@ async function chunkDocument(
   pages: { pageNumber: number; text: string; language: string }[],
   minChunkSize: number,
   maxChunkSize: number,
-  overlap: number, // Not yet supported
-  metadata: any
+  overlap: number,
+  metadata: any,
+  customDelimiter?: string
 ): Promise<{ document: Document }> {
   try {
+    const chunkingStrategy = getChunkingStrategy();
+
     const document: Document = {
       documentId,
       chunks: [],
     };
 
     for (let page of pages) {
-      let chunks: string[] = [];
-      switch (chunkingStrategy) {
-        case 'static':
-          chunks = await chunkTextByMultiParagraphs(
-            page.text,
-            minChunkSize,
-            maxChunkSize
-          );
-          break;
-        case 'dynamic':
-          chunks = await chunkTextDynamically(
-            page.text,
-            minChunkSize,
-            maxChunkSize
-          );
-          break;
-        default:
-          throw new Error(`Unknown chunking strategy: ${chunkingStrategy}`);
-      }
+      let chunks;
+
+      // Strategies like NER, dynamic, etc.
+      chunks = await (
+        chunkingStrategy as (
+          text: string,
+          minChunkSize: number,
+          maxChunkSize: number
+        ) => Promise<string[]>
+      )(page.text, minChunkSize, maxChunkSize);
+
       for (let i = 0; i < chunks.length; i++) {
         document.chunks.push({
           id: `${document.documentId}:${document.chunks.length}`,

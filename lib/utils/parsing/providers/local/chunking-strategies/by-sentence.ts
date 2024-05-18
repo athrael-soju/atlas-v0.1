@@ -1,11 +1,14 @@
-export async function chunkTextDynamically(
+import natural from 'natural';
+
+export async function chunkTextByMultiSentence(
   text: string,
   minChunkSize: number,
   maxChunkSize: number
 ): Promise<string[]> {
-  const chunks: string[] = [];
-  const sentences = text.split(/(?<=\.|\?|!)\s/);
+  const tokenizer = new natural.SentenceTokenizer();
+  const sentences = tokenizer.tokenize(text);
 
+  const chunks: string[] = [];
   let currentChunk = '';
   let currentChunkSize = 0;
 
