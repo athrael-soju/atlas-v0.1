@@ -10,16 +10,10 @@ import { getChunkingStrategy } from './strategy-selector';
 export async function parseLocal(
   file: FileEntry,
   minChunkSize: number,
-  maxChunkSize: number,
-  overlap: number,
-  customDelimiter?: string
+  maxChunkSize: number
 ): Promise<any[]> {
   const fileData = await fs.readFile(file.path);
-  const documentContents = await processFile(
-    file.name,
-    fileData,
-    file.contentType
-  );
+  const documentContents = await processFile(fileData, file.contentType);
   const documentId = randomUUID();
 
   const metadata = {
@@ -33,15 +27,12 @@ export async function parseLocal(
     documentContents.pages,
     minChunkSize,
     maxChunkSize,
-    overlap,
-    metadata,
-    customDelimiter
+    metadata
   );
   return result.document.chunks;
 }
 
 async function processFile(
-  fileName: string,
   fileData: Buffer,
   fileType: string
 ): Promise<{
@@ -104,9 +95,7 @@ async function chunkDocument(
   pages: { pageNumber: number; text: string; language: string }[],
   minChunkSize: number,
   maxChunkSize: number,
-  overlap: number,
-  metadata: any,
-  customDelimiter?: string
+  metadata: any
 ): Promise<{ document: Document }> {
   try {
     const chunkingStrategy = getChunkingStrategy();
