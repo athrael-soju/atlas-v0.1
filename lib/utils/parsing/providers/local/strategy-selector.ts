@@ -1,6 +1,6 @@
 import { chunkTextByMultiParagraphs } from './chunking-strategies/by-paragraph';
 import { chunkTextByMultiSentence } from './chunking-strategies/by-sentence';
-import { chunkTextBySentencesWithNER } from './chunking-strategies/by-sentence-ner';
+// import { chunkTextBySentencesWithNER } from './chunking-strategies/by-sentence-ner';
 //import { chunkTextSemantically } from './chunking-strategies/semantic';
 // import { chunkTextByTopicModeling } from './chunking-strategies/topic-modeling';
 // import { chunkTextBySlidingWindow } from './chunking-strategies/sliding-window';
@@ -16,8 +16,8 @@ export function getChunkingStrategy() {
       return chunkTextByMultiSentence;
     // case 'semantic':
     //   return chunkTextSemantically;
-    case 'ner':
-      return chunkTextBySentencesWithNER;
+    // case 'ner':
+    //   return chunkTextBySentencesWithNER;
     // case 'topicModeling':
     //   return chunkTextByTopicModeling;
     // case 'slidingWindow':
