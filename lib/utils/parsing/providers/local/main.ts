@@ -4,6 +4,10 @@ import { FileEntry } from '@/lib/types';
 import { Document } from '@/lib/types';
 import { randomUUID } from 'crypto';
 import { franc } from 'franc';
+import { chunkTextByMultiParagraphs } from './chunking-strategies/static';
+import { chunkTextDynamically } from './chunking-strategies/dynamic';
+
+const chunkingStrategy = process.env.CHUNKING_STRATEGY || 'static';
 
 export async function parseLocal(
   file: FileEntry,
@@ -48,12 +52,10 @@ async function processFile(
   try {
     let pages: { pageNumber: number; text: string; language: string }[] = [];
     if (fileType === 'application/pdf') {
-      const pdfData = await pdfParse(fileData, {
+      await pdfParse(fileData, {
         pagerender: function (page: any) {
           return page
-            .getTextContent({
-              normalizeWhitespace: true,
-            })
+            .getTextContent({ normalizeWhitespace: true })
             .then(function (textContent: { items: any[] }) {
               const pageText = textContent.items
                 .map(function (item) {
@@ -110,11 +112,25 @@ async function chunkDocument(
     };
 
     for (let page of pages) {
-      const chunks = chunkTextByMultiParagraphs(
-        page.text,
-        minChunkSize,
-        maxChunkSize
-      );
+      let chunks: string[] = [];
+      switch (chunkingStrategy) {
+        case 'static':
+          chunks = await chunkTextByMultiParagraphs(
+            page.text,
+            minChunkSize,
+            maxChunkSize
+          );
+          break;
+        case 'dynamic':
+          chunks = await chunkTextDynamically(
+            page.text,
+            minChunkSize,
+            maxChunkSize
+          );
+          break;
+        default:
+          throw new Error(`Unknown chunking strategy: ${chunkingStrategy}`);
+      }
       for (let i = 0; i < chunks.length; i++) {
         document.chunks.push({
           id: `${document.documentId}:${document.chunks.length}`,
@@ -133,46 +149,4 @@ async function chunkDocument(
     console.error('Error in chunking and embedding document:', error);
     throw error;
   }
-}
-
-function chunkTextByMultiParagraphs(
-  text: string,
-  minChunkSize: number,
-  maxChunkSize: number
-): string[] {
-  const chunks: string[] = [];
-  let currentChunk = '';
-
-  let startIndex = 0;
-  while (startIndex < text.length) {
-    let endIndex = startIndex + maxChunkSize;
-    if (endIndex >= text.length) {
-      endIndex = text.length;
-    } else {
-      const paragraphBoundary = text.indexOf('\n\n', endIndex);
-      if (paragraphBoundary !== -1) {
-        endIndex = paragraphBoundary;
-      }
-    }
-
-    const chunk = text.slice(startIndex, endIndex).trim();
-    if (chunk.length >= minChunkSize) {
-      chunks.push(chunk);
-      currentChunk = '';
-    } else {
-      currentChunk += chunk + '\n\n';
-    }
-
-    startIndex = endIndex + 1;
-  }
-
-  if (currentChunk.length >= minChunkSize) {
-    chunks.push(currentChunk.trim());
-  } else if (chunks.length > 0) {
-    chunks[chunks.length - 1] += '\n\n' + currentChunk.trim();
-  } else {
-    chunks.push(currentChunk.trim());
-  }
-
-  return chunks;
 }

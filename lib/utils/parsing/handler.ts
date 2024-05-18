@@ -1,5 +1,5 @@
-import { parseUnstructured } from '@/lib/utils/parsing/unstructured';
-import { parseLocal } from '@/lib/utils/parsing/local';
+import { parseUnstructured } from '@/lib/utils/parsing/providers/unstructured';
+import { parseLocal } from '@/lib/utils/parsing/providers/local/main';
 import { FileEntry } from '@/lib/types';
 
 export async function parse(
