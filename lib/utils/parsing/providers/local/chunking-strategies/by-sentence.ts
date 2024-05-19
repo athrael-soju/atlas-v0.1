@@ -1,40 +1,92 @@
-import natural from 'natural';
+import { SentenceTokenizer } from 'natural';
+import { franc } from 'franc';
+import { randomUUID } from 'crypto';
+import { ChunkedDocument, Chunk, Page } from '@/lib/types';
 
 export async function chunkTextByMultiSentence(
-  text: string,
+  documentContents: { content: string; pages: Page[] },
   minChunkSize: number,
-  maxChunkSize: number
-): Promise<string[]> {
-  const tokenizer = new natural.SentenceTokenizer();
-  const sentences = tokenizer.tokenize(text);
+  maxChunkSize: number,
+  fileName: string,
+  fileType: string,
+  parentId: string
+): Promise<ChunkedDocument> {
+  const tokenizer = new SentenceTokenizer();
+  const sentences = tokenizer.tokenize(documentContents.content);
 
-  const chunks: string[] = [];
-  let currentChunk = '';
+  const chunks: Chunk[] = [];
+  let currentChunk: string[] = [];
   let currentChunkSize = 0;
+  let pageIndex = 0;
 
   for (const sentence of sentences) {
-    if (currentChunkSize + sentence.length > maxChunkSize) {
-      if (currentChunkSize >= minChunkSize) {
-        chunks.push(currentChunk.trim());
-        currentChunk = sentence;
-        currentChunkSize = sentence.length;
-      } else {
-        currentChunk += ' ' + sentence;
-        currentChunkSize += sentence.length;
-      }
+    const sentenceLength = sentence.length;
+
+    if (currentChunkSize + sentenceLength > maxChunkSize) {
+      // finalize the current chunk
+      const chunkText = currentChunk.join(' ');
+      const language = franc(chunkText);
+
+      chunks.push({
+        id: randomUUID(),
+        text: chunkText,
+        metadata: {
+          file_name: fileName,
+          file_type: fileType,
+          parent_id: parentId,
+          pages: getCurrentPages(documentContents.pages, currentChunkSize),
+          language: language,
+        },
+      });
+
+      currentChunk = [sentence];
+      currentChunkSize = sentenceLength;
     } else {
-      currentChunk += ' ' + sentence;
-      currentChunkSize += sentence.length;
+      currentChunk.push(sentence);
+      currentChunkSize += sentenceLength;
+    }
+
+    // update pageIndex based on sentence position
+    while (
+      pageIndex < documentContents.pages.length &&
+      currentChunkSize > documentContents.pages[pageIndex].end
+    ) {
+      pageIndex++;
     }
   }
 
-  if (currentChunk.trim().length >= minChunkSize) {
-    chunks.push(currentChunk.trim());
-  } else if (chunks.length > 0) {
-    chunks[chunks.length - 1] += ' ' + currentChunk.trim();
-  } else {
-    chunks.push(currentChunk.trim());
-  }
+  // add the last chunk if any
+  if (currentChunk.length > 0) {
+    const chunkText = currentChunk.join(' ');
+    const language = franc(chunkText);
 
-  return chunks;
+    chunks.push({
+      id: randomUUID(),
+      text: chunkText,
+      metadata: {
+        file_name: fileName,
+        file_type: fileType,
+        parent_id: parentId,
+        pages: getCurrentPages(documentContents.pages, currentChunkSize),
+        language: language,
+      },
+    });
+  }
+  const document: ChunkedDocument = {
+    id: parentId,
+    chunks,
+  };
+
+  return document;
+}
+
+// Helper function to get current pages
+function getCurrentPages(pages: Page[], chunkSize: number): number[] {
+  const currentPages: number[] = [];
+  for (const page of pages) {
+    if (chunkSize >= page.start && chunkSize <= page.end) {
+      currentPages.push(page.pageNumber);
+    }
+  }
+  return currentPages;
 }

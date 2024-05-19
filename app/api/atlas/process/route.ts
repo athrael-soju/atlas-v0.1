@@ -39,7 +39,7 @@ async function processFile(
       uploadResponse.file,
       parsingStrategy
     );
-
+    
     sendUpdate(`Embedding: '${file.name}'`);
     const embedResponse: EmbeddingResponse = await embedDocument(
       parseResponse,

@@ -18,13 +18,25 @@ export interface EmbeddingResponse {
   embeddings: any[];
 }
 
-export interface Document {
-  documentId: string;
+export interface ChunkedDocument {
+  id: string;
   chunks: Chunk[];
 }
 
 export interface Chunk {
   id: string;
-  metadata: any;
   text: string;
+  metadata: {
+    file_name: string;
+    file_type: string;
+    parent_id: string;
+    pages?: number[];
+    language?: string;
+  };
+}
+
+export interface Page {
+  start: number;
+  end: number;
+  pageNumber: number;
 }

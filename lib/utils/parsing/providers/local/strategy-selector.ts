@@ -1,4 +1,4 @@
-import { chunkTextByMultiParagraphs } from './chunking-strategies/by-paragraph';
+//import { chunkTextByMultiParagraphs } from './chunking-strategies/by-paragraph';
 import { chunkTextByMultiSentence } from './chunking-strategies/by-sentence';
 // import { chunkTextBySentencesWithNER } from './chunking-strategies/by-sentence-ner';
 //import { chunkTextSemantically } from './chunking-strategies/semantic';
@@ -10,8 +10,8 @@ const CHUNKING_STRATEGY = process.env.CHUNKING_STRATEGY || 'dynamic';
 
 export function getChunkingStrategy() {
   switch (CHUNKING_STRATEGY) {
-    case 'byParagraph':
-      return chunkTextByMultiParagraphs;
+    // case 'byParagraph':
+    //   return chunkTextByMultiParagraphs;
     case 'bySentence':
       return chunkTextByMultiSentence;
     // case 'semantic':
