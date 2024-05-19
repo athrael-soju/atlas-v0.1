@@ -17,15 +17,20 @@ export async function chunkTextByMultiSentence(
   const chunks: Chunk[] = [];
   let currentChunk: string[] = [];
   let currentChunkSize = 0;
-  let pageIndex = 0;
+  let currentPosition = 0; // Track the current position in the document
 
   for (const sentence of sentences) {
     const sentenceLength = sentence.length;
 
     if (currentChunkSize + sentenceLength > maxChunkSize) {
-      // finalize the current chunk
+      // Finalize the current chunk
       const chunkText = currentChunk.join(' ');
       const language = franc(chunkText);
+      const currentPages = getCurrentPages(
+        documentContents.pages,
+        currentPosition,
+        currentPosition + chunkText.length
+      );
 
       chunks.push({
         id: randomUUID(),
@@ -34,32 +39,29 @@ export async function chunkTextByMultiSentence(
           file_name: fileName,
           file_type: fileType,
           parent_id: parentId,
-          pages: getCurrentPages(documentContents.pages, currentChunkSize),
+          pages: currentPages,
           language: language,
         },
       });
 
       currentChunk = [sentence];
       currentChunkSize = sentenceLength;
+      currentPosition += chunkText.length + 1; // +1 for the space
     } else {
       currentChunk.push(sentence);
       currentChunkSize += sentenceLength;
     }
-
-    // update pageIndex based on sentence position
-    while (
-      pageIndex < documentContents.pages.length &&
-      currentChunkSize > documentContents.pages[pageIndex].end
-    ) {
-      pageIndex++;
-    }
   }
 
-  // add the last chunk if any
+  // Add the last chunk if any
   if (currentChunk.length > 0) {
     const chunkText = currentChunk.join(' ');
     const language = franc(chunkText);
-
+    const currentPages = getCurrentPages(
+      documentContents.pages,
+      currentPosition,
+      currentPosition + chunkText.length
+    );
     chunks.push({
       id: randomUUID(),
       text: chunkText,
@@ -67,11 +69,12 @@ export async function chunkTextByMultiSentence(
         file_name: fileName,
         file_type: fileType,
         parent_id: parentId,
-        pages: getCurrentPages(documentContents.pages, currentChunkSize),
+        pages: currentPages,
         language: language,
       },
     });
   }
+
   const document: ChunkedDocument = {
     id: parentId,
     chunks,
@@ -81,12 +84,20 @@ export async function chunkTextByMultiSentence(
 }
 
 // Helper function to get current pages
-function getCurrentPages(pages: Page[], chunkSize: number): number[] {
+function getCurrentPages(
+  pages: Page[],
+  chunkStart: number,
+  chunkEnd: number
+): string {
   const currentPages: number[] = [];
   for (const page of pages) {
-    if (chunkSize >= page.start && chunkSize <= page.end) {
+    if (
+      (chunkStart >= page.start && chunkStart <= page.end) ||
+      (chunkEnd >= page.start && chunkEnd <= page.end) ||
+      (chunkStart <= page.start && chunkEnd >= page.end)
+    ) {
       currentPages.push(page.pageNumber);
     }
   }
-  return currentPages;
+  return JSON.stringify(currentPages);
 }

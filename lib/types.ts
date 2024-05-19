@@ -30,8 +30,8 @@ export interface Chunk {
     file_name: string;
     file_type: string;
     parent_id: string;
-    pages?: number[];
-    language?: string;
+    pages: string;
+    language: string;
   };
 }
 
