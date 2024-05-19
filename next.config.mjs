@@ -23,19 +23,20 @@ export default defineNextConfig({
   experimental: {
     serverComponentsExternalPackages: [
       'pdf-parse',
-      'sharp',
-      'onnxruntime-node',
+      // 'sharp', // Used for transformer.js
+      // 'onnxruntime-node', // Used for transformer.js
     ],
   },
-  webpack: (config) => {
-    // See https://webpack.js.org/configuration/resolve/#resolvealias
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      sharp$: false,
-      'onnxruntime-node$': false,
-    };
-    return config;
-  },
+  // Used for transformer.js
+  // webpack: (config) => {
+  //   // See https://webpack.js.org/configuration/resolve/#resolvealias
+  //   config.resolve.alias = {
+  //     ...config.resolve.alias,
+  //     sharp$: false,
+  //     'onnxruntime-node$': false,
+  //   };
+  //   return config;
+  // },
   reactStrictMode: true,
   swcMinify: true,
   publicRuntimeConfig: {},

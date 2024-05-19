@@ -27,10 +27,10 @@ export async function query(userEmail: string, embeddings: any, topK: number) {
 
   const context = response.matches.map((item: any) => ({
     text: item.metadata.text,
-    filename: item.metadata.filename,
-    filetype: item.metadata.filetype,
-    languages: item.metadata.languages,
-    pageNumber: item.metadata.page_number,
+    filename: item.metadata.file_name,
+    filetype: item.metadata.file_type,
+    languages: item.metadata.language,
+    pageNumber: item.metadata.pages,
     parentId: item.metadata.parent_id,
     userEmail: item.metadata.user_email,
   }));
