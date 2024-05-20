@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { process } from '@/app/services/client/atlas';
+import { forge } from '@/app/services/client/atlas';
 
 interface DropzoneProps {
   onChange: React.Dispatch<React.SetStateAction<string[]>>;
@@ -92,7 +92,7 @@ export function Dropzone({
         handleFileInfo(message);
       };
 
-      await process(files, userEmail, onUpdate);
+      await forge(files, userEmail, onUpdate);
     } catch (error) {
       setError((error as Error).message);
     }

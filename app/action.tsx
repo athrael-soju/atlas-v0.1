@@ -5,7 +5,6 @@ import OpenAI from 'openai';
 
 import { spinner, BotMessage } from '@/components/llm-stocks';
 import { runOpenAICompletion } from '@/lib/utils';
-import { retrieve } from '@/app/services/client/atlas';
 import { prompts } from '@/lib/prompts';
 import { tools } from '@/lib/stocks/tools';
 import { checkIfCalled, confirmPurchase } from '@/lib/stocks/functions';

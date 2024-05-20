@@ -24,7 +24,7 @@ function sendUpdate(
   controller.enqueue(`data: ${message}\n\n`);
 }
 
-async function processFile(
+async function processDocument(
   file: File,
   userEmail: string,
   parsingStrategy: string,
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
         const results = await Promise.all(
           files.map((file) =>
-            processFile(file, userEmail, parsingStrategy, send)
+            processDocument(file, userEmail, parsingStrategy, send)
           )
         );
 

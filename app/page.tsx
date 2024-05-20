@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
-import { retrieve } from './services/client/atlas';
+import { oracle } from './services/client/atlas';
 
 export default function Page() {
   const [messages, setMessages] = useUIState<typeof AI>();
@@ -81,7 +81,7 @@ export default function Page() {
               ]);
 
               let context = '';
-              await retrieve(userEmail, message, topK, topN, (update) => {
+              await oracle(userEmail, message, topK, topN, (update) => {
                 context += update + '\n';
               })
               try {
@@ -130,7 +130,7 @@ export default function Page() {
                 ]);
 
                 let context = '';
-                await retrieve(userEmail, value, topK, topN, (update) => {
+                await oracle(userEmail, value, topK, topN, (update) => {
                   context += update + '\n';
                 })
 

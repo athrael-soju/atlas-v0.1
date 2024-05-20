@@ -13,7 +13,7 @@ function sendUpdate(
   controller.enqueue(`data: ${message}\n\n`);
 }
 
-async function retrieve(
+async function retrieveContext(
   userEmail: string,
   content: string,
   topK: number,
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       async start(controller) {
         const send = (message: string) => sendUpdate(controller, message);
 
-        const response = await retrieve(userEmail, content, topK, topN, send);
+        const response = await retrieveContext(userEmail, content, topK, topN, send);
 
         send(`Final Result: ${JSON.stringify(response.content)}`);
         controller.close();

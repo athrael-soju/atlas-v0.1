@@ -44,7 +44,7 @@ const readStream = async (
   }
 };
 
-export const process = async (
+export const forge = async (
   files: FileList,
   userEmail: string,
   onUpdate: (message: string) => void
@@ -54,7 +54,7 @@ export const process = async (
   formData.append('userEmail', userEmail);
 
   try {
-    const response = await fetch('/api/atlas/process', {
+    const response = await fetch('/api/atlas/forge', {
       method: 'POST',
       body: formData,
     });
@@ -66,7 +66,7 @@ export const process = async (
   }
 };
 
-export const retrieve = async (
+export const oracle = async (
   userEmail: string,
   content: string,
   topK: string,
@@ -80,7 +80,7 @@ export const retrieve = async (
   formData.append('topN', topN);
 
   try {
-    const response = await fetch(`/api/atlas/retrieve`, {
+    const response = await fetch(`/api/atlas/oracle`, {
       method: 'POST',
       body: formData,
     });
