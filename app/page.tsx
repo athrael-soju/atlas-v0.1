@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 
 import { useUIState, useActions } from 'ai/rsc';
 import { UserMessage } from '@/components/llm-stocks/message';
 
 import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
-import { FooterText } from '@/components/footer';
 import Textarea from 'react-textarea-autosize';
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
 import {
@@ -20,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
+import { retrieve } from './services/client/atlas';
 
 export default function Page() {
   const [messages, setMessages] = useUIState<typeof AI>();
@@ -28,13 +28,16 @@ export default function Page() {
   const { formRef, onKeyDown } = useEnterSubmit();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+
   const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
+  const topK = process.env.NEXT_PUBLIC_PINECONE_TOPK as string || '100';
+  const topN = process.env.NEXT_PUBLIC_COHERE_TOPN as string || '10';
+
   const handleFileChange: React.Dispatch<React.SetStateAction<string[]>> = (
     newFiles: React.SetStateAction<string[]>
   ) => {
     setUploadedFiles(newFiles);
   };
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === '/') {
@@ -69,7 +72,6 @@ export default function Page() {
         ) : (
           <EmptyScreen
             submitMessage={async (message) => {
-              // Add user message UI
               setMessages((currentMessages) => [
                 ...currentMessages,
                 {
@@ -78,12 +80,26 @@ export default function Page() {
                 },
               ]);
 
-              // Submit and get response message
-              const responseMessage = await submitUserMessage(message);
-              setMessages((currentMessages) => [
-                ...currentMessages,
-                responseMessage,
-              ]);
+              let context = '';
+              await retrieve(userEmail, message, topK, topN, (update) => {
+                context += update + '\n';
+              })
+              try {
+                const responseMessage = await submitUserMessage(message, context);
+                setMessages((currentMessages) => [
+                  ...currentMessages,
+                  responseMessage,
+                ]);
+              } catch (error) {
+                console.error(error);
+                setMessages((currentMessages) => [
+                  ...currentMessages,
+                  {
+                    id: Date.now() + 1,
+                    display: <UserMessage>Error: {error as ReactNode}</UserMessage>,
+                  },
+                ]);
+              }
             }}
           />
         )}
@@ -97,7 +113,6 @@ export default function Page() {
               onSubmit={async (e: any) => {
                 e.preventDefault();
 
-                // Blur focus on mobile
                 if (window.innerWidth < 600) {
                   e.target['message']?.blur();
                 }
@@ -106,7 +121,6 @@ export default function Page() {
                 setInputValue('');
                 if (!value) return;
 
-                // Add user message UI
                 setMessages((currentMessages) => [
                   ...currentMessages,
                   {
@@ -115,16 +129,26 @@ export default function Page() {
                   },
                 ]);
 
+                let context = '';
+                await retrieve(userEmail, value, topK, topN, (update) => {
+                  context += update + '\n';
+                })
+
                 try {
-                  // Submit and get response message
-                  const responseMessage = await submitUserMessage(value);
+                  const responseMessage = await submitUserMessage(value, context);
                   setMessages((currentMessages) => [
                     ...currentMessages,
                     responseMessage,
                   ]);
                 } catch (error) {
-                  // You may want to show a toast or trigger an error state.
                   console.error(error);
+                  setMessages((currentMessages) => [
+                    ...currentMessages,
+                    {
+                      id: Date.now() + 1,
+                      display: <UserMessage>Error: {error as ReactNode}</UserMessage>,
+                    },
+                  ]);
                 }
               }}
             >
@@ -188,7 +212,6 @@ export default function Page() {
                 </div>
               </div>
             </form>
-            {/* <FooterText className="hidden sm:block" /> */}
           </div>
         </div>
       </div>

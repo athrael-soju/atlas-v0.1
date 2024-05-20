@@ -31,7 +31,7 @@ const readStream = async (
 
         if (completeMessage.startsWith('data: ')) {
           const data = completeMessage.replace('data: ', '');
-          
+
           if (isFinalResult && data.startsWith('Final Result:')) {
             const result = JSON.parse(data.replace('Final Result:', '').trim());
             onUpdate(result);
@@ -67,21 +67,20 @@ export const process = async (
 };
 
 export const retrieve = async (
-  serverUrl: string,
   userEmail: string,
   content: string,
-  topK: number,
-  topN: number,
+  topK: string,
+  topN: string,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   formData.append('userEmail', userEmail);
   formData.append('content', content);
-  formData.append('topK', topK.toString());
-  formData.append('topN', topN.toString());
+  formData.append('topK', topK);
+  formData.append('topN', topN);
 
   try {
-    const response = await fetch(`${serverUrl}/api/atlas/retrieve`, {
+    const response = await fetch(`/api/atlas/retrieve`, {
       method: 'POST',
       body: formData,
     });

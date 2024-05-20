@@ -14,27 +14,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
-export async function submitUserMessage(content: string) {
+export async function submitUserMessage(content: string, context: string) {
   'use server';
 
-  let context;
-  // TODO:  User message is submitted to the AI.
-  console.info('User: ', content);
   const aiState = getMutableAIState<typeof AI>();
-  if (process.env.ENABLE_RAG === 'true') {
-    const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
-    const serverUrl = process.env.SERVER_URL || 'http://localhost:3000';
-    const topK = parseInt(process.env.PINECONE_TOPK as string);
-    const topN = parseInt(process.env.COHERE_TOPN as string);
 
-    const onUpdate = (message: string) => {
-      if (message !== undefined) {
-        context = message;
-      }
-    };
-
-    await retrieve(serverUrl, userEmail, content, topK, topN, onUpdate);
-  }
   aiState.update([
     ...aiState.get(),
     {
@@ -82,7 +66,6 @@ export async function submitUserMessage(content: string) {
       reply.done();
       aiState.done([...aiState.get(), { role: 'assistant', content }]);
 
-      // TODO: AI Response finished streaming (When the response is a text stream. GenAI responses can be handled in each function respectively, in lib\chat\stocks\functions.tsx)
       console.info('AI: ', content);
     }
   });
@@ -95,8 +78,6 @@ export async function submitUserMessage(content: string) {
     display: reply.value,
   };
 }
-
-// Define necessary types and create the AI.
 
 const initialAIState: {
   role: 'user' | 'assistant' | 'system' | 'function';
