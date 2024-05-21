@@ -226,6 +226,14 @@ export default function Page() {
                     >
                       Upload PDF Documents
                     </Button>
+                    <hr />
+                    <Button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Close
+                    </Button>                    
                   </div>
                 </div>
               </div>
