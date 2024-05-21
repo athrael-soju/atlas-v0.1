@@ -3,6 +3,7 @@
 import { IconAI, IconUser } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm'
 
 // Different types of message bubbles.
 
@@ -33,7 +34,7 @@ export function BotMessage({
       </div>
       <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
         {typeof children === 'string' ? (
-          <ReactMarkdown>{children}</ReactMarkdown>
+          <ReactMarkdown children={children} remarkPlugins={[remarkGfm]} />
         ) : (
           children
         )}
