@@ -130,9 +130,11 @@ export default function Page() {
                 ]);
 
                 let context = '';
-                await oracle(userEmail, value, topK, topN, (update) => {
-                  context += update + '\n';
-                })
+                if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
+                  await oracle(userEmail, value, topK, topN, (update) => {
+                    context += update + '\n';
+                  })
+                }
 
                 try {
                   const responseMessage = await submitUserMessage(value, context);
