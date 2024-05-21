@@ -13,6 +13,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { IconArrowElbow, IconPlus } from '@/components/ui/icons';
+import { AiOutlineUpload } from 'react-icons/ai';
 import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
@@ -26,6 +27,9 @@ export default function Page() {
   const { formRef, onKeyDown } = useEnterSubmit();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [isDropzoneOpen, setIsDropzoneOpen] = useState(false);
+  const [isUploadCompleted, setIsUploadCompleted] = useState(false);
+  const [isUploadStarted, setIsUploadStarted] = useState(false);
 
   const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
   const topK = process.env.NEXT_PUBLIC_PINECONE_TOPK as string || '100';
@@ -35,6 +39,7 @@ export default function Page() {
     newFiles: React.SetStateAction<string[]>
   ) => {
     setUploadedFiles(newFiles);
+    setIsUploadCompleted(true); // Assuming file upload is instant for this example
   };
 
   useEffect(() => {
@@ -153,16 +158,6 @@ export default function Page() {
                 }
               }}
             >
-              <div className="p-5">
-                <div>
-                  <Dropzone
-                    onChange={handleFileChange}
-                    fileExtension="pdf"
-                    className="your-custom-class"
-                    userEmail={userEmail}
-                  />
-                </div>
-              </div>
               <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-secondary px-12 sm:rounded-full sm:px-12">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -196,7 +191,7 @@ export default function Page() {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                 />
-                <div className="absolute right-4 top-[13px] sm:right-4">
+                <div className="absolute right-4 top-[13px] sm:right-4 flex items-center space-x-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -210,9 +205,64 @@ export default function Page() {
                     </TooltipTrigger>
                     <TooltipContent>Send message</TooltipContent>
                   </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="bg-transparent shadow-none text-secondary-foreground rounded-full hover:bg-secondary-foreground/25"
+                        onClick={() => {
+                          setIsDropzoneOpen(true);
+                          setIsUploadCompleted(false);
+                        }}
+                      >
+                        <AiOutlineUpload />
+                        <span className="sr-only">Upload PDF</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Upload PDF</TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             </form>
+            {isDropzoneOpen && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div
+                  className="relative bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Dropzone
+                    onChange={handleFileChange}
+                    fileExtension="pdf"
+                    className="your-custom-class"
+                    userEmail={userEmail}
+                    isUploadCompleted={isUploadCompleted}
+                    setIsUploadCompleted={setIsUploadCompleted}
+                    setIsUploadStarted={setIsUploadStarted}
+                  />
+                  {uploadedFiles.length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="text-lg font-medium">Uploaded Files</h3>
+                      <ul className="list-disc pl-5">
+                        {uploadedFiles.map((file, index) => (
+                          <li key={index}>{file}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      className={`bg-gray-300 text-gray-800 font-bold py-2 px-4 w-full rounded ${!isUploadCompleted && isUploadStarted ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-400'}`}
+                      onClick={() => setIsDropzoneOpen(false)}
+                      disabled={!isUploadCompleted && isUploadStarted}
+                    >
+                      {isUploadCompleted ? 'Ok' : 'Cancel'}
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

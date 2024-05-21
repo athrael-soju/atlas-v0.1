@@ -10,6 +10,9 @@ interface DropzoneProps {
   className?: string;
   fileExtension?: string;
   userEmail: string;
+  isUploadCompleted: boolean;
+  setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsUploadStarted: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function Dropzone({
@@ -17,13 +20,15 @@ export function Dropzone({
   className,
   fileExtension,
   userEmail,
+  isUploadCompleted,
+  setIsUploadCompleted,
+  setIsUploadStarted,
   ...props
 }: Readonly<DropzoneProps>) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileInfo, setFileInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
-  const [uploadComplete, setUploadComplete] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -84,9 +89,12 @@ export function Dropzone({
 
       const onUpdate = (message: string) => {
         if (allowedStates.some((state) => message.startsWith(state))) {
+          setIsUploadStarted(true);
           setProgress((prev) => prev + 20.0 / files.length);
         } else if (message.startsWith('Success')) {
           setProgress(100);
+          setIsUploadStarted(false);
+          setIsUploadCompleted(true);          
         }
 
         handleFileInfo(message);
@@ -138,7 +146,7 @@ export function Dropzone({
         </Button>
         {fileInfo && (
           <p
-            className={`text-${uploadComplete ? 'green-500' : 'muted-foreground'}`}
+            className={`text-${isUploadCompleted ? 'green-500' : 'muted-foreground'}`}
           >
             {fileInfo}
           </p>
