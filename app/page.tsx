@@ -13,7 +13,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { IconArrowElbow, IconPlus } from '@/components/ui/icons';
-import { AiOutlineUpload } from 'react-icons/ai';
 import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
