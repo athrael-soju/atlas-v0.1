@@ -181,7 +181,7 @@ export default function Page() {
                   tabIndex={0}
                   onKeyDown={onKeyDown}
                   placeholder="Send a message."
-                  className="min-h-[60px] w-full bg-transparent placeholder:text-muted-foreground resize-none px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
+                  className="min-h-[60px] w-full bg-transparent placeholder:text-muted-foreground resize-none px-8 py-[1.3rem] focus-within:outline-none sm:text-sm"
                   autoFocus
                   spellCheck={false}
                   autoComplete="off"
@@ -191,7 +191,7 @@ export default function Page() {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                 />
-                <div className="absolute right-4 top-[13px] sm:right-4 flex items-center space-x-2">
+                <div className="absolute right-4 top-[13px] sm:right-4 flex items-center space-x-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
