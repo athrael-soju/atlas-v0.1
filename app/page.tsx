@@ -30,6 +30,7 @@ export default function Page() {
   const [isDropzoneOpen, setIsDropzoneOpen] = useState(false);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
   const [isUploadStarted, setIsUploadStarted] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
   const topK = process.env.NEXT_PUBLIC_PINECONE_TOPK as string || '100';
@@ -158,7 +159,7 @@ export default function Page() {
                 }
               }}
             >
-              <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-secondary px-12 sm:rounded-full sm:px-12">
+              <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-secondary px-12 sm:rounded-3xl sm:px-12">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -167,14 +168,14 @@ export default function Page() {
                       className="absolute left-4 top-[14px] size-8 rounded-full bg-background p-0 sm:left-4"
                       onClick={(e) => {
                         e.preventDefault();
-                        window.location.reload();
+                        setIsMenuOpen((prev) => !prev);
                       }}
                     >
                       <IconPlus />
-                      <span className="sr-only">New Chat</span>
+                      {/* <span className="sr-only">New Chat</span> */}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>New Chat</TooltipContent>
+                  <TooltipContent>Options</TooltipContent>
                 </Tooltip>
                 <Textarea
                   ref={inputRef}
@@ -205,26 +206,30 @@ export default function Page() {
                     </TooltipTrigger>
                     <TooltipContent>Send message</TooltipContent>
                   </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="bg-transparent shadow-none text-secondary-foreground rounded-full hover:bg-secondary-foreground/25"
-                        onClick={() => {
-                          setIsDropzoneOpen(true);
-                          setIsUploadCompleted(false);
-                        }}
-                      >
-                        <AiOutlineUpload />
-                        <span className="sr-only">Upload PDF</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Upload PDF</TooltipContent>
-                  </Tooltip>
                 </div>
               </div>
             </form>
+            {isMenuOpen && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="relative bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+                  <h3 className="text-lg font-medium text-center">Options</h3>
+                  <div className="mt-4 flex flex-col space-y-4">
+                    <Button onClick={() => { window.location.reload(); }}>
+                      Start New Chat
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setIsDropzoneOpen(true);
+                        setIsUploadCompleted(false);
+                      }}
+                    >
+                      Upload PDF Documents
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
             {isDropzoneOpen && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                 <div
@@ -259,7 +264,6 @@ export default function Page() {
                       {isUploadCompleted ? 'Ok' : 'Cancel'}
                     </button>
                   </div>
-
                 </div>
               </div>
             )}
