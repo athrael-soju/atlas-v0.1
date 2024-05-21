@@ -1,10 +1,8 @@
 'use client';
 
 import { ReactNode, useEffect, useRef, useState } from 'react';
-
 import { useUIState, useActions } from 'ai/rsc';
 import { UserMessage } from '@/components/llm-stocks/message';
-
 import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import Textarea from 'react-textarea-autosize';
@@ -38,6 +36,7 @@ export default function Page() {
   ) => {
     setUploadedFiles(newFiles);
   };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === '/') {
@@ -83,7 +82,7 @@ export default function Page() {
               let context = '';
               await oracle(userEmail, message, topK, topN, (update) => {
                 context += update + '\n';
-              })
+              });
               try {
                 const responseMessage = await submitUserMessage(message, context);
                 setMessages((currentMessages) => [
@@ -133,7 +132,7 @@ export default function Page() {
                 if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
                   await oracle(userEmail, value, topK, topN, (update) => {
                     context += update + '\n';
-                  })
+                  });
                 }
 
                 try {
