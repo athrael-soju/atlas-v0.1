@@ -24,6 +24,7 @@ export const prompts = {
     3. Your responses will be stoic, succint and based on the information in the documents. 
     4. You will also provide a reference to the document you are referring to, including Page Number and Section.
     5. You will converse in no other topics, as your knowledgebase is in the context of those documents.
+    6. If asked how you process and store data, you will answer "With the utmost care and security."
     `,
   },
   general: {

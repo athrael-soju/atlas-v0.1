@@ -18,6 +18,7 @@ import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
 import { oracle } from './services/client/atlas';
+import { cn } from '@/lib/utils';
 
 export default function Page() {
   const [messages, setMessages] = useUIState<typeof AI>();
@@ -32,8 +33,21 @@ export default function Page() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
-  const topK = process.env.NEXT_PUBLIC_PINECONE_TOPK as string || '100';
-  const topN = process.env.NEXT_PUBLIC_COHERE_TOPN as string || '10';
+  const topK = (process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || '100';
+  const topN = (process.env.NEXT_PUBLIC_COHERE_TOPN as string) || '10';
+
+  const exampleMessages = [
+    {
+      heading: 'Could you please explain',
+      subheading: 'what Atlas is?',
+      message: 'Could you please explain what Atlas is?',
+    },
+    {
+      heading: 'How does Atlas',
+      subheading: 'process and store my data?',
+      message: 'How does Atlas process and store my data?',
+    },
+  ];
 
   const handleFileChange: React.Dispatch<React.SetStateAction<string[]>> = (
     newFiles: React.SetStateAction<string[]>
@@ -66,49 +80,43 @@ export default function Page() {
     };
   }, [inputRef]);
 
+  const submitMessage = async (message: string) => {
+    setInputValue(message);
+    {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: Date.now(),
+          display: <UserMessage>{message}</UserMessage>,
+        },
+      ]);
+
+      let context = '';
+      if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
+        await oracle(userEmail, message, topK, topN, (update) => {
+          context += update + '\n';
+        });
+      }
+      try {
+        const responseMessage = await submitUserMessage(message, context);
+        setMessages((currentMessages) => [...currentMessages, responseMessage]);
+      } catch (error) {
+        console.error(error);
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          {
+            id: Date.now() + 1,
+            display: <UserMessage>Error: {error as ReactNode}</UserMessage>,
+          },
+        ]);
+      }
+    }
+  };
+
   return (
     <div>
       <div className="pb-[200px] pt-4 md:pt-10">
-        {messages.length ? (
-          <>
-            <ChatList messages={messages} />
-          </>
-        ) : (
-          <EmptyScreen
-            submitMessage={async (message) => {
-              setMessages((currentMessages) => [
-                ...currentMessages,
-                {
-                  id: Date.now(),
-                  display: <UserMessage>{message}</UserMessage>,
-                },
-              ]);
-
-              let context = '';
-              if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-                await oracle(userEmail, message, topK, topN, (update) => {
-                  context += update + '\n';
-                });
-              }
-              try {
-                const responseMessage = await submitUserMessage(message, context);
-                setMessages((currentMessages) => [
-                  ...currentMessages,
-                  responseMessage,
-                ]);
-              } catch (error) {
-                console.error(error);
-                setMessages((currentMessages) => [
-                  ...currentMessages,
-                  {
-                    id: Date.now() + 1,
-                    display: <UserMessage>Error: {error as ReactNode}</UserMessage>,
-                  },
-                ]);
-              }
-            }}
-          />
-        )}
+        {messages.length ? <ChatList messages={messages} /> : <EmptyScreen />}
         <ChatScrollAnchor trackVisibility={true} />
       </div>
       <div className="fixed inset-x-0 bottom-0 w-full duration-300 ease-in-out peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px] dark:from-10%">
@@ -143,7 +151,10 @@ export default function Page() {
                 }
 
                 try {
-                  const responseMessage = await submitUserMessage(value, context);
+                  const responseMessage = await submitUserMessage(
+                    value,
+                    context
+                  );
                   setMessages((currentMessages) => [
                     ...currentMessages,
                     responseMessage,
@@ -154,12 +165,32 @@ export default function Page() {
                     ...currentMessages,
                     {
                       id: Date.now() + 1,
-                      display: <UserMessage>Error: {error as ReactNode}</UserMessage>,
+                      display: (
+                        <UserMessage>Error: {error as ReactNode}</UserMessage>
+                      ),
                     },
                   ]);
                 }
               }}
             >
+              <div className="mb-4 grid sm:grid-cols-2 gap-2 sm:gap-4 px-4 sm:px-0">
+                {exampleMessages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      'cursor-pointer bg-secondary rounded-2xl p-4 sm:p-6 transition-colors'
+                    )}
+                    onClick={async () => {
+                      submitMessage(message.message);
+                    }}
+                  >
+                    <div className="font-medium">{message.heading}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {message.subheading}
+                    </div>
+                  </div>
+                ))}
+              </div>
               <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-secondary px-12 sm:rounded-3xl sm:px-12">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -215,7 +246,11 @@ export default function Page() {
                 <div className="relative bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
                   <h3 className="text-lg font-medium text-center">Options</h3>
                   <div className="mt-4 flex flex-col space-y-4">
-                    <Button onClick={() => { window.location.reload(); }}>
+                    <Button
+                      onClick={() => {
+                        window.location.reload();
+                      }}
+                    >
                       Start New Chat
                     </Button>
                     <Button
