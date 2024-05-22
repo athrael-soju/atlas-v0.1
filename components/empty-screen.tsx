@@ -1,14 +1,14 @@
-import { Button } from '@/components/ui/button';
-import { ExternalLink } from '@/components/external-link';
-import { IconArrowRight } from '@/components/ui/icons';
-import { cn } from '@/lib/utils'
-import { sub } from 'date-fns';
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "@/components/external-link";
+import { IconArrowRight } from "@/components/ui/icons";
+import { cn } from "@/lib/utils";
+import { sub } from "date-fns";
 
 const exampleMessages = [
   {
-    heading: 'Could you please explain',
-    subheading: 'what Atlas is?',
-    message: 'Could you please explain what Atlas is?',
+    heading: "Could you please explain",
+    subheading: "what Atlas is?",
+    message: "Could you please explain what Atlas is?",
   },
   {
     heading: "How does Atlas",
@@ -19,9 +19,9 @@ const exampleMessages = [
 
 export function EmptyScreen({
   submitMessage,
-}: {
+}: Readonly<{
   submitMessage: (message: string) => void;
-}) {
+}>) {
   return (
     <div className="mx-auto max-w-2xl px-4">
       <div className="flex flex-col gap-2 rounded-2xl bg-secondary sm:p-4 p-2 text-sm sm:text-base">
@@ -48,23 +48,22 @@ export function EmptyScreen({
         should not be considered as financial advice.
       </p>
       <div className="mb-4 grid sm:grid-cols-2 gap-2 sm:gap-4 px-4 sm:px-0">
-        {
-          exampleMessages.map((message, index) => (
-            <div
-              key={index}
-              className={cn(
-                'cursor-pointer bg-secondary rounded-2xl p-4 sm:p-6 transition-colors'
-              )}
-              onClick={async () => {
-                submitMessage(message.message);
-              }}
-            >
-              <div className="font-medium">{message.heading}</div>
-              <div className="text-sm text-muted-foreground">
-                {message.subheading}
-              </div>
+        {exampleMessages.map((message, index) => (
+          <div
+            key={index}
+            className={cn(
+              "cursor-pointer bg-secondary rounded-2xl p-4 sm:p-6 transition-colors"
+            )}
+            onClick={async () => {
+              submitMessage(message.message);
+            }}
+          >
+            <div className="font-medium">{message.heading}</div>
+            <div className="text-sm text-muted-foreground">
+              {message.subheading}
             </div>
-          ))}
+          </div>
+        ))}
       </div>
     </div>
   );
