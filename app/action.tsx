@@ -33,7 +33,7 @@ export async function submitUserMessage(content: string, context: string) {
     <BotMessage className="items-center">{spinner}</BotMessage>
   );
 
-  const profile = process.env.NEXT_PUBLIC_ASSISTANT_PROFILE ?? 'stocks';
+  const profile = process.env.NEXT_PUBLIC_ASSISTANT_PROFILE ?? 'atlas';
 
   const functions =
     process.env.FUNCTIONS_ENABLED === 'true'

@@ -1,19 +1,19 @@
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from '@/components/external-link';
 import { IconArrowRight } from '@/components/ui/icons';
+import { cn } from '@/lib/utils'
+import { sub } from 'date-fns';
 
 const exampleMessages = [
   {
-    heading: 'What are the trending stocks?',
-    message: 'What are the trending stocks?',
+    heading: 'Could you please explain',
+    subheading: 'what Atlas is?',
+    message: 'Could you please explain what Atlas is?',
   },
   {
-    heading: "What's the stock price of AAPL?",
-    message: "What's the stock price of AAPL?",
-  },
-  {
-    heading: "I'd like to buy 10 shares of MSFT",
-    message: "I'd like to buy 10 shares of MSFT",
+    heading: "How does Atlas",
+    subheading: "process and store my data?",
+    message: "How does Atlas process and store my data?",
   },
 ];
 
@@ -24,49 +24,48 @@ export function EmptyScreen({
 }) {
   return (
     <div className="mx-auto max-w-2xl px-4">
-      <div className="flex flex-col gap-2 rounded-2xl bg-secondary sm:p-8 p-4 text-sm sm:text-base">
+      <div className="flex flex-col gap-2 rounded-2xl bg-secondary sm:p-4 p-2 text-sm sm:text-base">
         <h1 className="text-2xl sm:text-3xl tracking-tight font-semibold max-w-fit inline-block mx-auto text-center">
-          Welcome to Atlas 1.0!
+          Welcome to Atlas
         </h1>
-        <p className="mb-2 leading-normal text-muted-foreground">
-          This is a demo of an interactive assistant which allows you to ask
-          questions about documents you have uploaded.
+        {/* <p className="mb-2 leading-normal text-muted-foreground">
+          This is simple interface to the powerful Atlas RAG Pipeline.
         </p>
         <p className="mb-2 leading-normal text-muted-foreground">
-          The demo is built with
+          The application is built with
           <ExternalLink href="https://nextjs.org">
             Next.js
-          </ExternalLink> and{' '}
-          <ExternalLink href="https://sdk.vercel.ai/docs">Vercel</ExternalLink>.
-        </p>
-        <p className="mb-2 leading-normal text-muted-foreground">
-          It uses{' '}
+          </ExternalLink> and {' '}
+          <ExternalLink href="https://sdk.vercel.ai/docs">Vercel</ExternalLink> and it uses{' '}
           <ExternalLink href="https://vercel.com/blog/ai-sdk-3-generative-ui">
             a powerful RAG Engine
           </ExternalLink>
           to generate responses to your questions.
-        </p>
-        {/* <p className="leading-normal text-muted-foreground">Try an example:</p>
-        <div className="mt-4 flex flex-col items-start space-y-2 mb-4">
-          {exampleMessages.map((message, index) => (
-            <Button
-              key={index}
-              variant="link"
-              className="h-auto p-0 text-base"
-              onClick={async () => {
-                submitMessage(message.message);
-              }}
-            >
-              <IconArrowRight className="mr-2 text-muted-foreground" />
-              {message.heading}
-            </Button>
-          ))}
-        </div> */}
+        </p> */}
       </div>
       <p className="leading-normal text-muted-foreground text-[0.8rem] text-center max-w-96 ml-auto mr-auto">
         Note: Data and latency are simulated for illustrative purposes and
         should not be considered as financial advice.
       </p>
+      <div className="mb-4 grid sm:grid-cols-2 gap-2 sm:gap-4 px-4 sm:px-0">
+        {
+          exampleMessages.map((message, index) => (
+            <div
+              key={index}
+              className={cn(
+                'cursor-pointer bg-secondary rounded-2xl p-4 sm:p-6 transition-colors'
+              )}
+              onClick={async () => {
+                submitMessage(message.message);
+              }}
+            >
+              <div className="font-medium">{message.heading}</div>
+              <div className="text-sm text-muted-foreground">
+                {message.subheading}
+              </div>
+            </div>
+          ))}
+      </div>
     </div>
   );
 }

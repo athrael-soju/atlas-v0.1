@@ -4,27 +4,28 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: ;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --ring: 240 5% 64.9%;
-    --radius: 0.5rem;
-  }
+    --background: 35 12% 91%;  /* Light beige background */
+    --foreground: 35 22% 29%;  /* Darker earthy brown for text */
+    --muted: 35 10% 80%;  /* Muted lighter beige */
+    --muted-foreground: 35 22% 39%;  /* Muted darker beige for foreground elements */
+    --popover: 35 12% 91%;  /* Popover with the same light beige */
+    --popover-foreground: 35 22% 29%;  /* Popover text with dark brown */
+    --card: 35 12% 91%;  /* Card with the same light beige */
+    --card-foreground: 35 22% 29%;  /* Card text with dark brown */
+    --border: 35 15% 85%;  /* Slightly darker beige for borders */
+    --input: 35 15% 85%;  /* Input with slightly darker beige */
+    --primary: 35 22% 29%;  /* Primary color as dark brown */
+    --primary-foreground: 0 0% 98%;  /* Light color for text on primary */
+    --secondary: 35 10% 80%;  /* Secondary light beige */
+    --secondary-foreground: 35 22% 29%;  /* Text on secondary elements with dark brown */
+    --accent: 35 10% 80%;  /* Accent with light beige */
+    --accent-foreground: 35 22% 29%;  /* Accent text with dark brown */
+    --destructive: 0 84.2% 60.2%;  /* Destructive (red) for warnings and errors */
+    --destructive-foreground: 0 0% 98%;  /* Light color for text on destructive */
+    --ring: 35 15% 50%;  /* Ring with a darker beige */
+    --radius: 0.5rem;  /* Border radius */
+}
+
 
   .dark {
     --background: 240 10% 3.9%;

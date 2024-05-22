@@ -85,9 +85,11 @@ export default function Page() {
               ]);
 
               let context = '';
-              await oracle(userEmail, message, topK, topN, (update) => {
-                context += update + '\n';
-              });
+              if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
+                await oracle(userEmail, message, topK, topN, (update) => {
+                  context += update + '\n';
+                });
+              }
               try {
                 const responseMessage = await submitUserMessage(message, context);
                 setMessages((currentMessages) => [
@@ -232,7 +234,7 @@ export default function Page() {
                       }}
                     >
                       Close
-                    </Button>                    
+                    </Button>
                   </div>
                 </div>
               </div>
