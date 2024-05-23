@@ -5,15 +5,15 @@ import { GenerateItineraryAI } from './generate-itinerary';
 import '../globals.css';
 
 const meta = {
-  title: 'AI RSC Demo',
+  title: 'Atlas',
   description:
     'Demo of an interactive financial assistant built using Next.js and Vercel AI SDK.',
 };
 export const metadata: Metadata = {
   ...meta,
   title: {
-    default: 'AI RSC Demo',
-    template: `%s - AI RSC Demo`,
+    default: 'Atlas',
+    template: `%s - Atlas`,
   },
   icons: {
     icon: '/favicon.ico',
