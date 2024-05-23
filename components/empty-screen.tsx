@@ -12,10 +12,14 @@ export function EmptyScreen() {
           Welcome to Atlas
         </h1>
         <p className="mb-2 leading-normal text-muted-foreground">
-          A powerful AI assistant with access to your personal knowledgebase.
+          Atlas is a revolutionary system designed to store millions of
+          documents and seamlessly retrieve information from them. Imagine
+          having all your data at your fingertips, securely stored and easily
+          accessible, enhancing your interactions with any large language model
+          you use.
         </p>
         <p className="mb-2 leading-normal text-muted-foreground">
-          This application is built with{' '}
+          Atlas is built with{' '}
           <ExternalLink href="https://nextjs.org">Next.js</ExternalLink>
           {', '}
           <ExternalLink href="https://sdk.vercel.ai/docs">

@@ -17,7 +17,7 @@ export async function Header() {
         <Link href="/">
           <span className="text-lg font-bold">
             {/* <IconSparkles className="inline mr-0 w-4 sm:w-5 mb-0.5" /> */}
-            ATLAS v0.01a
+            ATLAS 0.01a
           </span>
         </Link>
       </span>
