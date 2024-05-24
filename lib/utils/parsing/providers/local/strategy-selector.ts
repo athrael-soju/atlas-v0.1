@@ -6,7 +6,7 @@ import { chunkTextByMultiSentence } from './chunking-strategies/by-sentence';
 // import { chunkTextBySlidingWindow } from './chunking-strategies/sliding-window';
 //import { chunkTextByCustomDelimiter } from './chunking-strategies/custom-delimiter';
 
-const CHUNKING_STRATEGY = process.env.CHUNKING_STRATEGY || 'dynamic';
+const CHUNKING_STRATEGY = process.env.CHUNKING_STRATEGY ?? 'dynamic';
 
 export function getChunkingStrategy() {
   switch (CHUNKING_STRATEGY) {

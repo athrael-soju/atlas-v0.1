@@ -32,9 +32,27 @@ export default function Page() {
   const [isUploadStarted, setIsUploadStarted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const userEmail = process.env.NEXT_PUBLIC_USEREMAIL as string;
-  const topK = (process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || '100';
-  const topN = (process.env.NEXT_PUBLIC_COHERE_TOPN as string) || '10';
+  const userEmail = process.env.NEXT_PUBLIC_USER_EMAIL as string;
+
+  const oracleParams = {
+    userEmail: userEmail,
+    topK: parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100,
+    topN: parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10,
+  };
+
+  const forgeParams = {
+    userEmail: userEmail,
+    provider: (process.env.NEXT_PUBLIC_PARSING_PROVIDER as string) || 'local',
+    maxChunkSize:
+      parseInt(process.env.NEXT_PUBLIC_MAX_CHUNK_SIZE as string) || 1024,
+    minChunkSize:
+      parseInt(process.env.NEXT_PUBLIC_MIN_CHUNK_SIZE as string) || 256,
+    overlap: parseInt(process.env.NEXT_PUBLIC_OVERLAP as string) || 128,
+    chunkBatch: parseInt(process.env.NEXT_PUBLIC_CHUNK_BATCH as string) || 150,
+    parsingStrategy:
+      (process.env.NEXT_PUBLIC_UNSTRUCTURED_PARSING_STRATEGY as string) ||
+      'auto',
+  };
 
   const exampleMessages = [
     {
@@ -93,7 +111,7 @@ export default function Page() {
 
       let context = '';
       if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-        await oracle(userEmail, message, topK, topN, (update) => {
+        await oracle(message, oracleParams, (update) => {
           context += update + '\n';
         });
       }
@@ -145,7 +163,7 @@ export default function Page() {
 
                 let context = '';
                 if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-                  await oracle(userEmail, value, topK, topN, (update) => {
+                  await oracle(value, oracleParams, (update) => {
                     context += update + '\n';
                   });
                 }
@@ -284,7 +302,7 @@ export default function Page() {
                     onChange={handleFileChange}
                     fileExtension="pdf"
                     className="your-custom-class"
-                    userEmail={userEmail}
+                    forgeParams={forgeParams}
                     isUploadCompleted={isUploadCompleted}
                     setIsUploadCompleted={setIsUploadCompleted}
                     setIsUploadStarted={setIsUploadStarted}

@@ -1,3 +1,5 @@
+import { ForgeParams, OracleParams } from '@/lib/types';
+
 const readStream = async (
   response: Response,
   onUpdate: (message: string) => void,
@@ -46,12 +48,12 @@ const readStream = async (
 
 export const forge = async (
   files: FileList,
-  userEmail: string,
+  forgeParams: ForgeParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   Array.from(files).forEach((file) => formData.append('files', file));
-  formData.append('userEmail', userEmail);
+  formData.append('forgeParams', JSON.stringify(forgeParams));
 
   try {
     const response = await fetch('/api/atlas/forge', {
@@ -67,18 +69,13 @@ export const forge = async (
 };
 
 export const oracle = async (
-  userEmail: string,
   content: string,
-  topK: string,
-  topN: string,
+  oracleParams: OracleParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
-  formData.append('userEmail', userEmail);
   formData.append('content', content);
-  formData.append('topK', topK);
-  formData.append('topN', topN);
-
+  formData.append('oracleParams', JSON.stringify(oracleParams));
   try {
     const response = await fetch(`/api/atlas/oracle`, {
       method: 'POST',

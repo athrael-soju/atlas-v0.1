@@ -40,3 +40,18 @@ export interface Page {
   end: number;
   pageNumber: number;
 }
+
+export interface OracleParams {
+  userEmail: string;
+  topK: number;
+  topN: number;
+}
+
+export interface ForgeParams {
+  userEmail: string;
+  provider: string;
+  maxChunkSize: number;
+  minChunkSize: number;
+  overlap: number;
+  chunkBatch: number;
+}

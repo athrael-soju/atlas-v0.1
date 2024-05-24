@@ -6,16 +6,14 @@ import {
 import { parse } from '@/lib/utils/parsing/handler';
 import { embedDocument } from '@/lib/utils/embedding/openai';
 import { upsertDocument } from '@/lib/utils/indexing/pinecone';
-import { EmbeddingResponse, FileActionResponse } from '@/lib/types';
+import {
+  EmbeddingResponse,
+  FileActionResponse,
+  ForgeParams,
+} from '@/lib/types';
 import { performance } from 'perf_hooks';
 
 export const runtime = 'nodejs';
-
-const provider = process.env.PARSING_PROVIDER || 'unstructured.io';
-const maxChunkSize = parseInt(process.env.MAX_CHUNK_SIZE as string) || 1024;
-const minChunkSize = parseInt(process.env.MIN_CHUNK_SIZE as string) || 256;
-const overlap = parseInt(process.env.OVERLAP as string) || 128;
-const chunkBatch = parseInt(process.env.CHUNK_BATCH as string) || 150;
 
 function sendUpdate(
   controller: ReadableStreamDefaultController,
@@ -26,11 +24,11 @@ function sendUpdate(
 
 async function processDocument(
   file: File,
-  userEmail: string,
-  parsingStrategy: string,
+  forgeParams: ForgeParams,
   sendUpdate: (message: string) => void
 ): Promise<{ success: boolean; fileName: string; error?: string }> {
   const totalStartTime = performance.now(); // Start timing the total process
+
   try {
     let startTime, endTime;
 
@@ -38,7 +36,7 @@ async function processDocument(
     sendUpdate(`Uploading: '${file.name}'`);
     const uploadResponse: FileActionResponse = await handleFileUpload(
       file,
-      userEmail
+      forgeParams.userEmail
     );
     endTime = performance.now();
     sendUpdate(
@@ -48,12 +46,11 @@ async function processDocument(
     startTime = performance.now();
     sendUpdate(`Parsing: '${file.name}'`);
     const parseResponse = await parse(
-      provider,
-      minChunkSize,
-      maxChunkSize,
-      overlap,
+      forgeParams.provider,
+      forgeParams.minChunkSize,
+      forgeParams.maxChunkSize,
+      forgeParams.overlap,
       uploadResponse.file,
-      parsingStrategy
     );
     endTime = performance.now();
     sendUpdate(
@@ -64,7 +61,7 @@ async function processDocument(
     sendUpdate(`Embedding: '${file.name}'`);
     const embedResponse: EmbeddingResponse = await embedDocument(
       parseResponse,
-      userEmail
+      forgeParams.userEmail
     );
     endTime = performance.now();
     sendUpdate(
@@ -73,7 +70,11 @@ async function processDocument(
 
     startTime = performance.now();
     sendUpdate(`Upserting: '${file.name}'`);
-    await upsertDocument(embedResponse.embeddings, userEmail, chunkBatch);
+    await upsertDocument(
+      embedResponse.embeddings,
+      forgeParams.userEmail,
+      forgeParams.chunkBatch
+    );
     endTime = performance.now();
     sendUpdate(
       `Upserted '${file.name}' in ${((endTime - startTime) / 1000).toFixed(2)} seconds`
@@ -81,7 +82,7 @@ async function processDocument(
 
     startTime = performance.now();
     sendUpdate(`Cleaning up: '${file.name}'`);
-    await handleFileDeletion(uploadResponse.file, userEmail);
+    await handleFileDeletion(uploadResponse.file, forgeParams.userEmail);
     endTime = performance.now();
     sendUpdate(
       `Cleaned up '${file.name}' in ${((endTime - startTime) / 1000).toFixed(2)} seconds`
@@ -111,9 +112,11 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
     const files = data.getAll('files') as File[];
-    const userEmail = data.get('userEmail') as string;
+    const forgeParams = JSON.parse(
+      data.get('forgeParams') as string
+    ) as ForgeParams;
 
-    if (!userEmail) {
+    if (!forgeParams.userEmail) {
       return NextResponse.json(
         { error: 'User email is required' },
         { status: 400 }
@@ -124,17 +127,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
     }
 
-    const parsingStrategy = process.env
-      .NEXT_PUBLIC_UNSTRUCTURED_PARSING_STRATEGY as string;
-
     const stream = new ReadableStream({
       async start(controller) {
         const send = (message: string) => sendUpdate(controller, message);
 
         const results = await Promise.all(
-          files.map((file) =>
-            processDocument(file, userEmail, parsingStrategy, send)
-          )
+          files.map((file) => processDocument(file, forgeParams, send))
         );
 
         const success = results.filter((result) => result.success).length;

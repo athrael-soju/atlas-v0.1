@@ -7,16 +7,10 @@ export async function parse(
   minChunkSize: number,
   maxChunkSize: number,
   overlap: number,
-  file: FileEntry,
-  parsingStrategy: string
+  file: FileEntry
 ): Promise<any[]> {
-  if (provider === 'unstructured.io') {
-    return await parseUnstructured(
-      file,
-      parsingStrategy,
-      maxChunkSize,
-      overlap
-    );
+  if (provider === 'unstructured') {
+    return await parseUnstructured(file, maxChunkSize, overlap);
   } else if (provider === 'local') {
     return await parseLocal(file, minChunkSize, maxChunkSize);
   } else {

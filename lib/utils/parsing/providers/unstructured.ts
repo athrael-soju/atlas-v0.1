@@ -13,7 +13,6 @@ const unstructuredClient = new UnstructuredClient({
 
 export async function parseUnstructured(
   file: FileEntry,
-  parsingStrategy: string,
   chunkSize: number,
   overlap: number
 ) {
@@ -23,7 +22,7 @@ export async function parseUnstructured(
       content: fileData,
       fileName: file.name,
     },
-    strategy: parsingStrategy,
+    strategy: 'fast', // TODO: Add support for user-selected strategy
     chunkingStrategy: 'by_title',
     maxCharacters: chunkSize,
     overlap: overlap,

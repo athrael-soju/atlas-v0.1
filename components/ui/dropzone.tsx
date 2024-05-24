@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { forge } from '@/app/services/client/atlas';
+import { ForgeParams } from '@/lib/types';
 
 interface DropzoneProps {
   onChange: React.Dispatch<React.SetStateAction<string[]>>;
   className?: string;
   fileExtension?: string;
-  userEmail: string;
+  forgeParams: ForgeParams;
   isUploadCompleted: boolean;
   setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
   setIsUploadStarted: React.Dispatch<React.SetStateAction<boolean>>;
@@ -19,7 +20,7 @@ export function Dropzone({
   onChange,
   className,
   fileExtension,
-  userEmail,
+  forgeParams,
   isUploadCompleted,
   setIsUploadCompleted,
   setIsUploadStarted,
@@ -94,13 +95,13 @@ export function Dropzone({
         } else if (message.startsWith('Success')) {
           setProgress(100);
           setIsUploadStarted(false);
-          setIsUploadCompleted(true);          
+          setIsUploadCompleted(true);
         }
 
         handleFileInfo(message);
       };
 
-      await forge(files, userEmail, onUpdate);
+      await forge(files, forgeParams, onUpdate);
     } catch (error) {
       setError((error as Error).message);
     }
