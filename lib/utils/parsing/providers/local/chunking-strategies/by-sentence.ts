@@ -1,3 +1,4 @@
+// For text based documents only
 import { SentenceTokenizer } from 'natural';
 import { franc } from 'franc';
 import { randomUUID } from 'crypto';
