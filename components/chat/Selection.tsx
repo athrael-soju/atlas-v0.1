@@ -10,7 +10,7 @@ export const Selection: React.FC<SelectionProps> = ({ setView }) => (
     <div className="flex flex-col md:flex-row w-full max-w-4x1">
       <Button
         onClick={() => setView('upload')}
-        className="flex-1 py-10 md:py-20 text-lg md:text-xl rounded-t-lg md:rounded-l-lg md:rounded-r-none border-b-2 md:border-b-0 md:border-r-2 border-gray-300"
+        className="flex-1 py-10 md:py-20 text-lg md:text-xl border-b-2 md:border-b-0 md:border-r-2 border-gray-300"
       >
         Enhance knowledgebase (Forge)
       </Button>
