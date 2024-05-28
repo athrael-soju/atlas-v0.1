@@ -13,7 +13,6 @@ interface DropzoneProps {
   forgeParams: ForgeParams;
   isUploadCompleted: boolean;
   setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
-  setIsUploadStarted: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function Dropzone({
@@ -23,7 +22,6 @@ export function Dropzone({
   forgeParams,
   isUploadCompleted,
   setIsUploadCompleted,
-  setIsUploadStarted,
   ...props
 }: Readonly<DropzoneProps>) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -90,11 +88,9 @@ export function Dropzone({
 
       const onUpdate = (message: string) => {
         if (allowedStates.some((state) => message.startsWith(state))) {
-          setIsUploadStarted(true);
           setProgress((prev) => prev + 20.0 / files.length);
         } else if (message.startsWith('Success')) {
           setProgress(100);
-          setIsUploadStarted(false);
           setIsUploadCompleted(true);
         }
 

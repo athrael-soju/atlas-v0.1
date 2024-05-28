@@ -28,7 +28,6 @@ export default function Page() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
-  const [isUploadStarted, setIsUploadStarted] = useState(false);
 
   const userEmail = process.env.NEXT_PUBLIC_USER_EMAIL as string;
 
@@ -190,7 +189,6 @@ export default function Page() {
                   forgeParams={forgeParams}
                   isUploadCompleted={isUploadCompleted}
                   setIsUploadCompleted={setIsUploadCompleted}
-                  setIsUploadStarted={setIsUploadStarted}
                 />
                 {uploadedFiles.length > 0 && (
                   <div className="mt-4">
