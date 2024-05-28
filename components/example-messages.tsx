@@ -22,7 +22,7 @@ export const ExampleMessages: React.FC<ExampleMessagesProps> = ({
   ];
 
   return (
-    <div className="mb-4 grid sm:grid-cols-2 gap-2 sm:gap-4 px-4 sm:px-0">
+    <div className="mb-2 grid sm:grid-cols-2 gap-2 sm:gap-4 px-4 sm:px-0">
       {exampleMessages.map((message, index) => (
         <div
           key={index}
