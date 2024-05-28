@@ -19,6 +19,7 @@ import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
 import { oracle } from './services/client/atlas';
 import { cn } from '@/lib/utils';
+import { ExampleMessages } from '@/components/example-messages';
 
 export default function Page() {
   const [messages, setMessages] = useUIState<typeof AI>();
@@ -27,10 +28,8 @@ export default function Page() {
   const { formRef, onKeyDown } = useEnterSubmit();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-  const [isDropzoneOpen, setIsDropzoneOpen] = useState(false);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
   const [isUploadStarted, setIsUploadStarted] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const userEmail = process.env.NEXT_PUBLIC_USER_EMAIL as string;
 
@@ -53,19 +52,6 @@ export default function Page() {
       (process.env.NEXT_PUBLIC_UNSTRUCTURED_PARSING_STRATEGY as string) ||
       'auto',
   };
-
-  const exampleMessages = [
-    {
-      heading: 'Could you please explain',
-      subheading: 'what Atlas is?',
-      message: 'Could you please explain what Atlas is?',
-    },
-    {
-      heading: 'How does Atlas',
-      subheading: 'process and store my data?',
-      message: 'How does Atlas process and store my data?',
-    },
-  ];
 
   const handleFileChange: React.Dispatch<React.SetStateAction<string[]>> = (
     newFiles: React.SetStateAction<string[]>
@@ -130,7 +116,7 @@ export default function Page() {
       }
     }
   };
-
+  console.log('messages', messages);
   return (
     <div>
       <div className="pb-[200px] pt-4 md:pt-10">
@@ -139,6 +125,9 @@ export default function Page() {
       </div>
       <div className="fixed inset-x-0 bottom-0 w-full duration-300 ease-in-out peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px] dark:from-10%">
         <div className="mx-auto sm:max-w-2xl sm:px-4">
+          {messages.length === 0 ? (
+            <ExampleMessages onClick={submitMessage} />
+          ) : null}
           <div className="mb-4 grid gap-2 sm:gap-4 px-4 sm:px-0">
             <form
               ref={formRef}
@@ -191,24 +180,31 @@ export default function Page() {
                 }
               }}
             >
-              <div className="mb-4 grid sm:grid-cols-2 gap-2 sm:gap-4 px-4 sm:px-0">
-                {exampleMessages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      'cursor-pointer bg-secondary rounded-2xl p-4 sm:p-6 transition-colors'
-                    )}
-                    onClick={async () => {
-                      submitMessage(message.message);
-                    }}
-                  >
-                    <div className="font-medium">{message.heading}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {message.subheading}
-                    </div>
+              <button
+                className="relative p-2 rounded-lg w-full max-w-4xl mb-2"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Dropzone
+                  onChange={handleFileChange}
+                  fileExtension="pdf"
+                  className="your-custom-class"
+                  forgeParams={forgeParams}
+                  isUploadCompleted={isUploadCompleted}
+                  setIsUploadCompleted={setIsUploadCompleted}
+                  setIsUploadStarted={setIsUploadStarted}
+                />
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-lg font-medium">Uploaded Files</h3>
+                    <ul className="list-disc pl-5">
+                      {uploadedFiles.map((file, index) => (
+                        <li key={index}>{file}</li>
+                      ))}
+                    </ul>
                   </div>
-                ))}
-              </div>
+                )}
+              </button>
+
               <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-secondary px-12 sm:rounded-3xl sm:px-12">
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -218,14 +214,14 @@ export default function Page() {
                       className="absolute left-4 top-[14px] size-8 rounded-full bg-background p-0 sm:left-4"
                       onClick={(e) => {
                         e.preventDefault();
-                        setIsMenuOpen((prev) => !prev);
+                        window.location.reload();
                       }}
                     >
                       <IconPlus />
                       {/* <span className="sr-only">New Chat</span> */}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Options</TooltipContent>
+                  <TooltipContent>New Chat</TooltipContent>
                 </Tooltip>
                 <Textarea
                   ref={inputRef}
@@ -259,76 +255,6 @@ export default function Page() {
                 </div>
               </div>
             </form>
-            {isMenuOpen && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="relative bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-                  <h3 className="text-lg font-medium text-center">Options</h3>
-                  <div className="mt-4 flex flex-col space-y-4">
-                    <Button
-                      onClick={() => {
-                        window.location.reload();
-                      }}
-                    >
-                      Start New Chat
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        setIsDropzoneOpen(true);
-                        setIsUploadCompleted(false);
-                      }}
-                    >
-                      Upload PDF Documents
-                    </Button>
-                    <hr />
-                    <Button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                      }}
-                    >
-                      Close
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-            {isDropzoneOpen && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div
-                  className="relative bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Dropzone
-                    onChange={handleFileChange}
-                    fileExtension="pdf"
-                    className="your-custom-class"
-                    forgeParams={forgeParams}
-                    isUploadCompleted={isUploadCompleted}
-                    setIsUploadCompleted={setIsUploadCompleted}
-                    setIsUploadStarted={setIsUploadStarted}
-                  />
-                  {uploadedFiles.length > 0 && (
-                    <div className="mt-4">
-                      <h3 className="text-lg font-medium">Uploaded Files</h3>
-                      <ul className="list-disc pl-5">
-                        {uploadedFiles.map((file, index) => (
-                          <li key={index}>{file}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  <div className="mt-4 flex justify-center">
-                    <button
-                      className={`bg-gray-300 text-gray-800 font-bold py-2 px-4 w-full rounded ${!isUploadCompleted && isUploadStarted ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-400'}`}
-                      onClick={() => setIsDropzoneOpen(false)}
-                      disabled={!isUploadCompleted && isUploadStarted}
-                    >
-                      {isUploadCompleted ? 'Ok' : 'Cancel'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
