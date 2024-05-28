@@ -1,12 +1,11 @@
-// components/chat/TooltipButtons.tsx
-
 import React from 'react';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { IconPlus, IconArrowElbow } from '@/components/ui/icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCog, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/components/ui/button';
 
 interface TooltipButtonProps {
@@ -22,7 +21,7 @@ export const TooltipButton: React.FC<TooltipButtonProps> = ({ setView }) => (
         className="absolute left-4 top-[14px] size-8 rounded-full bg-background p-0 sm:left-4"
         onClick={() => setView('select')}
       >
-        <IconPlus />
+        <FontAwesomeIcon icon={faCog} />
       </Button>
     </TooltipTrigger>
     <TooltipContent>Options</TooltipContent>
@@ -37,7 +36,7 @@ export const SendMessageButton: React.FC = () => (
         size="icon"
         className="bg-transparent shadow-none text-secondary-foreground rounded-full hover:bg-secondary-foreground/25"
       >
-        <IconArrowElbow />
+        <FontAwesomeIcon icon={faArrowRight} />
         <span className="sr-only">Send message</span>
       </Button>
     </TooltipTrigger>

@@ -8,12 +8,11 @@ interface UploadProps {
   onCancel: () => void;
   forgeParams: any;
 }
-
-export function Upload({
+export const Upload: React.FC<UploadProps> = ({
   onComplete,
   onCancel,
   forgeParams,
-}: Readonly<UploadProps>) {
+}) => {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
   const [isUploadStarted, setIsUploadStarted] = useState(false);
@@ -27,11 +26,10 @@ export function Upload({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="relative bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
+      <div className="relative bg-primary-foreground p-8 rounded-lg shadow-lg w-full max-w-4xl">
         <Dropzone
           onChange={handleFileChange}
           fileExtension="pdf"
-          className="your-custom-class"
           forgeParams={forgeParams}
           isUploadCompleted={isUploadCompleted}
           setIsUploadCompleted={setIsUploadCompleted}
@@ -49,10 +47,10 @@ export function Upload({
         )}
         <div className="mt-4 flex justify-center">
           <button
-            className={`bg-gray-300 text-gray-800 font-bold py-2 px-4 w-full rounded ${
+            className={`bg-secondary font-bold py-2 px-4 w-full rounded ${
               !isUploadCompleted && isUploadStarted
                 ? 'cursor-not-allowed opacity-50'
-                : 'hover:bg-gray-400'
+                : 'hover:bg-primary hover:text-primary-foreground'
             }`}
             onClick={isUploadCompleted ? onComplete : onCancel}
             disabled={!isUploadCompleted && isUploadStarted}
@@ -63,4 +61,4 @@ export function Upload({
       </div>
     </div>
   );
-}
+};

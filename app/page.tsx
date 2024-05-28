@@ -108,7 +108,12 @@ export default function Page() {
 
   return (
     <div>
-      {view === 'select' && <Selection setView={setView} />}
+      {view === 'select' && (
+        <div className="pt-4 md:pt-10">
+          <EmptyScreen />
+          <Selection setView={setView} />
+        </div>
+      )}
       {view === 'upload' && (
         <Upload
           onComplete={() => setView('select')}
@@ -117,8 +122,8 @@ export default function Page() {
         />
       )}
       {view === 'chat' && (
-        <div className="pb-[200px] pt-4 md:pt-10">
-          {messages.length ? <ChatList messages={messages} /> : <EmptyScreen />}
+        <div className="pt-4 md:pt-10">
+          {messages.length ? <ChatList messages={messages} /> : null}
           <ChatScrollAnchor trackVisibility={true} />
           <div className="fixed inset-x-0 bottom-0 w-full duration-300 ease-in-out peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px] dark:from-10%">
             <div className="mx-auto sm:max-w-2xl sm:px-4">

@@ -18,7 +18,6 @@ interface DropzoneProps {
 
 export function Dropzone({
   onChange,
-  className,
   fileExtension,
   forgeParams,
   isUploadCompleted,
@@ -119,8 +118,7 @@ export function Dropzone({
         'disabled:cursor-not-allowed disabled:opacity-50',
         isDragging
           ? 'border-blue-500'
-          : 'border-input bg-transparent placeholder:text-muted-foreground',
-        className
+          : 'border-input bg-transparent placeholder:text-muted-foreground'
       )}
       {...props}
       onDragOver={handleDragOver}
