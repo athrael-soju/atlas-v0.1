@@ -23,8 +23,9 @@ export default defineNextConfig({
   experimental: {
     serverComponentsExternalPackages: [
       'pdf-parse',
-      'sharp', // Used for transformer.js
-      'onnxruntime-node', // Used for transformer.js
+      // 'sharp', // Used for transformer.js
+      // 'onnxruntime-node', // Used for transformer.js
+      // 'webworker-threads', //used for Natural
     ],
   },
   webpack: (config) => {
@@ -35,6 +36,7 @@ export default defineNextConfig({
       'onnxruntime-node$': false, // Used for transformer.js
       "mongodb-client-encryption": false, // Unused for Natural
       "aws4": false, // Unused for Natural
+      'webworker-threads': false, // Unused for Natural
     };
     return config;
   },

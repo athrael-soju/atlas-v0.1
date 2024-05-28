@@ -18,7 +18,6 @@ import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
 import { oracle } from './services/client/atlas';
-import { cn } from '@/lib/utils';
 import { ExampleMessages } from '@/components/example-messages';
 
 export default function Page() {
@@ -180,7 +179,7 @@ export default function Page() {
                 }
               }}
             >
-              <button
+              <div
                 className="relative p-2 rounded-lg w-full max-w-4xl mb-2"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -203,8 +202,7 @@ export default function Page() {
                     </ul>
                   </div>
                 )}
-              </button>
-
+              </div>
               <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-secondary px-12 sm:rounded-3xl sm:px-12">
                 <Tooltip>
                   <TooltipTrigger asChild>
