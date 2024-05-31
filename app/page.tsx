@@ -17,9 +17,9 @@ import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
-import { oracle } from './services/client/atlas';
+import { archivist } from './services/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
-import { ForgeParams, OracleParams } from '@/lib/types';
+import { ForgeParams, ArchivistParams } from '@/lib/types';
 
 export default function Page() {
   const [messages, setMessages] = useUIState<typeof AI>();
@@ -32,11 +32,11 @@ export default function Page() {
 
   const userEmail = process.env.NEXT_PUBLIC_USER_EMAIL as string;
 
-  const oracleParams = {
+  const archivistParams = {
     userEmail: userEmail,
     topK: parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100,
     topN: parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10,
-  } as OracleParams;
+  } as ArchivistParams;
 
   const forgeParams = {
     provider: (process.env.NEXT_PUBLIC_PARSING_PROVIDER as string) || 'local',
@@ -95,7 +95,7 @@ export default function Page() {
 
       let context = '';
       if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-        await oracle(message, oracleParams, (update) => {
+        await archivist(message, archivistParams, (update) => {
           context += update + '\n';
         });
       }
@@ -150,7 +150,7 @@ export default function Page() {
 
                 let context = '';
                 if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-                  await oracle(value, oracleParams, (update) => {
+                  await archivist(value, archivistParams, (update) => {
                     context += update + '\n';
                   });
                 }

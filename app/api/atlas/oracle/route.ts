@@ -3,7 +3,7 @@ import { rerank } from '@/lib/utils/reranking/cohere';
 import { embedMessage } from '@/lib/utils/embedding/openai';
 import { query } from '@/lib/utils/indexing/pinecone';
 import { performance } from 'perf_hooks';
-import { OracleParams } from '@/lib/types';
+import { ArchivistParams } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
@@ -16,13 +16,13 @@ function sendUpdate(
 
 async function retrieveContext(
   content: string,
-  oracleParams: OracleParams,
+  archivistParams: ArchivistParams,
   sendUpdate: (message: string) => void
 ): Promise<{ success: boolean; userEmail: string; content: any }> {
   const totalStartTime = performance.now(); // Start timing the total process
-  const userEmail = oracleParams.userEmail;
-  const topK = oracleParams.topK;
-  const topN = oracleParams.topN;
+  const userEmail = archivistParams.userEmail;
+  const topK = archivistParams.topK;
+  const topN = archivistParams.topN;
   try {
     let startTime, endTime;
 
@@ -73,11 +73,11 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
     const content = data.get('content') as string;
-    const oracleParams = JSON.parse(
-      data.get('oracleParams') as string
-    ) as OracleParams;
+    const archivistParams = JSON.parse(
+      data.get('archivistParams') as string
+    ) as ArchivistParams;
 
-    if (!oracleParams.userEmail) {
+    if (!archivistParams.userEmail) {
       return NextResponse.json(
         { error: 'User email is required' },
         { status: 400 }
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       async start(controller) {
         const send = (message: string) => sendUpdate(controller, message);
 
-        const response = await retrieveContext(content, oracleParams, send);
+        const response = await retrieveContext(content, archivistParams, send);
 
         send(`Final Result: ${JSON.stringify(response.content)}`);
         controller.close();

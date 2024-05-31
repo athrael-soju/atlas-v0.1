@@ -50,7 +50,7 @@ export interface Page {
   pageNumber: number;
 }
 
-export interface OracleParams {
+export interface ArchivistParams {
   userEmail: string;
   topK: number;
   topN: number;
