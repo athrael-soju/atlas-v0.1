@@ -17,9 +17,9 @@ import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
-import { archivist } from './services/client/atlas';
+import { archive } from './services/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
-import { ForgeParams, ArchivistParams } from '@/lib/types';
+import { ForgeParams, ArchiveParams } from '@/lib/types';
 
 export default function Page() {
   const [messages, setMessages] = useUIState<typeof AI>();
@@ -32,11 +32,11 @@ export default function Page() {
 
   const userEmail = process.env.NEXT_PUBLIC_USER_EMAIL as string;
 
-  const archivistParams = {
+  const archiveParams = {
     userEmail: userEmail,
     topK: parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100,
     topN: parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10,
-  } as ArchivistParams;
+  } as ArchiveParams;
 
   const forgeParams = {
     provider: (process.env.NEXT_PUBLIC_PARSING_PROVIDER as string) || 'local',
@@ -95,7 +95,7 @@ export default function Page() {
 
       let context = '';
       if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-        await archivist(message, archivistParams, (update) => {
+        await archive(message, archiveParams, (update) => {
           context += update + '\n';
         });
       }
@@ -150,7 +150,7 @@ export default function Page() {
 
                 let context = '';
                 if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-                  await archivist(value, archivistParams, (update) => {
+                  await archive(value, archiveParams, (update) => {
                     context += update + '\n';
                   });
                 }

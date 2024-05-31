@@ -50,7 +50,7 @@ export interface Page {
   pageNumber: number;
 }
 
-export interface ArchivistParams {
+export interface ArchiveParams {
   userEmail: string;
   topK: number;
   topN: number;

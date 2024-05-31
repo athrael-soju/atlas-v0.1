@@ -1,4 +1,4 @@
-import { ForgeParams, ArchivistParams } from '@/lib/types';
+import { ForgeParams, ArchiveParams } from '@/lib/types';
 
 const readStream = async (
   response: Response,
@@ -70,16 +70,16 @@ export const forge = async (
   }
 };
 
-export const archivist = async (
+export const archive = async (
   content: string,
-  archivistParams: ArchivistParams,
+  archiveParams: ArchiveParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   formData.append('content', content);
-  formData.append('archivistParams', JSON.stringify(archivistParams));
+  formData.append('archiveParams', JSON.stringify(archiveParams));
   try {
-    const response = await fetch(`/api/atlas/archivist`, {
+    const response = await fetch(`/api/atlas/archive`, {
       method: 'POST',
       body: formData,
     });
