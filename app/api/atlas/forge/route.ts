@@ -31,7 +31,6 @@ async function processDocument(
 
   try {
     let startTime, endTime;
-
     startTime = performance.now();
     sendUpdate(`Uploading: '${file.name}'`);
     const uploadResponse: FileActionResponse = await handleFileUpload(
@@ -50,7 +49,7 @@ async function processDocument(
       forgeParams.minChunkSize,
       forgeParams.maxChunkSize,
       forgeParams.overlap,
-      uploadResponse.file,
+      uploadResponse.file
     );
     endTime = performance.now();
     sendUpdate(

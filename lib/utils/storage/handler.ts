@@ -11,7 +11,7 @@ export async function handleFileUpload(
       throw new StorageError('Missing file or userId');
     }
 
-    const fsProvider = process.env.FILESYSTEM_PROVIDER || 'local';
+    const fsProvider = process.env.FILESYSTEM_PROVIDER ?? 'local';
 
     if (!fsProvider) {
       throw new StorageError('FILESYSTEM_PROVIDER is not set');
@@ -25,6 +25,7 @@ export async function handleFileUpload(
         break;
       case 's3':
         fileData = await uploadToS3(file, userId);
+        break;
       default:
         throw new StorageError(
           `Unsupported filesystem provider: ${fsProvider}`

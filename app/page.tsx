@@ -185,7 +185,6 @@ export default function Page() {
                 <Dropzone
                   onChange={handleFileChange}
                   fileExtension="pdf"
-                  className="your-custom-class"
                   forgeParams={forgeParams}
                   isUploadCompleted={isUploadCompleted}
                   setIsUploadCompleted={setIsUploadCompleted}
