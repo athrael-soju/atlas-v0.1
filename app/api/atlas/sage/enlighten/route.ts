@@ -1,101 +1,59 @@
+import { AssistantParams } from '@/lib/types';
 import { NextRequest, NextResponse } from 'next/server';
-import { performance } from 'perf_hooks';
-import fs from 'fs';
 import OpenAI from 'openai';
-
-export const runtime = 'nodejs';
 
 const openai = new OpenAI();
 
-function sendUpdate(
-  controller: ReadableStreamDefaultController,
-  message: string
-): void {
-  controller.enqueue(`data: ${message}\n\n`);
-}
-
-async function storeFile(
-  file: File,
-  sendUpdate: (message: string) => void
-): Promise<{
-  success: boolean;
-  fileName: string;
-  response: any;
-}> {
-  try {
-    let startTime, endTime;
-    startTime = performance.now();
-    sendUpdate(`Uploading: '${file.name}'`);
-
-    if (file.type.includes('text')) {
-      const response = await openai.files.create({
-        file: fs.createReadStream(file.name),
-        purpose: 'assistants',
-      });
-
-      endTime = performance.now();
-      sendUpdate(
-        `Uploaded '${file.name}' in ${((endTime - startTime) / 1000).toFixed(2)} seconds`
-      );
-
-      return { success: true, fileName: file.name, response: response };
-    } else {
-      sendUpdate(`Unsupported file type: ${file.type}`);
-      return {
-        success: false,
-        fileName: file.name,
-        response: 'Unsupported file type',
-      };
-    }
-  } catch (error: any) {
-    sendUpdate(`Error processing ${file.name}: ${error.message}`);
-    return {
-      success: false,
-      fileName: file.name,
-      response: error.message,
-    };
-  }
-}
-
-export async function POST(req: NextRequest): Promise<Response> {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const data = await req.formData();
-    const files = data.getAll('files') as File[];
     const userEmail = data.get('userEmail') as string;
+    const assistantParams = JSON.parse(
+      data.get('assistantParams') as string
+    ) as AssistantParams;
 
-    if (!userEmail) {
+    if (!userEmail || !assistantParams.assistantId) {
       return NextResponse.json(
-        { error: 'User email is required' },
+        {
+          error: 'User email and assistant ID are required',
+        },
         { status: 400 }
       );
-    } else if (!files.length) {
-      return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
     }
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        const send = (message: string) => sendUpdate(controller, message);
+    const currentAssistant = await openai.beta.assistants.retrieve(
+      assistantParams.assistantId
+    );
 
-        const results = await Promise.all(
-          files.map((file) => {
-            return storeFile(file, send);
-          })
-        );
+    if (!currentAssistant) {
+      return NextResponse.json(
+        {
+          error: 'Assistant not found',
+        },
+        { status: 404 }
+      );
+    }
 
-        const success = results.filter((result) => result.success).length;
-        const failed = results.filter((result) => !result.success).length;
+    const updatedAssistantResponse = await openai.beta.assistants.update(
+      assistantParams.assistantId,
+      {
+        instructions:
+          assistantParams.instructions ?? currentAssistant.instructions,
+        name: assistantParams.name ?? currentAssistant.name,
+        tools: [{ type: 'code_interpreter' }],
+        tool_resources: currentAssistant.tool_resources ?? {
+          code_interpreter: {
+            file_ids: assistantParams.file_ids || [],
+          },
+        },
+        model: assistantParams.model || currentAssistant.model,
+      }
+    );
 
-        send(`Success: ${success}. Failed: ${failed}`);
-        controller.close();
-      },
-    });
-
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-      },
+    return NextResponse.json({
+      message: 'Assistant updated',
+      assistant: updatedAssistantResponse,
+      status: 200,
     });
   } catch (error: any) {
     return NextResponse.json(

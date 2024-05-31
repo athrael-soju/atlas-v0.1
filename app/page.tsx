@@ -19,6 +19,7 @@ import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
 import { oracle } from './services/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
+import { ForgeParams, OracleParams } from '@/lib/types';
 
 export default function Page() {
   const [messages, setMessages] = useUIState<typeof AI>();
@@ -35,7 +36,7 @@ export default function Page() {
     userEmail: userEmail,
     topK: parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100,
     topN: parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10,
-  };
+  } as OracleParams;
 
   const forgeParams = {
     provider: (process.env.NEXT_PUBLIC_PARSING_PROVIDER as string) || 'local',
@@ -48,7 +49,7 @@ export default function Page() {
     parsingStrategy:
       (process.env.NEXT_PUBLIC_UNSTRUCTURED_PARSING_STRATEGY as string) ||
       'auto',
-  };
+  } as ForgeParams;
 
   const handleFileChange: React.Dispatch<React.SetStateAction<string[]>> = (
     newFiles: React.SetStateAction<string[]>

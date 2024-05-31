@@ -6,12 +6,13 @@ const openai = new OpenAI();
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const requestBody = await req.json();
-    const { userEmail, name, instructions } = requestBody;
+    const { userEmail, name, instructions, model } = requestBody;
 
-    if (!userEmail || !name || !instructions) {
+    if (!userEmail || !name || !instructions || !model) {
       return NextResponse.json(
         {
-          error: 'User email, name and description are required',
+          error:
+            'User email, assistant name, instructions, and model are required',
         },
         { status: 400 }
       );
@@ -21,7 +22,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       instructions: instructions,
       name: name,
       tools: [{ type: 'code_interpreter' }],
-      model: process.env.OPENAI_MODEL_ID as string,
+      tool_resources: {
+        code_interpreter: {
+          file_ids: [],
+        },
+      },
+      model: model,
     });
 
     return NextResponse.json({

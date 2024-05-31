@@ -63,3 +63,11 @@ export interface ForgeParams {
   overlap: number;
   chunkBatch: number;
 }
+
+export interface AssistantParams {
+  assistantId: string;
+  name?: string;
+  instructions?: string;
+  model?: string;
+  file_ids?: string[];
+}
