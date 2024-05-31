@@ -8,8 +8,8 @@ import { ForgeParams } from '@/lib/types';
 
 interface DropzoneProps {
   onChange: React.Dispatch<React.SetStateAction<string[]>>;
-  className?: string;
   fileExtension?: string;
+  userEmail: string;
   forgeParams: ForgeParams;
   isUploadCompleted: boolean;
   setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
@@ -18,6 +18,7 @@ interface DropzoneProps {
 export function Dropzone({
   onChange,
   fileExtension,
+  userEmail,
   forgeParams,
   isUploadCompleted,
   setIsUploadCompleted,
@@ -96,7 +97,7 @@ export function Dropzone({
         handleFileInfo(message);
       };
 
-      await forge(files, forgeParams, onUpdate);
+      await forge(files, userEmail, forgeParams, onUpdate);
     } catch (error) {
       setError((error as Error).message);
     }

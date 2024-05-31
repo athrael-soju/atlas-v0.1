@@ -48,11 +48,13 @@ const readStream = async (
 
 export const forge = async (
   files: FileList,
+  userEmail: string,
   forgeParams: ForgeParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   Array.from(files).forEach((file) => formData.append('files', file));
+  formData.append('userEmail', userEmail);
   formData.append('forgeParams', JSON.stringify(forgeParams));
 
   try {

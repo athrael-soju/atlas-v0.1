@@ -38,7 +38,6 @@ export default function Page() {
   };
 
   const forgeParams = {
-    userEmail: userEmail,
     provider: (process.env.NEXT_PUBLIC_PARSING_PROVIDER as string) || 'local',
     maxChunkSize:
       parseInt(process.env.NEXT_PUBLIC_MAX_CHUNK_SIZE as string) || 1024,
@@ -114,7 +113,7 @@ export default function Page() {
       }
     }
   };
-  console.log('messages', messages);
+
   return (
     <div>
       <div className="pb-[200px] pt-4 md:pt-10">
@@ -184,7 +183,8 @@ export default function Page() {
               >
                 <Dropzone
                   onChange={handleFileChange}
-                  fileExtension="pdf"
+                  // fileExtension="pdf" // Add file extension filter
+                  userEmail={userEmail}
                   forgeParams={forgeParams}
                   isUploadCompleted={isUploadCompleted}
                   setIsUploadCompleted={setIsUploadCompleted}

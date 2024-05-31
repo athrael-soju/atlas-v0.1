@@ -7,9 +7,18 @@ export interface FileEntry {
   contentType: string;
 }
 
+export interface OpenAiFileUploadResponse {
+  id: string;
+  object: string;
+  bytes: number;
+  created_at: number;
+  filename: string;
+  purpose: string;
+}
+
 export interface FileActionResponse {
   message: string;
-  file: FileEntry;
+  file: FileEntry | OpenAiFileUploadResponse;
 }
 
 export interface EmbeddingResponse {
@@ -48,7 +57,6 @@ export interface OracleParams {
 }
 
 export interface ForgeParams {
-  userEmail: string;
   provider: string;
   maxChunkSize: number;
   minChunkSize: number;

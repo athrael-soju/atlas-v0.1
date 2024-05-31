@@ -1,27 +1,34 @@
-import { FileEntry, FileActionResponse } from '@/lib/types';
-import { writeFile, deleteFile } from '@/lib/utils/storage/local';
-import { uploadToS3, deleteFromS3 } from '@/lib/utils/storage/s3';
+import {
+  FileEntry,
+  FileActionResponse,
+  OpenAiFileUploadResponse,
+} from '@/lib/types';
+import { writeFile, deleteFile } from './providers/local';
+import { uploadToS3, deleteFromS3 } from './providers/s3';
+import { uploadDocumentToOpenAi } from './providers/openai';
 
 export async function handleFileUpload(
   file: File,
-  userId: string
+  userId: string,
+  fsProvider: string
 ): Promise<FileActionResponse> {
   try {
     if (!file || !userId) {
       throw new StorageError('Missing file or userId');
     }
 
-    const fsProvider = process.env.FILESYSTEM_PROVIDER ?? 'local';
-
     if (!fsProvider) {
       throw new StorageError('FILESYSTEM_PROVIDER is not set');
     }
 
-    let fileData: FileEntry;
+    let fileData: FileEntry | OpenAiFileUploadResponse;
 
     switch (fsProvider) {
       case 'local':
         fileData = await writeFile(file, userId);
+        break;
+      case 'openai':
+        fileData = await uploadDocumentToOpenAi(file, userId);
         break;
       case 's3':
         fileData = await uploadToS3(file, userId);
@@ -63,6 +70,7 @@ export async function handleFileDeletion(
         break;
       case 's3':
         await deleteFromS3(file, userId);
+        break;
       default:
         throw new StorageError(
           `Unsupported filesystem provider: ${fsProvider}`
