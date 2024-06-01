@@ -23,15 +23,13 @@ const getClientPromise = async (): Promise<MongoClient> => {
         });
     }
     clientPromise =
-      globalWithMongo._mongoClientPromise ||
+      globalWithMongo._mongoClientPromise ??
       Promise.reject(new Error('MongoClient promise is undefined'));
   } else {
     client = new MongoClient(uri, options);
-    try {
-      clientPromise = client.connect();
-    } catch (error: any) {
+    clientPromise = client.connect().catch((error: any) => {
       throw error;
-    }
+    });
   }
   return clientPromise;
 };
