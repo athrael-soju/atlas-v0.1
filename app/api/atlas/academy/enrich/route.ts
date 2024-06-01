@@ -43,10 +43,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         tools: [{ type: 'code_interpreter' }],
         tool_resources: currentAssistant.tool_resources ?? {
           code_interpreter: {
-            file_ids: assistantParams.file_ids || [],
+            file_ids: assistantParams.file_ids ?? [],
           },
         },
-        model: assistantParams.model || currentAssistant.model,
+        model: assistantParams.model ?? currentAssistant.model,
       }
     );
 

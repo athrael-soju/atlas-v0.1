@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { forge } from '@/app/services/client/atlas';
+import { forge } from '@/lib/client/atlas';
 import { ForgeParams } from '@/lib/types';
 
 interface DropzoneProps {

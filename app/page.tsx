@@ -17,9 +17,13 @@ import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
-import { archive } from './services/client/atlas';
+import { archive } from '@/lib/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
 import { ForgeParams, ArchiveParams } from '@/lib/types';
+
+// Force the page to be dynamic and allow streaming responses up to 30 seconds
+export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 export default function Page() {
   const [messages, setMessages] = useUIState<typeof AI>();
