@@ -71,3 +71,16 @@ export interface AssistantParams {
   model?: string;
   file_ids?: string[];
 }
+// types/user.ts
+export interface UserFile {
+  id: string;
+  purpose: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  img?: string;
+  assistantId?: string;
+  files: UserFile[];
+}
