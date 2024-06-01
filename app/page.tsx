@@ -20,12 +20,14 @@ import { Dropzone } from '@/components/ui/dropzone';
 import { archive } from '@/lib/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
 import { ForgeParams, ArchiveParams } from '@/lib/types';
+import { useSession } from 'next-auth/react';
 
 // Force the page to be dynamic and allow streaming responses up to 30 seconds
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 export default function Page() {
+  const { data: session } = useSession();
   const [messages, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions<typeof AI>();
   const [inputValue, setInputValue] = useState('');
@@ -34,7 +36,7 @@ export default function Page() {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
 
-  const userEmail = process.env.NEXT_PUBLIC_USER_EMAIL as string;
+  const userEmail = session?.user?.email || '';
 
   const archiveParams = {
     userEmail: userEmail,
@@ -118,6 +120,23 @@ export default function Page() {
       }
     }
   };
+  if (!session) {
+    return (
+      <div className="flex flex-col items-center justify-center bg-background p-16">
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="text-4xl text-center font-extrabold mt-4 text-card-foreground">
+            Welcome to Atlas
+          </h1>
+          <p>Log in to proceed</p>
+          <img
+            src="/atlas.png"
+            alt="Atlas Logo"
+            className="w-[100%] rounded-full shadow-lg"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
