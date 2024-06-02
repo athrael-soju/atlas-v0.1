@@ -1,4 +1,9 @@
-import { ForgeParams, ArchiveParams } from '@/lib/types';
+import {
+  ForgeParams,
+  ArchiveParams,
+  SageParams,
+  SageAction,
+} from '@/lib/types';
 
 const readStream = async (
   response: Response,
@@ -87,6 +92,28 @@ export const archive = async (
     await readStream(response, onUpdate);
   } catch (error) {
     console.error('Error in retrieve:', error);
+    onUpdate(`Error: ${error}`);
+  }
+};
+
+export const sage = async (
+  action: SageAction,
+  params: SageParams,
+  onUpdate: (message: string) => void
+): Promise<void> => {
+  const formData = new FormData();
+  formData.append('action', action);
+  formData.append('params', JSON.stringify(params));
+
+  try {
+    const response = await fetch('/api/sage', {
+      method: 'POST',
+      body: formData,
+    });
+
+    await readStream(response, onUpdate);
+  } catch (error) {
+    console.error('Error in process:', error);
     onUpdate(`Error: ${error}`);
   }
 };
