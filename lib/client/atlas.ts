@@ -5,6 +5,23 @@ import {
   SageAction,
 } from '@/lib/types';
 
+const processMessage = (
+  completeMessage: string,
+  isFinalResult: boolean,
+  onUpdate: (message: string) => void
+) => {
+  if (completeMessage.startsWith('data: ')) {
+    const data = completeMessage.replace('data: ', '');
+
+    if (isFinalResult && data.startsWith('Final Result:')) {
+      const result = JSON.parse(data.replace('Final Result:', '').trim());
+      onUpdate(result);
+    } else {
+      onUpdate(data);
+    }
+  }
+};
+
 const readStream = async (
   response: Response,
   onUpdate: (message: string) => void,
@@ -36,16 +53,7 @@ const readStream = async (
         buffer = buffer.slice(boundary + 2); // Remove processed part
         boundary = buffer.indexOf('\n\n');
 
-        if (completeMessage.startsWith('data: ')) {
-          const data = completeMessage.replace('data: ', '');
-
-          if (isFinalResult && data.startsWith('Final Result:')) {
-            const result = JSON.parse(data.replace('Final Result:', '').trim());
-            onUpdate(result);
-          } else {
-            onUpdate(data);
-          }
-        }
+        processMessage(completeMessage, isFinalResult, onUpdate);
       }
     }
   }

@@ -24,9 +24,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           switch (action as SageAction) {
             case 'summon':
               response = await summon(rest, sendUpdate);
-              controller.enqueue(
-                `data: Sage and thread summoned successfully\n\n`
-              );
+              controller.enqueue(`data: Sage summoned successfully\n\n`);
               controller.enqueue(`data: ${JSON.stringify(response)}\n\n`);
               break;
             case 'reform':

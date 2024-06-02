@@ -16,10 +16,10 @@ export async function summon(
   const user = await prisma.user.findUnique({ where: { email: userEmail } });
 
   if (user?.sageId && user?.threadId) {
-    throw new Error('User already has an assistant');
+    throw new Error('User already has a sage');
   }
 
-  sendUpdate('Summoning assistant...');
+  sendUpdate('Summoning sage...');
   const mySage = await openai.beta.assistants.create({
     instructions,
     name,
@@ -33,7 +33,7 @@ export async function summon(
     where: { email: userEmail },
     data: { sageId: mySage.id },
   });
-  sendUpdate('User updated with assistant ID.');
+  sendUpdate('User updated with sage ID.');
 
   sendUpdate('Creating thread...');
   const thread = await openai.beta.threads.create();
@@ -46,7 +46,7 @@ export async function summon(
   sendUpdate('User updated with thread ID.');
 
   return {
-    assistant: mySage,
+    sage: mySage,
     threadId: thread.id,
   };
 }
@@ -55,31 +55,29 @@ export async function reform(
   data: any,
   sendUpdate: (message: string) => void
 ): Promise<any> {
-  const { userEmail, assistantParams } = data;
+  const { userEmail, sageParams } = data;
 
-  if (!userEmail || !assistantParams.sageId) {
-    throw new Error('User email and assistant ID are required');
+  if (!userEmail || !sageParams.sageId) {
+    throw new Error('User email and sage ID are required');
   }
 
-  const currentSage = await openai.beta.assistants.retrieve(
-    assistantParams.sageId
-  );
+  const currentSage = await openai.beta.assistants.retrieve(sageParams.sageId);
 
   if (!currentSage) {
     throw new Error('Sage not found');
   }
 
-  sendUpdate('Reforming assistant...');
+  sendUpdate('Reforming sage...');
   const updatedSageResponse = await openai.beta.assistants.update(
-    assistantParams.sageId,
+    sageParams.sageId,
     {
-      instructions: assistantParams.instructions ?? currentSage.instructions,
-      name: assistantParams.name ?? currentSage.name,
+      instructions: sageParams.instructions ?? currentSage.instructions,
+      name: sageParams.name ?? currentSage.name,
       tools: [{ type: 'code_interpreter' }],
       tool_resources: currentSage.tool_resources ?? {
-        code_interpreter: { file_ids: assistantParams.file_ids ?? [] },
+        code_interpreter: { file_ids: sageParams.file_ids ?? [] },
       },
-      model: assistantParams.model ?? currentSage.model,
+      model: sageParams.model ?? currentSage.model,
     }
   );
   sendUpdate('Sage reformed successfully.');
@@ -94,10 +92,10 @@ export async function dismiss(
   const { userEmail, sageId } = data;
 
   if (!userEmail || !sageId) {
-    throw new Error('User email and assistant id are required');
+    throw new Error('User email and sage id are required');
   }
 
-  sendUpdate('Dismissing assistant...');
+  sendUpdate('Dismissing sage...');
   const response = await openai.beta.assistants.del(`${userEmail}_${sageId}`);
   sendUpdate('Sage dismissed successfully.');
 
