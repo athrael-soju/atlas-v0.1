@@ -83,7 +83,7 @@ export const forge = async (
   }
 };
 
-export const archive = async (
+export const scribe = async (
   content: string,
   archiveParams: ArchiveParams,
   onUpdate: (message: string) => void

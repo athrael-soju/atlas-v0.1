@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
-import { archive } from '@/lib/client/atlas';
+import { scribe } from '@/lib/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
 import { ForgeParams, ArchiveParams } from '@/lib/types';
 import { useSession } from 'next-auth/react';
@@ -101,7 +101,7 @@ export default function Page() {
 
       let context = '';
       if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-        await archive(message, archiveParams, (update) => {
+        await scribe(message, archiveParams, (update) => {
           context += update + '\n';
         });
       }
@@ -173,7 +173,7 @@ export default function Page() {
 
                 let context = '';
                 if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-                  await archive(value, archiveParams, (update) => {
+                  await scribe(value, archiveParams, (update) => {
                     context += update + '\n';
                   });
                 }
