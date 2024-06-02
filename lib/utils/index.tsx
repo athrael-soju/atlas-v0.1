@@ -36,7 +36,7 @@ export function runOpenAICompletion<
   let onTextContent: (text: string, isFinal: boolean) => void = () => {};
 
   const functionsMap: Record<string, TFunctions[number]> = {};
-  const functionsList = params.functions || [];
+  const functionsList = params.functions ?? [];
 
   for (const fn of functionsList) {
     functionsMap[fn.name] = fn;
@@ -104,9 +104,7 @@ export function runOpenAICompletion<
   })();
 
   return {
-    onTextContent: (
-      callback: (text: string, isFinal: boolean) => void | Promise<void>
-    ) => {
+    onTextContent: (callback: (text: string, isFinal: boolean) => void) => {
       onTextContent = callback;
     },
     onFunctionCall: <TName extends TFunctions[number]['name']>(

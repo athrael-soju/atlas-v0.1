@@ -36,7 +36,7 @@ export default function Page() {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
 
-  const userEmail = session?.user?.email || '';
+  const userEmail = session?.user?.email ?? '';
 
   const archiveParams = {
     userEmail: userEmail,
@@ -218,7 +218,7 @@ export default function Page() {
                     <h3 className="text-lg font-medium">Uploaded Files</h3>
                     <ul className="list-disc pl-5">
                       {uploadedFiles.map((file, index) => (
-                        <li key={index}>{file}</li>
+                        <li key={`${file}-${index}`}>{file}</li>
                       ))}
                     </ul>
                   </div>
