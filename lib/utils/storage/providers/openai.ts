@@ -1,7 +1,4 @@
-import fs from 'fs';
-import { OpenAI } from 'openai';
-
-const openai = new OpenAI();
+import { openai } from '@/lib/client/openai';
 
 export async function uploadDocumentToOpenAi(file: File, userId: string) {
   // TODO: Add a store to keep track of uploaded files, based on userId
