@@ -92,7 +92,7 @@ export const archive = async (
   formData.append('content', content);
   formData.append('archiveParams', JSON.stringify(archiveParams));
   try {
-    const response = await fetch(`/api/atlas/archive`, {
+    const response = await fetch(`/api/atlas/scribe`, {
       method: 'POST',
       body: formData,
     });

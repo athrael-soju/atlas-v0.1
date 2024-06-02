@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ArchiveParams } from '@/lib/types';
-import { retrieveContext } from '@/lib/utils/retrieval/archive';
+import { retrieveContext } from '@/lib/utils/retrieval/scribe';
 
 export const runtime = 'nodejs';
 
