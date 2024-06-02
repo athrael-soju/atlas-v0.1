@@ -9,12 +9,12 @@ import { uploadDocumentToOpenAi } from './providers/openai';
 
 export async function handleFileUpload(
   file: File,
-  userId: string,
+  userEmail: string,
   fsProvider: string
 ): Promise<FileActionResponse> {
   try {
-    if (!file || !userId) {
-      throw new StorageError('Missing file or userId');
+    if (!file || !userEmail) {
+      throw new StorageError('Missing file or userEmail');
     }
 
     if (!fsProvider) {
@@ -25,13 +25,13 @@ export async function handleFileUpload(
 
     switch (fsProvider) {
       case 'local':
-        fileData = await writeFile(file, userId);
+        fileData = await writeFile(file, userEmail);
         break;
       case 'openai':
-        fileData = await uploadDocumentToOpenAi(file, userId);
+        fileData = await uploadDocumentToOpenAi(file, userEmail);
         break;
       case 's3':
-        fileData = await uploadToS3(file, userId);
+        fileData = await uploadToS3(file, userEmail);
         break;
       default:
         throw new StorageError(
@@ -51,11 +51,11 @@ export async function handleFileUpload(
 
 export async function handleFileDeletion(
   file: FileEntry,
-  userId: string
+  userEmail: string
 ): Promise<FileActionResponse> {
   try {
-    if (!file || !userId) {
-      throw new StorageError('Missing file or userId');
+    if (!file || !userEmail) {
+      throw new StorageError('Missing file or userEmail');
     }
 
     const fsProvider = process.env.FILESYSTEM_PROVIDER || 'local';
@@ -66,10 +66,10 @@ export async function handleFileDeletion(
 
     switch (fsProvider) {
       case 'local':
-        await deleteFile(file, userId);
+        await deleteFile(file, userEmail);
         break;
       case 's3':
-        await deleteFromS3(file, userId);
+        await deleteFromS3(file, userEmail);
         break;
       default:
         throw new StorageError(

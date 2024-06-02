@@ -1,6 +1,6 @@
 export interface FileEntry {
   id: string;
-  userId: string;
+  userEmail: string;
   name: string;
   path: string;
   uploadDate: number;
