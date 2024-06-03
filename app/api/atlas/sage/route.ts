@@ -10,6 +10,7 @@ function sendUpdate(
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
+  // console.log(`${type}: ${message}`);
   controller.enqueue(`${type}: ${message}\n\n`);
 }
 
@@ -21,26 +22,21 @@ async function readStreamContent(
   AssistantStream.fromReadableStream(stream)
     .on('textCreated', (text) => {
       sendUpdate(type, controller, '\nassistant > ');
-      console.log('\nassistant > ', text.value ?? '');
     })
     .on('textDelta', (textDelta, snapshot) => {
-      sendUpdate(type, controller, textDelta.value ?? '');
-      console.log(textDelta.value ?? '');
+      sendUpdate(type, controller, snapshot.value);
     })
     .on('toolCallCreated', (toolCall) => {
       sendUpdate(type, controller, `\nassistant > ${toolCall.type}\n\n`);
-      console.log(`\nassistant > ${toolCall.type}\n\n`);
     })
     .on('toolCallDelta', (toolCallDelta, snapshot) => {
-      if (toolCallDelta.type === 'code_interpreter') {
-        if (toolCallDelta.code_interpreter?.input) {
-          sendUpdate(type, controller, toolCallDelta.code_interpreter.input);
-          console.log(toolCallDelta.code_interpreter.input);
+      if (snapshot.type === 'code_interpreter') {
+        if (snapshot.code_interpreter?.input) {
+          sendUpdate(type, controller, snapshot.code_interpreter.input);
         }
-        if (toolCallDelta.code_interpreter?.outputs) {
+        if (snapshot.code_interpreter?.outputs) {
           sendUpdate(type, controller, '\noutput >\n');
-          console.log('\noutput >\n');
-          toolCallDelta.code_interpreter.outputs.forEach((output) => {
+          snapshot.code_interpreter.outputs.forEach((output) => {
             if (output.type === 'logs') {
               console.log(`\n${output.logs}\n`);
             }
@@ -53,24 +49,6 @@ async function readStreamContent(
       controller.close();
     });
 }
-// Simplified version of the function
-// async function readStreamContent(
-//   stream: ReadableStream,
-//   controller: ReadableStreamDefaultController
-// ): Promise<void> {
-//   const reader = stream.getReader();
-//   const decoder = new TextDecoder();
-//   let done = false;
-//   while (!done) {
-//     const { value, done: readerDone } = await reader.read();
-//     done = readerDone;
-//     if (value) {
-//       const text = decoder.decode(value, { stream: true });
-//       sendUpdate(controller, text);
-//     }
-//   }
-//   controller.close();
-// }
 
 export async function POST(req: NextRequest): Promise<Response> {
   try {

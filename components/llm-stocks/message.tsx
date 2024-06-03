@@ -3,7 +3,7 @@
 import { IconAI, IconUser } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm'
+import remarkGfm from 'remark-gfm';
 
 // Different types of message bubbles.
 
@@ -55,7 +55,7 @@ export function BotCard({
       <div
         className={cn(
           'flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground',
-          !showAvatar && 'invisible',
+          !showAvatar && 'invisible'
         )}
       >
         <IconAI />

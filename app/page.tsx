@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState, FormEvent } from 'react';
 import { useUIState, useActions } from 'ai/rsc';
 import { BotMessage, UserMessage } from '@/components/llm-stocks/message';
 import { type AI } from './action';
@@ -89,7 +89,7 @@ export default function Page() {
   }, [inputRef]);
 
   const submitMessage = async (message: string) => {
-    setInputValue(message);
+    setInputValue('');
     setMessages((currentMessages) => [
       ...currentMessages,
       {
@@ -106,7 +106,6 @@ export default function Page() {
     }
     try {
       if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Sage') {
-        let currMsg = '';
         setMessages((currentMessages) => [
           ...currentMessages,
           {
@@ -120,11 +119,10 @@ export default function Page() {
           'consult',
           { userEmail, message, file_ids: uploadedFiles },
           (update) => {
-            currMsg += update;
             setMessages((currentMessages) => {
               const newMessages = [...currentMessages];
               newMessages[newMessages.length - 1].display = (
-                <BotMessage>{currMsg}</BotMessage>
+                <BotMessage>{update}</BotMessage>
               );
               return newMessages;
             });
@@ -144,6 +142,19 @@ export default function Page() {
         },
       ]);
     }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (window.innerWidth < 600) {
+      (e.target as HTMLFormElement)['message']?.blur();
+    }
+
+    const value = inputValue.trim();
+    if (!value) return;
+
+    await submitMessage(value);
   };
 
   if (!session) {
@@ -176,85 +187,7 @@ export default function Page() {
             <ExampleMessages onClick={submitMessage} />
           ) : null}
           <div className="mb-4 grid gap-2 sm:gap-4 px-4 sm:px-0">
-            <form
-              ref={formRef}
-              onSubmit={async (e: any) => {
-                e.preventDefault();
-
-                if (window.innerWidth < 600) {
-                  e.target['message']?.blur();
-                }
-
-                const value = inputValue.trim();
-                setInputValue('');
-                if (!value) return;
-
-                setMessages((currentMessages) => [
-                  ...currentMessages,
-                  {
-                    id: Date.now(),
-                    display: <UserMessage>{value}</UserMessage>,
-                  },
-                ]);
-
-                let context = '';
-                if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Scribe') {
-                  await scribe(value, archiveParams, (update) => {
-                    context += update + '\n';
-                  });
-                }
-                try {
-                  if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Sage') {
-                    let currMsg = '';
-                    setMessages((currentMessages) => [
-                      ...currentMessages,
-                      {
-                        id: Date.now(),
-                        display: (
-                          <BotMessage className="items-center">
-                            {spinner}
-                          </BotMessage>
-                        ),
-                      },
-                    ]);
-                    await sage(
-                      'consult',
-                      { userEmail, message: value, file_ids: uploadedFiles },
-                      (update) => {
-                        currMsg += update;
-                        setMessages((currentMessages) => {
-                          const newMessages = [...currentMessages];
-                          newMessages[newMessages.length - 1].display = (
-                            <BotMessage>{currMsg}</BotMessage>
-                          );
-                          return newMessages;
-                        });
-                      }
-                    );
-                  } else {
-                    const responseMessage = await submitUserMessage(
-                      value,
-                      context
-                    );
-                    setMessages((currentMessages) => [
-                      ...currentMessages,
-                      responseMessage,
-                    ]);
-                  }
-                } catch (error) {
-                  console.error(error);
-                  setMessages((currentMessages) => [
-                    ...currentMessages,
-                    {
-                      id: Date.now() + 1,
-                      display: (
-                        <UserMessage>Error: {error as ReactNode}</UserMessage>
-                      ),
-                    },
-                  ]);
-                }
-              }}
-            >
+            <form ref={formRef} onSubmit={handleSubmit}>
               <div
                 className="relative p-2 rounded-lg w-full max-w-4xl mb-2"
                 onClick={(e) => e.stopPropagation()}

@@ -12,7 +12,6 @@ const processMessage = (
 ) => {
   if (completeMessage.startsWith('data: ')) {
     const data = completeMessage.replace('data: ', '');
-
     if (isFinalResult && data.startsWith('Final Result:')) {
       const result = JSON.parse(data.replace('Final Result:', '').trim());
       onUpdate(result);
@@ -22,6 +21,11 @@ const processMessage = (
   } else if (completeMessage.startsWith('sage_data: ')) {
     const data = completeMessage.replace('sage_data: ', '');
     onUpdate(data);
+  } else if (completeMessage.startsWith('notification: ')) {
+    const data = completeMessage.replace('notification: ', '');
+    //onUpdate(data);
+  } else {
+    onUpdate(completeMessage);
   }
 };
 
@@ -49,6 +53,7 @@ const readStream = async (
 
     if (value) {
       buffer += decoder.decode(value, { stream: true });
+      //console.log('Buffer:', buffer);
       let boundary = buffer.indexOf('\n\n');
 
       while (boundary !== -1) {
