@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { useUIState, useActions } from 'ai/rsc';
-import { UserMessage } from '@/components/llm-stocks/message';
+import { BotMessage, UserMessage } from '@/components/llm-stocks/message';
 import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import Textarea from 'react-textarea-autosize';
@@ -17,12 +17,12 @@ import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
-import { scribe } from '@/lib/client/atlas';
+import { scribe, sage } from '@/lib/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
 import { ForgeParams, ArchiveParams } from '@/lib/types';
 import { useSession } from 'next-auth/react';
+import { spinner } from '@/components/llm-stocks';
 
-// Force the page to be dynamic and allow streaming responses up to 30 seconds
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
@@ -90,36 +90,62 @@ export default function Page() {
 
   const submitMessage = async (message: string) => {
     setInputValue(message);
-    {
+    setMessages((currentMessages) => [
+      ...currentMessages,
+      {
+        id: Date.now(),
+        display: <UserMessage>{message}</UserMessage>,
+      },
+    ]);
+
+    let context = '';
+    if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Scribe') {
+      await scribe(message, archiveParams, (update) => {
+        context += update + '\n';
+      });
+    }
+    try {
+      if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Sage') {
+        let currMsg = '';
+        setMessages((currentMessages) => [
+          ...currentMessages,
+          {
+            id: Date.now(),
+            display: (
+              <BotMessage className="items-center">{spinner}</BotMessage>
+            ),
+          },
+        ]);
+        await sage(
+          'consult',
+          { userEmail, message, file_ids: uploadedFiles },
+          (update) => {
+            currMsg += update;
+            setMessages((currentMessages) => {
+              const newMessages = [...currentMessages];
+              newMessages[newMessages.length - 1].display = (
+                <BotMessage>{currMsg}</BotMessage>
+              );
+              return newMessages;
+            });
+          }
+        );
+      } else {
+        const responseMessage = await submitUserMessage(message, context);
+        setMessages((currentMessages) => [...currentMessages, responseMessage]);
+      }
+    } catch (error) {
+      console.error(error);
       setMessages((currentMessages) => [
         ...currentMessages,
         {
           id: Date.now(),
-          display: <UserMessage>{message}</UserMessage>,
+          display: <UserMessage>Error: {error as ReactNode}</UserMessage>,
         },
       ]);
-
-      let context = '';
-      if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-        await scribe(message, archiveParams, (update) => {
-          context += update + '\n';
-        });
-      }
-      try {
-        const responseMessage = await submitUserMessage(message, context);
-        setMessages((currentMessages) => [...currentMessages, responseMessage]);
-      } catch (error) {
-        console.error(error);
-        setMessages((currentMessages) => [
-          ...currentMessages,
-          {
-            id: Date.now() + 1,
-            display: <UserMessage>Error: {error as ReactNode}</UserMessage>,
-          },
-        ]);
-      }
     }
   };
+
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center bg-background p-16">
@@ -172,21 +198,49 @@ export default function Page() {
                 ]);
 
                 let context = '';
-                if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
+                if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Scribe') {
                   await scribe(value, archiveParams, (update) => {
                     context += update + '\n';
                   });
                 }
-
                 try {
-                  const responseMessage = await submitUserMessage(
-                    value,
-                    context
-                  );
-                  setMessages((currentMessages) => [
-                    ...currentMessages,
-                    responseMessage,
-                  ]);
+                  if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Sage') {
+                    let currMsg = '';
+                    setMessages((currentMessages) => [
+                      ...currentMessages,
+                      {
+                        id: Date.now(),
+                        display: (
+                          <BotMessage className="items-center">
+                            {spinner}
+                          </BotMessage>
+                        ),
+                      },
+                    ]);
+                    await sage(
+                      'consult',
+                      { userEmail, message: value, file_ids: uploadedFiles },
+                      (update) => {
+                        currMsg += update;
+                        setMessages((currentMessages) => {
+                          const newMessages = [...currentMessages];
+                          newMessages[newMessages.length - 1].display = (
+                            <BotMessage>{currMsg}</BotMessage>
+                          );
+                          return newMessages;
+                        });
+                      }
+                    );
+                  } else {
+                    const responseMessage = await submitUserMessage(
+                      value,
+                      context
+                    );
+                    setMessages((currentMessages) => [
+                      ...currentMessages,
+                      responseMessage,
+                    ]);
+                  }
                 } catch (error) {
                   console.error(error);
                   setMessages((currentMessages) => [
@@ -207,7 +261,6 @@ export default function Page() {
               >
                 <Dropzone
                   onChange={handleFileChange}
-                  // fileExtension="pdf" // Add file extension filter
                   userEmail={userEmail}
                   forgeParams={forgeParams}
                   isUploadCompleted={isUploadCompleted}
@@ -237,7 +290,6 @@ export default function Page() {
                       }}
                     >
                       <IconPlus />
-                      {/* <span className="sr-only">New Chat</span> */}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>New Chat</TooltipContent>

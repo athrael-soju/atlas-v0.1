@@ -19,6 +19,9 @@ const processMessage = (
     } else {
       onUpdate(data);
     }
+  } else if (completeMessage.startsWith('sage_data: ')) {
+    const data = completeMessage.replace('sage_data: ', '');
+    onUpdate(data);
   }
 };
 
@@ -52,7 +55,6 @@ const readStream = async (
         const completeMessage = buffer.slice(0, boundary);
         buffer = buffer.slice(boundary + 2); // Remove processed part
         boundary = buffer.indexOf('\n\n');
-
         processMessage(completeMessage, isFinalResult, onUpdate);
       }
     }
@@ -106,15 +108,15 @@ export const scribe = async (
 
 export const sage = async (
   action: SageAction,
-  params: SageParams,
+  sageParams: SageParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   formData.append('action', action);
-  formData.append('params', JSON.stringify(params));
+  formData.append('sageParams', JSON.stringify(sageParams));
 
   try {
-    const response = await fetch('/api/sage', {
+    const response = await fetch('/api/atlas/sage', {
       method: 'POST',
       body: formData,
     });

@@ -10,7 +10,7 @@ import { tools } from '@/lib/stocks/tools';
 import { checkIfCalled, confirmPurchase } from '@/lib/stocks/functions';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
+  apiKey: process.env.OPENAI_API_KEY ?? '',
 });
 
 export async function submitUserMessage(content: string, context: string) {

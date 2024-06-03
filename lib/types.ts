@@ -65,7 +65,8 @@ export interface ForgeParams {
 }
 
 export interface SageParams {
-  sageId: string;
+  userEmail: string;
+  message?: string;
   name?: string;
   instructions?: string;
   model?: string;
@@ -80,9 +81,10 @@ export interface UserFile {
 export interface User {
   id: string;
   email: string;
-  img?: string;
+  image?: string;
   sageId?: string;
+  threadId?: string;
   files: UserFile[];
 }
 
-export type SageAction = 'summon' | 'reform' | 'dismiss';
+export type SageAction = 'summon' | 'reform' | 'consult' | 'dismiss';

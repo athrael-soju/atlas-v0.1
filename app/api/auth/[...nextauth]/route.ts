@@ -106,7 +106,7 @@ const options: NextAuthOptions = {
         token.refresh_token_expires_in = account.refresh_token_expires_in;
         token.provider = 'github';
       }
-      if (!token.provider) token.provider = 'Titanium';
+      if (!token.provider) token.provider = 'Atlas';
       return token;
     },
     async session({
