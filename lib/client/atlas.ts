@@ -18,7 +18,7 @@ const processMessage = (
   } else if (completeMessage.startsWith('notification: ')) {
     const data = completeMessage.replace('notification: ', '');
     console.log(data);
-    //onUpdate(data);
+    //onUpdate(data); // Showing notification messages causes issues
   } else {
     console.log('Unknown message:', completeMessage);
     onUpdate(completeMessage);
