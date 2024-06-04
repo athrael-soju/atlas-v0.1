@@ -20,22 +20,17 @@ async function readStreamContent(
   controller: ReadableStreamDefaultController
 ): Promise<void> {
   AssistantStream.fromReadableStream(stream)
-    .on('textCreated', (text) => {
-      //sendUpdate(type, controller, '\nassistant > ');
-    })
+    .on('textCreated', (text) => {})
     .on('textDelta', (textDelta, snapshot) => {
       sendUpdate(type, controller, snapshot.value);
     })
-    .on('toolCallCreated', (toolCall) => {
-      //sendUpdate(type, controller, `\nassistant > ${toolCall.type}\n\n`);
-    })
+    .on('toolCallCreated', (toolCall) => {})
     .on('toolCallDelta', (toolCallDelta, snapshot) => {
       if (snapshot.type === 'code_interpreter') {
         if (snapshot.code_interpreter?.input) {
           sendUpdate(type, controller, snapshot.code_interpreter.input);
         }
         if (snapshot.code_interpreter?.outputs) {
-          //sendUpdate(type, controller, '\noutput >\n');
           snapshot.code_interpreter.outputs.forEach((output) => {
             if (output.type === 'logs') {
               console.log(`\nlog: ${output.logs}\n`);

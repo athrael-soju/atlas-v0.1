@@ -70,7 +70,7 @@ const providers = [
 
       // Get the MongoDB client and database
       const client = await clientPromise;
-      const db = client.db();
+      const db = client.db('Atlas');
 
       // Check if user already exists
       const existingUser = await db

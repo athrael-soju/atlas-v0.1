@@ -152,17 +152,17 @@ export async function consult(
 }
 
 export async function dismiss(
-  data: any,
+  sageParams: any,
   sendUpdate: (message: string) => void
 ): Promise<any> {
-  const { userEmail, sageId } = data;
+  const { userEmail, sageId } = sageParams;
 
   if (!userEmail || !sageId) {
     throw new Error('User email and sage id are required');
   }
 
   sendUpdate('Dismissing sage...');
-  const response = await openai.beta.assistants.del(`${userEmail}_${sageId}`);
+  const response = await openai.beta.assistants.del(`${sageId}`);
   sendUpdate('Sage dismissed successfully.');
 
   return response;
