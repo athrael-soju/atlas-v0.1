@@ -115,17 +115,30 @@ export default function Page() {
             ),
           },
         ]);
+        let botMessageUpdate = '';
         await sage(
           'consult',
           { userEmail, message, file_ids: uploadedFiles },
           (update) => {
-            setMessages((currentMessages) => {
-              const newMessages = [...currentMessages];
-              newMessages[newMessages.length - 1].display = (
-                <BotMessage>{update}</BotMessage>
-              );
-              return newMessages;
-            });
+            if (update !== '') {
+              botMessageUpdate = update;
+              setMessages((currentMessages) => {
+                const newMessages = [...currentMessages];
+                newMessages[newMessages.length - 1].display = (
+                  <BotMessage>{update}</BotMessage>
+                );
+                return newMessages;
+              });
+            } else if (botMessageUpdate !== '' && update === '') {
+              setMessages((currentMessages) => [
+                ...currentMessages,
+                {
+                  id: Date.now() + 1,
+                  display: <BotMessage>{botMessageUpdate}</BotMessage>,
+                },
+              ]);
+              botMessageUpdate = '';
+            }
           }
         );
       } else {

@@ -7,7 +7,9 @@ import remarkGfm from 'remark-gfm';
 
 // Different types of message bubbles.
 
-export function UserMessage({ children }: { children: React.ReactNode }) {
+export function UserMessage({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <div className="group relative flex items-start md:-ml-12">
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-background">
@@ -23,10 +25,10 @@ export function UserMessage({ children }: { children: React.ReactNode }) {
 export function BotMessage({
   children,
   className,
-}: {
+}: Readonly<{
   children: React.ReactNode;
   className?: string;
-}) {
+}>) {
   return (
     <div className={cn('group relative flex items-start md:-ml-12', className)}>
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
@@ -46,10 +48,10 @@ export function BotMessage({
 export function BotCard({
   children,
   showAvatar = true,
-}: {
+}: Readonly<{
   children: React.ReactNode;
   showAvatar?: boolean;
-}) {
+}>) {
   return (
     <div className="group relative flex items-start md:-ml-12">
       <div

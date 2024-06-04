@@ -7,32 +7,27 @@ import {
 
 const processMessage = (
   completeMessage: string,
-  isFinalResult: boolean,
   onUpdate: (message: string) => void
 ) => {
   if (completeMessage.startsWith('data: ')) {
     const data = completeMessage.replace('data: ', '');
-    if (isFinalResult && data.startsWith('Final Result:')) {
-      const result = JSON.parse(data.replace('Final Result:', '').trim());
-      onUpdate(result);
-    } else {
-      onUpdate(data);
-    }
+    onUpdate(data);
   } else if (completeMessage.startsWith('sage_data: ')) {
     const data = completeMessage.replace('sage_data: ', '');
     onUpdate(data);
   } else if (completeMessage.startsWith('notification: ')) {
     const data = completeMessage.replace('notification: ', '');
+    console.log(data);
     //onUpdate(data);
   } else {
+    console.log('Unknown message:', completeMessage);
     onUpdate(completeMessage);
   }
 };
 
 const readStream = async (
   response: Response,
-  onUpdate: (message: string) => void,
-  isFinalResult: boolean = false
+  onUpdate: (message: string) => void
 ): Promise<void> => {
   if (!response.ok) {
     throw new Error('Failed to process the request');
@@ -53,14 +48,13 @@ const readStream = async (
 
     if (value) {
       buffer += decoder.decode(value, { stream: true });
-      //console.log('Buffer:', buffer);
       let boundary = buffer.indexOf('\n\n');
 
       while (boundary !== -1) {
         const completeMessage = buffer.slice(0, boundary);
         buffer = buffer.slice(boundary + 2); // Remove processed part
         boundary = buffer.indexOf('\n\n');
-        processMessage(completeMessage, isFinalResult, onUpdate);
+        processMessage(completeMessage, onUpdate);
       }
     }
   }
@@ -111,6 +105,7 @@ export const scribe = async (
   }
 };
 
+// Update sage function to properly handle markdown content
 export const sage = async (
   action: SageAction,
   sageParams: SageParams,
