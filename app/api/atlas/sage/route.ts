@@ -10,7 +10,7 @@ function sendUpdate(
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
-  console.log(`${type}: ${message}`);
+  //console.log(`${type}: ${message}`);
   controller.enqueue(`${type}: ${message}\n\n`);
 }
 
