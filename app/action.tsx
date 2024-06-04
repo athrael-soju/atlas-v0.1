@@ -30,7 +30,9 @@ export async function submitUserMessage(content: string, context: string) {
     },
   ]);
   const reply = createStreamableUI(
-    <BotMessage className="items-center">{spinner}</BotMessage>
+    <BotMessage role="assistant" className="items-center">
+      {spinner}
+    </BotMessage>
   );
 
   const profile = process.env.NEXT_PUBLIC_PERSONA ?? 'atlas';
@@ -60,7 +62,7 @@ export async function submitUserMessage(content: string, context: string) {
   });
 
   completion.onTextContent((content: string, isFinal: boolean) => {
-    reply.update(<BotMessage>{content}</BotMessage>);
+    reply.update(<BotMessage role="assistant">{content}</BotMessage>);
     if (isFinal) {
       reply.done();
       aiState.done([...aiState.get(), { role: 'assistant', content }]);

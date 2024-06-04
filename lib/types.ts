@@ -87,4 +87,9 @@ export interface User {
   files: UserFile[];
 }
 
+export type MessageProps = {
+  role: 'user' | 'assistant' | 'code';
+  text: string;
+};
+
 export type SageAction = 'summon' | 'reform' | 'consult' | 'dismiss';

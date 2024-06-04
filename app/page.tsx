@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef, useState, FormEvent } from 'react';
 import { useUIState, useActions } from 'ai/rsc';
-import { BotMessage, UserMessage } from '@/components/llm-stocks/message';
+import { BotMessage } from '@/components/llm-stocks/message';
 import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import Textarea from 'react-textarea-autosize';
@@ -94,7 +94,7 @@ export default function Page() {
       ...currentMessages,
       {
         id: Date.now(),
-        display: <UserMessage>{message}</UserMessage>,
+        display: <BotMessage role="user">{message}</BotMessage>,
       },
     ]);
 
@@ -111,7 +111,9 @@ export default function Page() {
           {
             id: Date.now(),
             display: (
-              <BotMessage className="items-center">{spinner}</BotMessage>
+              <BotMessage role={'code'} className="items-center">
+                {spinner}
+              </BotMessage>
             ),
           },
         ]);
@@ -126,8 +128,8 @@ export default function Page() {
               setMessages((currentMessages) => {
                 const newMessages = [...currentMessages];
                 newMessages[newMessages.length - 1].display = (
-                  <BotMessage>
-                    {finalMessage + '\n' + currentMessage}
+                  <BotMessage role={'code'}>
+                    {finalMessage + currentMessage}
                   </BotMessage>
                 );
                 return newMessages;
@@ -148,7 +150,9 @@ export default function Page() {
         ...currentMessages,
         {
           id: Date.now(),
-          display: <UserMessage>Error: {error as ReactNode}</UserMessage>,
+          display: (
+            <BotMessage role="user">Error: {error as ReactNode}</BotMessage>
+          ),
         },
       ]);
     }

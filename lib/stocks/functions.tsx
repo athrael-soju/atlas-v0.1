@@ -130,7 +130,7 @@ export async function checkIfCalled(completion: any, reply: any, aiState: any) {
     'show_stock_purchase_ui',
     ({ symbol, price, numberOfShares = 100 }: StockPurchaseInfo) => {
       if (numberOfShares <= 0 || numberOfShares > 1000) {
-        reply.done(<BotMessage>Invalid amount</BotMessage>);
+        reply.done(<BotMessage role="assistant">Invalid amount</BotMessage>);
         aiState.done([
           ...aiState.get(),
           {
@@ -144,7 +144,7 @@ export async function checkIfCalled(completion: any, reply: any, aiState: any) {
 
       reply.done(
         <>
-          <BotMessage>
+          <BotMessage role="assistant">
             Sure!{' '}
             {typeof numberOfShares === 'number'
               ? `Click the button below to purchase ${numberOfShares} shares of $${symbol}:`
