@@ -72,9 +72,13 @@ export function BotMessage({
           <IconAI />
         </div>
         <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
-          {typeof children === 'string'
-            ? Message({ role, text: children })
-            : children}
+          {typeof children === 'string' ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {children}
+            </ReactMarkdown>
+          ) : (
+            children
+          )}
         </div>
       </div>
     );
