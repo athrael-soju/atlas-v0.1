@@ -43,6 +43,10 @@ async function readStreamContent(
         }
       }
     })
+    .on('imageFileDone', (image) => {
+      const imageUrl = `\n![${image.file_id}](/api/files/${image.file_id})\n`;
+      sendUpdate('image', controller, imageUrl);
+    })
     .on('event', (event) => {
       if (event.event === 'thread.run.requires_action') {
         sendUpdate('event', controller, 'Requires action');

@@ -125,7 +125,7 @@ export default function Page() {
           { userEmail, message, file_ids: uploadedFiles },
           (update) => {
             const { type, message } = JSON.parse(update);
-            if (type === 'assistant' || type === 'code') {
+            if (type === 'assistant' || type === 'code' || type === 'image') {
               role = type;
               currentMessage += message;
               setMessages((currentMessages) => {
