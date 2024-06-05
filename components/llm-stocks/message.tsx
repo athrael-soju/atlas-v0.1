@@ -13,7 +13,13 @@ function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-background">
         <IconUser />
       </div>
-      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">{text}</div>
+      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1 bg-primary-foreground rounded-lg">
+        {typeof text === 'string' ? (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+        ) : (
+          text
+        )}
+      </div>
     </div>
   );
 }
@@ -71,7 +77,7 @@ export function BotMessage({
         <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
           <IconAI />
         </div>
-        <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
+        <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1 bg-primary-foreground rounded-lg">
           {typeof children === 'string' ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {children}
