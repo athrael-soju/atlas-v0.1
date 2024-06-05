@@ -3,35 +3,39 @@ import { summon, reform, consult, dismiss } from '@/lib/utils/analysis/sage';
 import { SageAction, SageParams } from '@/lib/types';
 import { AssistantStream } from 'openai/lib/AssistantStream';
 
+// Define runtime for the handler
 export const runtime = 'nodejs';
 
+// Helper function to send updates
 function sendUpdate(
   type: string,
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
-  //console.log(`${type}: ${message}`);
-  controller.enqueue(`${type}: ${message}\n\n`);
+  controller.enqueue(JSON.stringify({ type, message }));
 }
 
 async function readStreamContent(
-  type: string,
   stream: ReadableStream,
   controller: ReadableStreamDefaultController
 ): Promise<void> {
   AssistantStream.fromReadableStream(stream)
-    .on('textCreated', (text) => {})
-    .on('textDelta', (textDelta, snapshot) => {
-      sendUpdate(type, controller, snapshot.value);
+    .on('textCreated', (text) => {
+      sendUpdate('assistant', controller, '');
     })
-    .on('toolCallCreated', (toolCall) => {})
+    .on('textDelta', (textDelta, snapshot) => {
+      sendUpdate('assistant', controller, textDelta.value ?? '');
+    })
+    .on('toolCallCreated', (toolCall) => {
+      sendUpdate('code', controller, toolCall.type);
+    })
     .on('toolCallDelta', (toolCallDelta, snapshot) => {
-      if (snapshot.type === 'code_interpreter') {
-        if (snapshot.code_interpreter?.input) {
-          sendUpdate(type, controller, snapshot.code_interpreter.input);
+      if (toolCallDelta.type === 'code_interpreter') {
+        if (toolCallDelta.code_interpreter?.input) {
+          sendUpdate('code', controller, toolCallDelta.code_interpreter.input);
         }
-        if (snapshot.code_interpreter?.outputs) {
-          snapshot.code_interpreter.outputs.forEach((output) => {
+        if (toolCallDelta.code_interpreter?.outputs) {
+          toolCallDelta.code_interpreter.outputs.forEach((output) => {
             if (output.type === 'logs') {
               console.log(`\nlog: ${output.logs}\n`);
             }
@@ -39,12 +43,22 @@ async function readStreamContent(
         }
       }
     })
+    .on('event', (event) => {
+      if (event.event === 'thread.run.requires_action') {
+        sendUpdate('event', controller, 'Requires action');
+        console.log('Requires action:', event.data);
+      }
+      if (event.event === 'thread.run.completed') {
+        sendUpdate('event', controller, event.data.status);
+        console.log('Event:', event.data.status);
+      }
+    })
     .on('end', () => {
-      //sendUpdate('notification', controller, 'Sage consulted successfully.');
       controller.close();
     });
 }
 
+// Main POST handler for Sage API
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
@@ -59,10 +73,10 @@ export async function POST(req: NextRequest): Promise<Response> {
         { status: 400 }
       );
     }
-    let responseStream;
+
     const stream = new ReadableStream({
       async start(controller) {
-        const send = (message: string) =>
+        const send = (type: string, message: string) =>
           sendUpdate('notification', controller, message);
         try {
           switch (action) {
@@ -73,20 +87,16 @@ export async function POST(req: NextRequest): Promise<Response> {
               await reform(sageParams, send);
               break;
             case 'consult':
-              responseStream = await consult(sageParams, send);
+              const responseStream = await consult(sageParams, send);
               if (responseStream) {
-                await readStreamContent(
-                  'sage_data',
-                  responseStream,
-                  controller
-                );
+                await readStreamContent(responseStream, controller);
               }
               break;
             case 'dismiss':
               await dismiss(sageParams, send);
               break;
             default:
-              controller.enqueue(`data: Invalid action\n\n`);
+              controller.enqueue('data: Invalid action\n\n');
               break;
           }
         } catch (error) {

@@ -4,7 +4,7 @@ import clientPromise from '@/lib/client/mongodb';
 
 export async function summon(
   sageParams: SageParams,
-  sendUpdate: (message: string) => void
+  sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const client = await clientPromise;
   const db = client.db('Atlas');
@@ -24,7 +24,7 @@ export async function summon(
   if (user?.sageId && user?.threadId) {
     throw new Error('User already has a sage');
   } else {
-    sendUpdate('Summoning sage...');
+    sendUpdate('notification', 'Summoning sage...');
     const sage = await openai.beta.assistants.create({
       instructions,
       name,
@@ -32,7 +32,7 @@ export async function summon(
       tool_resources: { code_interpreter: { file_ids: [] } },
       model,
     });
-    sendUpdate('Sage summoned successfully.');
+    sendUpdate('notification', 'Sage summoned successfully.');
     await userCollection.updateOne(
       { email: userEmail },
       {
@@ -42,11 +42,11 @@ export async function summon(
       }
     );
 
-    sendUpdate('User updated with sage ID.');
+    sendUpdate('notification', 'User updated with sage ID.');
 
-    sendUpdate('Creating thread...');
+    sendUpdate('notification', 'Creating thread...');
     const thread = await openai.beta.threads.create();
-    sendUpdate('Thread created successfully.');
+    sendUpdate('notification', 'Thread created successfully.');
 
     await userCollection.updateOne(
       { email: userEmail },
@@ -57,7 +57,7 @@ export async function summon(
       }
     );
 
-    sendUpdate('User updated with thread ID.');
+    sendUpdate('notification', 'User updated with thread ID.');
     return {
       sage: sage,
       threadId: thread.id,
@@ -67,7 +67,7 @@ export async function summon(
 
 export async function reform(
   sageParams: SageParams,
-  sendUpdate: (message: string) => void
+  sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const { userEmail, name, instructions, model, file_ids } = sageParams;
   const client = await clientPromise;
@@ -88,7 +88,7 @@ export async function reform(
     throw new Error('Sage not found');
   }
 
-  sendUpdate('Reforming sage...');
+  sendUpdate('notification', 'Reforming sage...');
   const updatedSageResponse = await openai.beta.assistants.update(
     currentSage.id,
     {
@@ -101,14 +101,14 @@ export async function reform(
       model: model ?? currentSage.model,
     }
   );
-  sendUpdate('Sage reformed successfully.');
+  sendUpdate('notification', 'Sage reformed successfully.');
 
   return updatedSageResponse;
 }
 
 export async function consult(
   sageParams: SageParams,
-  sendUpdate: (message: string) => void
+  sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const { userEmail, message, file_ids } = sageParams;
   const client = await clientPromise;
@@ -122,28 +122,28 @@ export async function consult(
   if (!user?.sageId || !user?.threadId) {
     throw new Error('User does not have a sage or thread ID');
   }
-  sendUpdate('User found with sage and thread ID.');
+  sendUpdate('notification', 'User found with sage and thread ID.');
 
   const myThread = await openai.beta.threads.retrieve(user.threadId);
-  sendUpdate('Thread retrieved successfully.');
+  sendUpdate('notification', 'Thread retrieved successfully.');
 
   if ((file_ids?.length ?? 0) > 0) {
-    sendUpdate('Updating thread...');
+    sendUpdate('notification', 'Updating thread...');
     await openai.beta.threads.update(myThread.id, {
       metadata: { modified: 'true', user: user.email },
       tool_resources: { code_interpreter: { file_ids: file_ids } },
     });
-    sendUpdate('Thread updated successfully.');
+    sendUpdate('notification', 'Thread updated successfully.');
   }
 
-  sendUpdate('Creating message...');
+  sendUpdate('notification', 'Creating message...');
   await openai.beta.threads.messages.create(myThread.id, {
     role: 'user',
     content: message,
   });
-  sendUpdate('Message created successfully.');
+  sendUpdate('notification', 'Message created successfully.');
 
-  sendUpdate('Consulting sage...');
+  sendUpdate('notification', 'Consulting sage...');
   const stream = openai.beta.threads.runs.stream(myThread.id, {
     assistant_id: user.sageId,
   });
@@ -153,7 +153,7 @@ export async function consult(
 
 export async function dismiss(
   sageParams: any,
-  sendUpdate: (message: string) => void
+  sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const { userEmail, sageId } = sageParams;
 
@@ -161,9 +161,9 @@ export async function dismiss(
     throw new Error('User email and sage id are required');
   }
 
-  sendUpdate('Dismissing sage...');
+  sendUpdate('notification', 'Dismissing sage...');
   const response = await openai.beta.assistants.del(`${sageId}`);
-  sendUpdate('Sage dismissed successfully.');
+  sendUpdate('notification', 'Sage dismissed successfully.');
 
   return response;
 }

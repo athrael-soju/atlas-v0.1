@@ -24,7 +24,7 @@ import { useSession } from 'next-auth/react';
 import { spinner } from '@/components/llm-stocks';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export default function Page() {
   const { data: session } = useSession();
@@ -117,26 +117,24 @@ export default function Page() {
             ),
           },
         ]);
-        let finalMessage = '',
-          currentMessage = '';
+
+        let currentMessage = '';
+        let role: 'assistant' | 'code';
         await sage(
           'consult',
           { userEmail, message, file_ids: uploadedFiles },
           (update) => {
-            if (update !== '') {
-              currentMessage = update;
+            const { type, message } = JSON.parse(update);
+            if (type === 'assistant' || type === 'code') {
+              role = type;
+              currentMessage += message;
               setMessages((currentMessages) => {
                 const newMessages = [...currentMessages];
                 newMessages[newMessages.length - 1].display = (
-                  <BotMessage role={'code'}>
-                    {finalMessage + currentMessage}
-                  </BotMessage>
+                  <BotMessage role={role}>{currentMessage}</BotMessage>
                 );
                 return newMessages;
               });
-            } else if (currentMessage !== '' && update === '') {
-              finalMessage += currentMessage;
-              currentMessage = '';
             }
           }
         );

@@ -5,24 +5,6 @@ import {
   SageAction,
 } from '@/lib/types';
 
-const processMessage = (
-  completeMessage: string,
-  onUpdate: (message: string) => void
-) => {
-  if (completeMessage.startsWith('data: ')) {
-    const data = completeMessage.replace('data: ', '');
-    onUpdate(data);
-  } else if (completeMessage.startsWith('sage_data: ')) {
-    const data = completeMessage.replace('sage_data: ', '');
-    onUpdate(data);
-  } else if (completeMessage.startsWith('notification: ')) {
-    const data = completeMessage.replace('notification: ', '');
-    //onUpdate(data); // Showing notification messages causes issues
-  } else {
-    onUpdate(completeMessage);
-  }
-};
-
 const readStream = async (
   response: Response,
   onUpdate: (message: string) => void
@@ -46,15 +28,22 @@ const readStream = async (
 
     if (value) {
       buffer += decoder.decode(value, { stream: true });
-      let boundary = buffer.indexOf('\n\n');
+      let boundary = buffer.indexOf('}{');
 
       while (boundary !== -1) {
-        const completeMessage = buffer.slice(0, boundary);
-        buffer = buffer.slice(boundary + 2); // Remove processed part
-        boundary = buffer.indexOf('\n\n');
-        processMessage(completeMessage, onUpdate);
+        const message = buffer.slice(0, boundary + 1);
+        buffer = buffer.slice(boundary + 1); // Remove processed part
+        if (message) {
+          onUpdate(message);
+        }
+        boundary = buffer.indexOf('}{');
       }
     }
+  }
+
+  // Process any remaining buffer content
+  if (buffer) {
+    onUpdate(buffer);
   }
 };
 
