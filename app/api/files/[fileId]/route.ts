@@ -5,6 +5,21 @@ export async function GET(_request: any, { params: { fileId } }: any) {
     openai.files.retrieve(fileId),
     openai.files.content(fileId),
   ]);
+
+  return new Response(fileContent.body, {
+    headers: {
+      'Content-Disposition': `attachment; filename="${file.filename}"`,
+    },
+  });
+}
+
+//TODO: Implement delete file method.
+export async function POST(_request: any, { params: { fileId } }: any) {
+  const [file, fileContent] = await Promise.all([
+    openai.files.retrieve(fileId),
+    openai.files.content(fileId),
+  ]);
+
   return new Response(fileContent.body, {
     headers: {
       'Content-Disposition': `attachment; filename="${file.filename}"`,

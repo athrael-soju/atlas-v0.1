@@ -9,24 +9,16 @@ import { MessageProps } from '@/lib/types';
 
 // Different types of message bubbles.
 
-// export function UserMessage({
-//   children,
-// }: Readonly<{ children: React.ReactNode }>) {
-//   return (
-//     <div className="group relative flex items-start md:-ml-12">
-//       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-background">
-//         <IconUser />
-//       </div>
-//       <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
-//         {children}
-//       </div>
-//     </div>
-//   );
-// }
-
-const UserMessage = ({ text }: { text: string }) => {
-  return <div className={styles.userMessage}>{text}</div>;
-};
+function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
+  return (
+    <div className="group relative flex items-start md:-ml-12">
+      <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-background">
+        <IconUser />
+      </div>
+      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">{text}</div>
+    </div>
+  );
+}
 
 const CodeMessage = ({ text }: { text: string }) => {
   return (
@@ -71,18 +63,24 @@ export function BotMessage({
   className?: string;
   role: 'user' | 'assistant' | 'code';
 }>) {
-  return (
-    <div className={cn('group relative flex items-start md:-ml-12', className)}>
-      <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
-        {role === 'user' ? <IconUser /> : <IconAI />}
+  if (role === 'user') {
+    return <UserMessage text={children as string} />;
+  } else {
+    return (
+      <div
+        className={cn('group relative flex items-start md:-ml-12', className)}
+      >
+        <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
+          <IconAI />
+        </div>
+        <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
+          {typeof children === 'string'
+            ? Message({ role, text: children })
+            : children}
+        </div>
       </div>
-      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
-        {typeof children === 'string'
-          ? Message({ role, text: children })
-          : children}
-      </div>
-    </div>
-  );
+    );
+  }
 }
 
 export function BotCard({
