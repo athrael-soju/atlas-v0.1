@@ -27,7 +27,7 @@ async function readStreamContent(
       sendUpdate('assistant', controller, textDelta.value ?? '');
     })
     .on('toolCallCreated', (toolCall) => {
-      sendUpdate('code', controller, toolCall.type);
+      sendUpdate('code', controller, '');
     })
     .on('toolCallDelta', (toolCallDelta, snapshot) => {
       if (toolCallDelta.type === 'code_interpreter') {

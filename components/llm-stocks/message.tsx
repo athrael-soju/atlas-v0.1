@@ -7,8 +7,6 @@ import remarkGfm from 'remark-gfm';
 import styles from './chat.module.css';
 import { MessageProps } from '@/lib/types';
 
-// Different types of message bubbles.
-
 function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
   return (
     <div className="group relative flex items-start md:-ml-12">
@@ -105,7 +103,9 @@ export function BotCard({
   );
 }
 
-export function SystemMessage({ children }: { children: React.ReactNode }) {
+export function SystemMessage({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <div
       className={
