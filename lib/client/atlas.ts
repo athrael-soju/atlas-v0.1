@@ -32,7 +32,7 @@ const readStream = async (
 
       while (boundary !== -1) {
         const message = buffer.slice(0, boundary + 1);
-        buffer = buffer.slice(boundary + 1); // Remove processed part
+        buffer = buffer.slice(boundary + 1);
         if (message) {
           onUpdate(message);
         }
@@ -41,7 +41,6 @@ const readStream = async (
     }
   }
 
-  // Process any remaining buffer content
   if (buffer) {
     onUpdate(buffer);
   }
@@ -92,7 +91,6 @@ export const scribe = async (
   }
 };
 
-// Update sage function to properly handle markdown content
 export const sage = async (
   action: SageAction,
   sageParams: SageParams,

@@ -62,7 +62,6 @@ async function readStreamContent(
     });
 }
 
-// Main POST handler for Sage API
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
@@ -78,45 +77,48 @@ export async function POST(req: NextRequest): Promise<Response> {
       );
     }
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        const send = (type: string, message: string) =>
-          sendUpdate('notification', controller, message);
-        try {
-          switch (action) {
-            case 'summon':
-              await summon(sageParams, send);
-              break;
-            case 'reform':
-              await reform(sageParams, send);
-              break;
-            case 'consult':
-              const responseStream = await consult(sageParams, send);
-              if (responseStream) {
-                await readStreamContent(responseStream, controller);
-              }
-              break;
-            case 'dismiss':
-              await dismiss(sageParams, send);
-              break;
-            default:
-              controller.enqueue('data: Invalid action\n\n');
-              break;
-          }
-        } catch (error) {
-          console.error('Error in action execution:', error);
-          controller.enqueue(`data: Error occurred: ${error}\n\n`);
-        }
-      },
-    });
-
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-      },
-    });
+    if (action === 'consult') {
+      const responseStream = await consult(sageParams, (type, message) => {
+        console.log(type, message); // For debugging purposes
+      });
+      const stream = new ReadableStream({
+        async start(controller) {
+          await readStreamContent(responseStream, controller);
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+        },
+      });
+    } else {
+      let result;
+      switch (action) {
+        case 'summon':
+          result = await summon(sageParams, (type, message) => {
+            console.log(type, message);
+          });
+          break;
+        case 'reform':
+          result = await reform(sageParams, (type, message) => {
+            console.log(type, message);
+          });
+          break;
+        case 'dismiss':
+          result = await dismiss(sageParams, (type, message) => {
+            console.log(type, message);
+          });
+          break;
+        default:
+          return NextResponse.json(
+            { error: 'Invalid action' },
+            { status: 400 }
+          );
+      }
+      return NextResponse.json(result);
+    }
   } catch (error: any) {
     console.error('Failed to process request:', error);
     return NextResponse.json(
