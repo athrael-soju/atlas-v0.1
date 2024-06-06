@@ -3,10 +3,8 @@ import { summon, reform, consult, dismiss } from '@/lib/utils/analysis/sage';
 import { SageAction, SageParams } from '@/lib/types';
 import { AssistantStream } from 'openai/lib/AssistantStream';
 
-// Define runtime for the handler
 export const runtime = 'nodejs';
 
-// Helper function to send updates
 function sendUpdate(
   type: string,
   controller: ReadableStreamDefaultController,
@@ -21,10 +19,10 @@ async function readStreamContent(
 ): Promise<void> {
   AssistantStream.fromReadableStream(stream)
     .on('textCreated', (text) => {
-      sendUpdate('assistant', controller, '');
+      sendUpdate('text', controller, '');
     })
     .on('textDelta', (textDelta, snapshot) => {
-      sendUpdate('assistant', controller, textDelta.value ?? '');
+      sendUpdate('text', controller, textDelta.value ?? '');
     })
     .on('toolCallCreated', (toolCall) => {
       sendUpdate('code', controller, '');
@@ -49,12 +47,10 @@ async function readStreamContent(
     })
     .on('event', (event) => {
       if (event.event === 'thread.run.requires_action') {
-        sendUpdate('event', controller, 'Requires action');
-        console.log('Requires action:', event.data);
+        sendUpdate('notification', controller, 'requires_action');
       }
       if (event.event === 'thread.run.completed') {
-        sendUpdate('event', controller, event.data.status);
-        console.log('Event:', event.data.status);
+        sendUpdate('notification', controller, 'events_completed');
       }
     })
     .on('end', () => {
@@ -77,48 +73,46 @@ export async function POST(req: NextRequest): Promise<Response> {
       );
     }
 
-    if (action === 'consult') {
-      const responseStream = await consult(sageParams, (type, message) => {
-        console.log(type, message); // For debugging purposes
-      });
-      const stream = new ReadableStream({
-        async start(controller) {
-          await readStreamContent(responseStream, controller);
-        },
-      });
-      return new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          Connection: 'keep-alive',
-        },
-      });
-    } else {
-      let result;
-      switch (action) {
-        case 'summon':
-          result = await summon(sageParams, (type, message) => {
-            console.log(type, message);
-          });
-          break;
-        case 'reform':
-          result = await reform(sageParams, (type, message) => {
-            console.log(type, message);
-          });
-          break;
-        case 'dismiss':
-          result = await dismiss(sageParams, (type, message) => {
-            console.log(type, message);
-          });
-          break;
-        default:
-          return NextResponse.json(
-            { error: 'Invalid action' },
-            { status: 400 }
-          );
-      }
-      return NextResponse.json(result);
-    }
+    let responseStream;
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (type: string, message: string) =>
+          sendUpdate(type, controller, message);
+        try {
+          switch (action) {
+            case 'summon':
+              await summon(sageParams, send);
+              break;
+            case 'reform':
+              await reform(sageParams, send);
+              break;
+            case 'consult':
+              responseStream = await consult(sageParams, send);
+              if (responseStream) {
+                await readStreamContent(responseStream, controller);
+              }
+              break;
+            case 'dismiss':
+              await dismiss(sageParams, send);
+              break;
+            default:
+              controller.enqueue('data: Invalid action\n\n');
+              break;
+          }
+        } catch (error) {
+          console.error('Error in action execution:', error);
+          controller.enqueue(`data: Error occurred: ${error}\n\n`);
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    });
   } catch (error: any) {
     console.error('Failed to process request:', error);
     return NextResponse.json(
