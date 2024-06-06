@@ -80,7 +80,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       );
     }
 
-    let responseStream;
+    let response;
     const stream = new ReadableStream({
       async start(controller) {
         const send = (type: string, message: string) =>
@@ -88,27 +88,26 @@ export async function POST(req: NextRequest): Promise<Response> {
         try {
           switch (action) {
             case 'summon':
-              await summon(sageParams, send);
+              response = await summon(sageParams, send);
               break;
             case 'reform':
-              await reform(sageParams, send);
+              response = await reform(sageParams, send);
               break;
             case 'consult':
-              responseStream = await consult(sageParams, send);
-              if (responseStream) {
-                await readStreamContent(responseStream, controller);
+              response = await consult(sageParams, send);
+              if (response) {
+                await readStreamContent(response, controller);
               }
               break;
             case 'dismiss':
-              await dismiss(sageParams, send);
+              response = await dismiss(sageParams, send);
               break;
             default:
-              controller.enqueue('data: Invalid action\n\n');
-              break;
+              sendUpdate('notification', controller, 'Invalid Action');
           }
-        } catch (error) {
-          console.error('Error in action execution:', error);
-          controller.enqueue(`data: Error occurred: ${error}\n\n`);
+        } catch (error: any) {
+          sendUpdate('notification', controller, error.message);
+          controller.close();
         }
       },
     });
