@@ -13,7 +13,7 @@ function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-background">
         <IconUser />
       </div>
-      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1 bg-primary-foreground rounded-lg">
+      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
         {typeof text === 'string' ? (
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
         ) : (
@@ -45,13 +45,13 @@ const AssistantMessage = ({ text }: { text: string }) => {
   );
 };
 
-const Message = ({ role, text }: MessageProps) => {
+export const Message = ({ role, text }: MessageProps) => {
   switch (role) {
-    case 'user':
-      return <UserMessage text={text} />;
     case 'assistant':
       return <AssistantMessage text={text} />;
     case 'code':
+      return <CodeMessage text={text} />;
+    case 'image':
       return <CodeMessage text={text} />;
     default:
       return null;
@@ -65,7 +65,7 @@ export function BotMessage({
 }: Readonly<{
   children: React.ReactNode;
   className?: string;
-  role: 'user' | 'assistant' | 'code';
+  role: string;
 }>) {
   if (role === 'user') {
     return <UserMessage text={children as string} />;
@@ -77,7 +77,7 @@ export function BotMessage({
         <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
           <IconAI />
         </div>
-        <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1 bg-primary-foreground rounded-lg">
+        <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
           {typeof children === 'string' ? (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {children}
