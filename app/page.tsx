@@ -119,22 +119,23 @@ export default function Page() {
         ]);
 
         let currentMessage = '';
-        let role: 'assistant' | 'code';
+        let role: 'text' | 'code' | 'image';
         await sage(
           'consult',
           { userEmail, message, file_ids: uploadedFiles },
           (update) => {
             const { type, message } = JSON.parse(update);
-            if (type === 'assistant' || type === 'code' || type === 'image') {
-              role = type;
-              currentMessage += message;
-              setMessages((currentMessages) => {
-                const newMessages = [...currentMessages];
-                newMessages[newMessages.length - 1].display = (
-                  <BotMessage role={role}>{currentMessage}</BotMessage>
-                );
-                return newMessages;
-              });
+            console.log(type, message);
+            if (type === 'text' || type === 'code' || type === 'image') {
+              // role = type;
+              // currentMessage += message;
+              // setMessages((currentMessages) => {
+              //   const newMessages = [...currentMessages];
+              //   newMessages[newMessages.length - 1].display = (
+              //     <BotMessage role={role}>{currentMessage}</BotMessage>
+              //   );
+              //   return newMessages;
+              // });
             }
           }
         );
