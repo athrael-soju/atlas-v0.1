@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef, useState, FormEvent } from 'react';
 import { useUIState, useActions } from 'ai/rsc';
-import { BotMessage } from '@/components/llm-stocks/message';
+import { AssistantMessage, UserMessage } from '@/components/llm-stocks/message';
 import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import Textarea from 'react-textarea-autosize';
@@ -88,13 +88,35 @@ export default function Page() {
     };
   }, [inputRef]);
 
+  const updateLastMessage = (role: any, content: string) => {
+    setMessages((currentMessages) => {
+      const newMessages = [...currentMessages];
+      newMessages[newMessages.length - 1].display = (
+        <AssistantMessage role={role} text={content} />
+      );
+      return newMessages;
+    });
+  };
+
+  const addNewMessage = (role: any, content: ReactNode) => {
+    setMessages((currentMessages) => [
+      ...currentMessages,
+      {
+        id: Date.now(),
+        display: (
+          <AssistantMessage role={role} text={content} className="items-center" />
+        ),
+      },
+    ]);
+  };
+
   const submitMessage = async (message: string) => {
     setInputValue('');
     setMessages((currentMessages) => [
       ...currentMessages,
       {
         id: Date.now(),
-        display: <BotMessage role="user">{message}</BotMessage>,
+        display: <UserMessage text={message} />,
       },
     ]);
 
@@ -106,36 +128,28 @@ export default function Page() {
     }
     try {
       if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Sage') {
-        setMessages((currentMessages) => [
-          ...currentMessages,
-          {
-            id: Date.now(),
-            display: (
-              <BotMessage role={'code'} className="items-center">
-                {spinner}
-              </BotMessage>
-            ),
-          },
-        ]);
-
-        let currentMessage = '';
-        let role: 'text' | 'code' | 'image';
+        addNewMessage('spinner', spinner);
+        let firstRun = true;
+        let prevType: 'text' | 'code' | 'image';
+        let currentMessage: string = '';
         await sage(
           'consult',
           { userEmail, message, file_ids: uploadedFiles },
           (update) => {
             const { type, message } = JSON.parse(update);
-            console.log(type, message);
-            if (type === 'text' || type === 'code' || type === 'image') {
-              // role = type;
-              // currentMessage += message;
-              // setMessages((currentMessages) => {
-              //   const newMessages = [...currentMessages];
-              //   newMessages[newMessages.length - 1].display = (
-              //     <BotMessage role={role}>{currentMessage}</BotMessage>
-              //   );
-              //   return newMessages;
-              // });
+            if (type.includes('created') && firstRun === false) {
+              addNewMessage(prevType, currentMessage);
+              if (type === 'text_created') {
+                prevType = 'text';
+              } else if (type === 'tool_created') {
+                prevType = 'code';
+              }
+              currentMessage = '';
+            } else if (type === 'text' || type === 'code' || type === 'image') {
+              currentMessage += message;
+              prevType = type;
+              firstRun = false;
+              updateLastMessage(type, currentMessage);
             }
           }
         );
@@ -149,9 +163,7 @@ export default function Page() {
         ...currentMessages,
         {
           id: Date.now(),
-          display: (
-            <BotMessage role="user">Error: {error as ReactNode}</BotMessage>
-          ),
+          display: <AssistantMessage role="text" text={'Error'} />,
         },
       ]);
     }

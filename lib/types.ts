@@ -88,7 +88,7 @@ export interface User {
 }
 
 export type MessageProps = {
-  role: 'assistant' | 'code' | 'image';
+  role: 'text' | 'code' | 'image' | 'spinner';
   text: string;
 };
 

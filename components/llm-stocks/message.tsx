@@ -7,7 +7,7 @@ import remarkGfm from 'remark-gfm';
 import styles from './chat.module.css';
 import { MessageProps } from '@/lib/types';
 
-function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
+export function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
   return (
     <div className="group relative flex items-start md:-ml-12">
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-background">
@@ -24,7 +24,7 @@ function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
   );
 }
 
-const CodeMessage = ({ text }: { text: string }) => {
+const CodeContent = ({ text }: { text: string }) => {
   return (
     <div className={styles.codeMessage}>
       {text.split('\n').map((line, index) => (
@@ -36,8 +36,7 @@ const CodeMessage = ({ text }: { text: string }) => {
     </div>
   );
 };
-
-const AssistantMessage = ({ text }: { text: string }) => {
+const TextContent = ({ text }: { text: string }) => {
   return (
     <div className={styles.assistantMessage}>
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
@@ -46,49 +45,32 @@ const AssistantMessage = ({ text }: { text: string }) => {
 };
 
 export const Message = ({ role, text }: MessageProps) => {
-  switch (role) {
-    case 'assistant':
-      return <AssistantMessage text={text} />;
-    case 'code':
-      return <CodeMessage text={text} />;
-    case 'image':
-      return <CodeMessage text={text} />;
-    default:
-      return null;
+  if (role === 'code') {
+    return <CodeContent text={text} />;
+  } else {
+    return <TextContent text={text} />;
   }
 };
 
-export function BotMessage({
-  children,
-  className,
+export function AssistantMessage({
   role,
+  text,
+  className,
 }: Readonly<{
-  children: React.ReactNode;
+  role: 'text' | 'code' | 'image' | 'spinner';
+  text: React.ReactNode;
   className?: string;
-  role: string;
 }>) {
-  if (role === 'user') {
-    return <UserMessage text={children as string} />;
-  } else {
-    return (
-      <div
-        className={cn('group relative flex items-start md:-ml-12', className)}
-      >
-        <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
-          <IconAI />
-        </div>
-        <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
-          {typeof children === 'string' ? (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {children}
-            </ReactMarkdown>
-          ) : (
-            children
-          )}
-        </div>
+  return (
+    <div className={cn('group relative flex items-start md:-ml-12', className)}>
+      <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
+        <IconAI />
       </div>
-    );
-  }
+      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
+        {typeof text === 'string' ? <Message role={role} text={text} /> : text}
+      </div>
+    </div>
+  );
 }
 
 export function BotCard({
@@ -113,16 +95,10 @@ export function BotCard({
   );
 }
 
-export function SystemMessage({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export function SystemMessage({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className={
-        'mt-2 flex items-center justify-center gap-2 text-xs text-gray-500'
-      }
-    >
-      <div className={'max-w-[600px] flex-initial px-2 py-2'}>{children}</div>
+    <div className="mt-2 flex items-center justify-center gap-2 text-xs text-gray-500">
+      <div className="max-w-[600px] flex-initial px-2 py-2">{children}</div>
     </div>
   );
 }

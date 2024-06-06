@@ -19,17 +19,22 @@ async function readStreamContent(
 ): Promise<void> {
   AssistantStream.fromReadableStream(stream)
     .on('textCreated', (text) => {
-      sendUpdate('text', controller, '');
+      sendUpdate('text_created', controller, 'text_created');
     })
     .on('textDelta', (textDelta, snapshot) => {
-      sendUpdate('text', controller, textDelta.value ?? '');
+      if (textDelta.value != null) {
+        sendUpdate('text', controller, textDelta.value);
+      }
     })
     .on('toolCallCreated', (toolCall) => {
-      sendUpdate('code', controller, '');
+      sendUpdate('code_created', controller, 'text_created');
     })
     .on('toolCallDelta', (toolCallDelta, snapshot) => {
       if (toolCallDelta.type === 'code_interpreter') {
-        if (toolCallDelta.code_interpreter?.input) {
+        if (!toolCallDelta.code_interpreter) {
+          return;
+        }
+        if (toolCallDelta.code_interpreter.input) {
           sendUpdate('code', controller, toolCallDelta.code_interpreter.input);
         }
         if (toolCallDelta.code_interpreter?.outputs) {
@@ -39,6 +44,8 @@ async function readStreamContent(
             }
           });
         }
+      } else {
+        return;
       }
     })
     .on('imageFileDone', (image) => {
