@@ -36,8 +36,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     const stream = new ReadableStream({
       async start(controller) {
         const send = (message: string) => sendUpdate(controller, message);
-
-        await retrieveContext(content, archiveParams, send);
+        const response = await retrieveContext(content, archiveParams, send);
+        send(`Final Result: ${JSON.stringify(response.content)}`);
         controller.close();
       },
     });

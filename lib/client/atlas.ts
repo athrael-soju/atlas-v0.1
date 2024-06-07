@@ -7,6 +7,7 @@ import {
 
 const readStream = async (
   response: Response,
+  bound: string,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   if (!response.ok) {
@@ -26,17 +27,27 @@ const readStream = async (
     const { value, done: readerDone } = await reader.read();
     done = readerDone;
 
+    // TODO: Handle Sage/Scribe/Forge
     if (value) {
       buffer += decoder.decode(value, { stream: true });
-      let boundary = buffer.indexOf('}{');
+      let boundary = buffer.indexOf(bound);
 
       while (boundary !== -1) {
         const message = buffer.slice(0, boundary + 1);
         buffer = buffer.slice(boundary + 1);
-        if (message) {
+        if (message.startsWith('data: ')) {
+          const data = message.replace('data: ', '');
+
+          if (data.startsWith('Final Result:')) {
+            const result = JSON.parse(data.replace('Final Result:', '').trim());
+            onUpdate(result);
+          } else {
+            onUpdate(data);
+          }
+        } else {
           onUpdate(message);
         }
-        boundary = buffer.indexOf('}{');
+        boundary = buffer.indexOf(bound);
       }
     }
   }
@@ -63,7 +74,7 @@ export const forge = async (
       body: formData,
     });
 
-    await readStream(response, onUpdate);
+    await readStream(response, '\n\n', onUpdate);
   } catch (error) {
     console.error('Error in process:', error);
     onUpdate(`Error: ${error}`);
@@ -84,7 +95,7 @@ export const scribe = async (
       body: formData,
     });
 
-    await readStream(response, onUpdate);
+    await readStream(response, '\n\n', onUpdate);
   } catch (error) {
     console.error('Error in retrieve:', error);
     onUpdate(`Error: ${error}`);
@@ -106,7 +117,7 @@ export const sage = async (
       body: formData,
     });
 
-    await readStream(response, onUpdate);
+    await readStream(response, '}{', onUpdate);
   } catch (error) {
     console.error('Error in process:', error);
     onUpdate(`Error: ${error}`);

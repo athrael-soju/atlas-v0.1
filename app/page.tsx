@@ -104,7 +104,11 @@ export default function Page() {
       {
         id: Date.now(),
         display: (
-          <AssistantMessage role={role} text={content} className="items-center" />
+          <AssistantMessage
+            role={role}
+            text={content}
+            className="items-center"
+          />
         ),
       },
     ]);
