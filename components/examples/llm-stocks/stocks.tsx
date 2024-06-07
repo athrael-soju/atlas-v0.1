@@ -4,7 +4,7 @@ import { useActions, useUIState } from 'ai/rsc';
 
 import type { AI } from '@/app/action';
 
-export function Stocks({ stocks }: { stocks: any[] }) {
+export function Stocks({ stocks }: Readonly<{ stocks: any[] }>) {
   const [, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions<typeof AI>();
 
