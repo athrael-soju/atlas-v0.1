@@ -37,32 +37,38 @@ export async function POST(req: NextRequest): Promise<Response> {
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
-        const results = await Promise.all(
-          files.map((file) => {
-            if (file.type === 'application/pdf') {
-              return processDocument(file, userEmail, forgeParams, send);
-            } else if (file.type.includes('text')) {
-              return processDocumentViaOpenAi(file, userEmail, send);
-            } else {
-              sendUpdate(
-                'notification',
-                controller,
-                `Unsupported file type: ${file.type}`
-              );
-              return Promise.resolve({
-                success: false,
-                fileName: file.name,
-                error: `Unsupported file type: ${file.type}`,
-              });
-            }
-          })
-        );
 
-        const success = results.filter((result) => result.success).length;
-        const failed = results.filter((result) => !result.success).length;
+        try {
+          const results = await Promise.all(
+            files.map((file) => {
+              if (file.type === 'application/pdf') {
+                return processDocument(file, userEmail, forgeParams, send);
+              } else if (file.type.includes('text')) {
+                return processDocumentViaOpenAi(file, userEmail, send);
+              } else {
+                sendUpdate(
+                  'notification',
+                  controller,
+                  `Unsupported file type: ${file.type}`
+                );
+                return Promise.resolve({
+                  success: false,
+                  fileName: file.name,
+                  error: `Unsupported file type: ${file.type}`,
+                });
+              }
+            })
+          );
 
-        send('notification', `Success: ${success}. Failed: ${failed}`);
-        controller.close();
+          const success = results.filter((result) => result.success).length;
+          const failed = results.filter((result) => !result.success).length;
+
+          send('notification', `Success: ${success}. Failed: ${failed}`);
+        } catch (error: any) {
+          send('notification', `Error processing files: ${error.message}`);
+        } finally {
+          controller.close();
+        }
       },
     });
 

@@ -38,10 +38,19 @@ export async function POST(req: NextRequest): Promise<Response> {
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
-        const response = await retrieveContext(content, archiveParams, send);
-        sendUpdate('final-notification', controller, JSON.stringify(response.content));
 
-        controller.close();
+        try {
+          const response = await retrieveContext(content, archiveParams, send);
+          sendUpdate(
+            'final-notification',
+            controller,
+            JSON.stringify(response.content)
+          );
+        } catch (error: any) {
+          sendUpdate('notification', controller, `Error: ${error.message}`);
+        } finally {
+          controller.close();
+        }
       },
     });
 
