@@ -1,6 +1,7 @@
 import { openai } from '@/lib/client/openai';
 import { SageParams, User } from '@/lib/types';
 import clientPromise from '@/lib/client/mongodb';
+import { threadId } from 'worker_threads';
 
 export async function summon(
   sageParams: SageParams,
@@ -32,7 +33,7 @@ export async function summon(
       tool_resources: { code_interpreter: { file_ids: [] } },
       model,
     });
-    sendUpdate('notification', 'Sage summoned successfully.');
+    sendUpdate('notification', 'Sage summoned successfully');
     await userCollection.updateOne(
       { email: userEmail },
       {
@@ -46,7 +47,7 @@ export async function summon(
 
     sendUpdate('notification', 'Creating thread...');
     const thread = await openai.beta.threads.create();
-    sendUpdate('notification', 'Thread created successfully.');
+    sendUpdate('notification', 'Thread created successfully');
 
     await userCollection.updateOne(
       { email: userEmail },
@@ -56,8 +57,8 @@ export async function summon(
         },
       }
     );
-
     sendUpdate('notification', 'User updated with thread ID.');
+
     return {
       sage: sage,
       threadId: thread.id,
@@ -75,8 +76,9 @@ export async function reform(
   if (!userEmail) {
     throw new Error('User email is required');
   }
+  const userCollection = db.collection<User>('users');
 
-  const user = await db.collection('users').findOne({ email: userEmail });
+  const user = await userCollection.findOne({ email: userEmail });
 
   if (!user?.sageId) {
     throw new Error('User does not have a sage');
@@ -101,7 +103,7 @@ export async function reform(
       model: model ?? currentSage.model,
     }
   );
-  sendUpdate('notification', 'Sage reformed successfully.');
+  sendUpdate('notification', 'Sage reformed successfully');
 
   return updatedSageResponse;
 }
@@ -117,7 +119,9 @@ export async function consult(
     throw new Error('User email and message are required');
   }
 
-  const user = await db.collection('users').findOne({ email: userEmail });
+  const userCollection = db.collection<User>('users');
+
+  const user = await userCollection.findOne({ email: userEmail });
 
   if (!user?.sageId || !user?.threadId) {
     throw new Error('User does not have a sage or thread ID');
@@ -125,7 +129,7 @@ export async function consult(
   sendUpdate('notification', 'User found with sage and thread ID.');
 
   const myThread = await openai.beta.threads.retrieve(user.threadId);
-  sendUpdate('notification', 'Thread retrieved successfully.');
+  sendUpdate('notification', 'Thread retrieved successfully');
 
   if ((file_ids?.length ?? 0) > 0) {
     sendUpdate('notification', 'Updating thread...');
@@ -133,7 +137,7 @@ export async function consult(
       metadata: { modified: 'true', user: user.email },
       tool_resources: { code_interpreter: { file_ids: file_ids } },
     });
-    sendUpdate('notification', 'Thread updated successfully.');
+    sendUpdate('notification', 'Thread updated successfully');
   }
 
   sendUpdate('notification', 'Creating message...');
@@ -141,7 +145,7 @@ export async function consult(
     role: 'user',
     content: message,
   });
-  sendUpdate('notification', 'Message created successfully.');
+  sendUpdate('notification', 'Message created successfully');
 
   sendUpdate('notification', 'Consulting sage...');
   const stream = openai.beta.threads.runs.stream(myThread.id, {
@@ -161,9 +165,34 @@ export async function dismiss(
     throw new Error('User email and sage id are required');
   }
 
+  const client = await clientPromise;
+  const db = client.db('Atlas');
+  if (!userEmail) {
+    throw new Error('User email not found in the database');
+  }
+
+  const userCollection = db.collection<User>('users');
+
+  const user = await userCollection.findOne({ email: userEmail });
+
+  if (!user?.sageId || !user?.threadId) {
+    throw new Error('User does not have a sage ID or thread ID');
+  }
+  console.log(user)
+  await userCollection.updateOne(
+    { email: userEmail },
+    {
+      $unset: {
+        'sageId': '',
+        'threadId': '',
+      },
+    }
+  );
+  sendUpdate('notification', 'User updated successfully');
+
   sendUpdate('notification', 'Dismissing sage...');
-  const response = await openai.beta.assistants.del(`${sageId}`);
-  sendUpdate('notification', 'Sage dismissed successfully.');
+  const response = await openai.beta.assistants.del(`${user.sageId}`);
+  sendUpdate('notification', 'Sage dismissed successfully');
 
   return response;
 }
