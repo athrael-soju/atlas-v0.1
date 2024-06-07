@@ -6,10 +6,11 @@ import { processDocumentViaOpenAi } from '@/lib/utils/processing/openai';
 export const runtime = 'nodejs';
 
 function sendUpdate(
+  type: string,
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
-  controller.enqueue(`data: ${message}\n\n`);
+  controller.enqueue(JSON.stringify({ type, message }));
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -34,8 +35,8 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     const stream = new ReadableStream({
       async start(controller) {
-        const send = (message: string) => sendUpdate(controller, message);
-
+        const send = (type: string, message: string) =>
+          sendUpdate(type, controller, message);
         const results = await Promise.all(
           files.map((file) => {
             if (file.type === 'application/pdf') {
@@ -43,7 +44,11 @@ export async function POST(req: NextRequest): Promise<Response> {
             } else if (file.type.includes('text')) {
               return processDocumentViaOpenAi(file, userEmail, send);
             } else {
-              sendUpdate(controller, `Unsupported file type: ${file.type}`);
+              sendUpdate(
+                'notification',
+                controller,
+                `Unsupported file type: ${file.type}`
+              );
               return Promise.resolve({
                 success: false,
                 fileName: file.name,
@@ -56,7 +61,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         const success = results.filter((result) => result.success).length;
         const failed = results.filter((result) => !result.success).length;
 
-        send(`Success: ${success}. Failed: ${failed}`);
+        send('notification', `Success: ${success}. Failed: ${failed}`);
         controller.close();
       },
     });

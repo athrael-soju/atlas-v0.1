@@ -5,10 +5,11 @@ import { retrieveContext } from '@/lib/utils/retrieval/scribe';
 export const runtime = 'nodejs';
 
 function sendUpdate(
+  type: string,
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
-  controller.enqueue(`data: ${message}\n\n`);
+  controller.enqueue(JSON.stringify({ type, message }));
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -35,9 +36,11 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     const stream = new ReadableStream({
       async start(controller) {
-        const send = (message: string) => sendUpdate(controller, message);
+        const send = (type: string, message: string) =>
+          sendUpdate(type, controller, message);
         const response = await retrieveContext(content, archiveParams, send);
-        send(`Final Result: ${JSON.stringify(response.content)}`);
+        sendUpdate('final-notification', controller, JSON.stringify(response.content));
+
         controller.close();
       },
     });
