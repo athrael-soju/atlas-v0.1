@@ -8,7 +8,7 @@ export function EmptyScreen() {
           Welcome to Atlas
         </h1>
         <p className="mb-2 leading-normal text-muted-foreground">
-          Atlas is a revolutionary system designed to store millions of
+          Atlas is a revolutionary application designed to store millions of
           documents and seamlessly retrieve information from them. Imagine
           having all your data at your fingertips, securely stored and easily
           accessible, enhancing your interactions with any large language model

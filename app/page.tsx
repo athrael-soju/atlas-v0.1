@@ -1,8 +1,8 @@
 'use client';
 
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState, FormEvent } from 'react';
 import { useUIState, useActions } from 'ai/rsc';
-import { UserMessage } from '@/components/llm-stocks/message';
+import { AssistantMessage, UserMessage } from '@/components/message';
 import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import Textarea from 'react-textarea-autosize';
@@ -17,10 +17,17 @@ import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/ui/dropzone';
-import { oracle } from './services/client/atlas';
+import { scribe, sage } from '@/lib/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
+import { ForgeParams, ArchiveParams } from '@/lib/types';
+import { useSession } from 'next-auth/react';
+import { spinner } from '@/components/llm-stocks';
+
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export default function Page() {
+  const { data: session } = useSession();
   const [messages, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions<typeof AI>();
   const [inputValue, setInputValue] = useState('');
@@ -29,16 +36,15 @@ export default function Page() {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
 
-  const userEmail = process.env.NEXT_PUBLIC_USER_EMAIL as string;
+  const userEmail = session?.user?.email ?? '';
 
-  const oracleParams = {
+  const archiveParams = {
     userEmail: userEmail,
     topK: parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100,
     topN: parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10,
-  };
+  } as ArchiveParams;
 
   const forgeParams = {
-    userEmail: userEmail,
     provider: (process.env.NEXT_PUBLIC_PARSING_PROVIDER as string) || 'local',
     maxChunkSize:
       parseInt(process.env.NEXT_PUBLIC_MAX_CHUNK_SIZE as string) || 1024,
@@ -49,7 +55,7 @@ export default function Page() {
     parsingStrategy:
       (process.env.NEXT_PUBLIC_UNSTRUCTURED_PARSING_STRATEGY as string) ||
       'auto',
-  };
+  } as ForgeParams;
 
   const handleFileChange: React.Dispatch<React.SetStateAction<string[]>> = (
     newFiles: React.SetStateAction<string[]>
@@ -82,39 +88,125 @@ export default function Page() {
     };
   }, [inputRef]);
 
+  const updateLastMessage = (role: any, content: string) => {
+    setMessages((currentMessages) => {
+      const newMessages = [...currentMessages];
+      newMessages[newMessages.length - 1].display = (
+        <AssistantMessage role={role} text={content} />
+      );
+      return newMessages;
+    });
+  };
+
+  const addNewMessage = (role: any, content: ReactNode) => {
+    setMessages((currentMessages) => [
+      ...currentMessages,
+      {
+        id: Date.now(),
+        display: (
+          <AssistantMessage
+            role={role}
+            text={content}
+            className="items-center"
+          />
+        ),
+      },
+    ]);
+  };
+
   const submitMessage = async (message: string) => {
-    setInputValue(message);
-    {
+    setInputValue('');
+    setMessages((currentMessages) => [
+      ...currentMessages,
+      {
+        id: Date.now(),
+        display: <UserMessage text={message} />,
+      },
+    ]);
+
+    let context = '';
+    if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Scribe') {
+      await scribe(message, archiveParams, (update) => {
+        const text = JSON.parse(update);
+        if (text.type === 'final-notification') {
+          context += text.message + '\n';
+        }
+      });
+    }
+    try {
+      if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Sage') {
+        addNewMessage('spinner', spinner);
+        let firstRun = true;
+        let prevType: 'text' | 'code' | 'image';
+        let currentMessage: string = '';
+        await sage(
+          'consult',
+          { userEmail, message, file_ids: uploadedFiles },
+          (update) => {
+            const { type, message } = JSON.parse(update);
+            if (type.includes('created') && firstRun === false) {
+              addNewMessage(prevType, currentMessage);
+              if (type === 'text_created') {
+                prevType = 'text';
+              } else if (type === 'tool_created') {
+                prevType = 'code';
+              }
+              currentMessage = '';
+            } else if (type === 'text' || type === 'code' || type === 'image') {
+              currentMessage += message;
+              prevType = type;
+              firstRun = false;
+              updateLastMessage(type, currentMessage);
+            }
+          }
+        );
+      } else {
+        const responseMessage = await submitUserMessage(message, context);
+        setMessages((currentMessages) => [...currentMessages, responseMessage]);
+      }
+    } catch (error) {
+      console.error(error);
       setMessages((currentMessages) => [
         ...currentMessages,
         {
           id: Date.now(),
-          display: <UserMessage>{message}</UserMessage>,
+          display: <AssistantMessage role="text" text={'Error'} />,
         },
       ]);
-
-      let context = '';
-      if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-        await oracle(message, oracleParams, (update) => {
-          context += update + '\n';
-        });
-      }
-      try {
-        const responseMessage = await submitUserMessage(message, context);
-        setMessages((currentMessages) => [...currentMessages, responseMessage]);
-      } catch (error) {
-        console.error(error);
-        setMessages((currentMessages) => [
-          ...currentMessages,
-          {
-            id: Date.now() + 1,
-            display: <UserMessage>Error: {error as ReactNode}</UserMessage>,
-          },
-        ]);
-      }
     }
   };
-  console.log('messages', messages);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if (window.innerWidth < 600) {
+      (e.target as HTMLFormElement)['message']?.blur();
+    }
+
+    const value = inputValue.trim();
+    if (!value) return;
+
+    await submitMessage(value);
+  };
+
+  if (!session) {
+    return (
+      <div className="flex flex-col items-center justify-center bg-background p-16">
+        <div className="flex flex-col items-center justify-center">
+          <h1 className="text-4xl text-center font-extrabold mt-4 text-card-foreground">
+            Welcome to Atlas
+          </h1>
+          <p>Log in to proceed</p>
+          <img
+            src="/atlas.png"
+            alt="Atlas Logo"
+            className="w-[100%] rounded-full shadow-lg"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="pb-[200px] pt-4 md:pt-10">
@@ -127,65 +219,14 @@ export default function Page() {
             <ExampleMessages onClick={submitMessage} />
           ) : null}
           <div className="mb-4 grid gap-2 sm:gap-4 px-4 sm:px-0">
-            <form
-              ref={formRef}
-              onSubmit={async (e: any) => {
-                e.preventDefault();
-
-                if (window.innerWidth < 600) {
-                  e.target['message']?.blur();
-                }
-
-                const value = inputValue.trim();
-                setInputValue('');
-                if (!value) return;
-
-                setMessages((currentMessages) => [
-                  ...currentMessages,
-                  {
-                    id: Date.now(),
-                    display: <UserMessage>{value}</UserMessage>,
-                  },
-                ]);
-
-                let context = '';
-                if (process.env.NEXT_PUBLIC_ENABLE_RAG === 'true') {
-                  await oracle(value, oracleParams, (update) => {
-                    context += update + '\n';
-                  });
-                }
-
-                try {
-                  const responseMessage = await submitUserMessage(
-                    value,
-                    context
-                  );
-                  setMessages((currentMessages) => [
-                    ...currentMessages,
-                    responseMessage,
-                  ]);
-                } catch (error) {
-                  console.error(error);
-                  setMessages((currentMessages) => [
-                    ...currentMessages,
-                    {
-                      id: Date.now() + 1,
-                      display: (
-                        <UserMessage>Error: {error as ReactNode}</UserMessage>
-                      ),
-                    },
-                  ]);
-                }
-              }}
-            >
+            <form ref={formRef} onSubmit={handleSubmit}>
               <div
                 className="relative p-2 rounded-lg w-full max-w-4xl mb-2"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Dropzone
                   onChange={handleFileChange}
-                  fileExtension="pdf"
-                  className="your-custom-class"
+                  userEmail={userEmail}
                   forgeParams={forgeParams}
                   isUploadCompleted={isUploadCompleted}
                   setIsUploadCompleted={setIsUploadCompleted}
@@ -195,7 +236,7 @@ export default function Page() {
                     <h3 className="text-lg font-medium">Uploaded Files</h3>
                     <ul className="list-disc pl-5">
                       {uploadedFiles.map((file, index) => (
-                        <li key={index}>{file}</li>
+                        <li key={`${file}-${index}`}>{file}</li>
                       ))}
                     </ul>
                   </div>
@@ -214,7 +255,6 @@ export default function Page() {
                       }}
                     >
                       <IconPlus />
-                      {/* <span className="sr-only">New Chat</span> */}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>New Chat</TooltipContent>

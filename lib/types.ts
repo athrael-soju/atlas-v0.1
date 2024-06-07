@@ -1,15 +1,24 @@
 export interface FileEntry {
   id: string;
-  userId: string;
+  userEmail: string;
   name: string;
   path: string;
   uploadDate: number;
   contentType: string;
 }
 
+export interface OpenAiFileUploadResponse {
+  id: string;
+  object: string;
+  bytes: number;
+  created_at: number;
+  filename: string;
+  purpose: string;
+}
+
 export interface FileActionResponse {
   message: string;
-  file: FileEntry;
+  file: FileEntry | OpenAiFileUploadResponse;
 }
 
 export interface EmbeddingResponse {
@@ -41,17 +50,46 @@ export interface Page {
   pageNumber: number;
 }
 
-export interface OracleParams {
+export interface ArchiveParams {
   userEmail: string;
   topK: number;
   topN: number;
 }
 
 export interface ForgeParams {
-  userEmail: string;
   provider: string;
   maxChunkSize: number;
   minChunkSize: number;
   overlap: number;
   chunkBatch: number;
 }
+
+export interface SageParams {
+  userEmail: string;
+  message?: string;
+  name?: string;
+  instructions?: string;
+  model?: string;
+  file_ids?: string[];
+}
+
+export interface UserFile {
+  id: string;
+  purpose: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  image?: string;
+  sageId?: string;
+  threadId?: string;
+  files: UserFile[];
+}
+
+export type MessageProps = {
+  role: 'text' | 'code' | 'image' | 'spinner';
+  text: string;
+};
+
+export type SageAction = 'summon' | 'reform' | 'consult' | 'dismiss';

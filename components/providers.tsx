@@ -3,13 +3,18 @@
 import * as React from 'react';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { ThemeProviderProps } from 'next-themes/dist/types';
-
+import { SessionProvider } from 'next-auth/react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-export function Providers({ children, ...props }: ThemeProviderProps) {
+export function Providers({
+  children,
+  ...props
+}: Readonly<ThemeProviderProps>) {
   return (
-    <NextThemesProvider {...props}>
-      <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
-    </NextThemesProvider>
+    <SessionProvider>
+      <NextThemesProvider {...props}>
+        <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
+      </NextThemesProvider>
+    </SessionProvider>
   );
 }

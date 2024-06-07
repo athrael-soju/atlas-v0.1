@@ -3,7 +3,7 @@
 import {
   spinner,
   BotCard,
-  BotMessage,
+  AssistantMessage,
   Stock,
   Purchase,
   Stocks,
@@ -130,7 +130,7 @@ export async function checkIfCalled(completion: any, reply: any, aiState: any) {
     'show_stock_purchase_ui',
     ({ symbol, price, numberOfShares = 100 }: StockPurchaseInfo) => {
       if (numberOfShares <= 0 || numberOfShares > 1000) {
-        reply.done(<BotMessage>Invalid amount</BotMessage>);
+        reply.done(<AssistantMessage role="text" text="Invalid amount" />);
         aiState.done([
           ...aiState.get(),
           {
@@ -144,12 +144,16 @@ export async function checkIfCalled(completion: any, reply: any, aiState: any) {
 
       reply.done(
         <>
-          <BotMessage>
-            Sure!{' '}
-            {typeof numberOfShares === 'number'
-              ? `Click the button below to purchase ${numberOfShares} shares of $${symbol}:`
-              : `How many $${symbol} would you like to purchase?`}
-          </BotMessage>
+          <AssistantMessage
+            role="text"
+            text={
+              `Sure ` +
+              (typeof numberOfShares === 'number'
+                ? `Click the button below to purchase ${numberOfShares} shares of $${symbol}:`
+                : `How many $${symbol} would you like to purchase?`)
+            }
+          />
+
           <BotCard showAvatar={false}>
             <Purchase
               defaultAmount={numberOfShares}

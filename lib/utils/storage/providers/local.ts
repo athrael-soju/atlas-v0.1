@@ -6,7 +6,7 @@ import { FileEntry } from '@/lib/types';
 
 export async function writeFile(
   file: File,
-  userId: string
+  userEmail: string
 ): Promise<FileEntry> {
   const path = join(tmpdir(), file.name);
   const arrayBuffer = await file.arrayBuffer();
@@ -15,7 +15,7 @@ export async function writeFile(
 
   const response: FileEntry = {
     id: randomUUID(),
-    userId: userId,
+    userEmail: userEmail,
     name: file.name,
     path: path,
     uploadDate: Date.now(),
@@ -27,9 +27,9 @@ export async function writeFile(
 
 export async function deleteFile(
   file: FileEntry,
-  userId: string
+  userEmail: string
 ): Promise<void> {
-  if (file.userId !== userId) {
+  if (file.userEmail !== userEmail) {
     throw new Error('Unauthorized');
   }
 }

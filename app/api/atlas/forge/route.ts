@@ -1,122 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  handleFileUpload,
-  handleFileDeletion,
-} from '@/lib/utils/storage/handler';
-import { parse } from '@/lib/utils/parsing/handler';
-import { embedDocument } from '@/lib/utils/embedding/openai';
-import { upsertDocument } from '@/lib/utils/indexing/pinecone';
-import {
-  EmbeddingResponse,
-  FileActionResponse,
-  ForgeParams,
-} from '@/lib/types';
-import { performance } from 'perf_hooks';
 
+import { ForgeParams } from '@/lib/types';
+import { processDocument } from '@/lib/utils/processing/forge';
+import { processDocumentViaOpenAi } from '@/lib/utils/processing/openai';
 export const runtime = 'nodejs';
 
 function sendUpdate(
+  type: string,
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
-  controller.enqueue(`data: ${message}\n\n`);
-}
-
-async function processDocument(
-  file: File,
-  forgeParams: ForgeParams,
-  sendUpdate: (message: string) => void
-): Promise<{ success: boolean; fileName: string; error?: string }> {
-  const totalStartTime = performance.now(); // Start timing the total process
-
-  try {
-    let startTime, endTime;
-
-    startTime = performance.now();
-    sendUpdate(`Uploading: '${file.name}'`);
-    const uploadResponse: FileActionResponse = await handleFileUpload(
-      file,
-      forgeParams.userEmail
-    );
-    endTime = performance.now();
-    sendUpdate(
-      `Uploaded '${file.name}' in ${((endTime - startTime) / 1000).toFixed(2)} seconds`
-    );
-
-    startTime = performance.now();
-    sendUpdate(`Parsing: '${file.name}'`);
-    const parseResponse = await parse(
-      forgeParams.provider,
-      forgeParams.minChunkSize,
-      forgeParams.maxChunkSize,
-      forgeParams.overlap,
-      uploadResponse.file,
-    );
-    endTime = performance.now();
-    sendUpdate(
-      `Parsed '${file.name}' in ${((endTime - startTime) / 1000).toFixed(2)} seconds`
-    );
-
-    startTime = performance.now();
-    sendUpdate(`Embedding: '${file.name}'`);
-    const embedResponse: EmbeddingResponse = await embedDocument(
-      parseResponse,
-      forgeParams.userEmail
-    );
-    endTime = performance.now();
-    sendUpdate(
-      `Embedded '${file.name}' in ${((endTime - startTime) / 1000).toFixed(2)} seconds`
-    );
-
-    startTime = performance.now();
-    sendUpdate(`Upserting: '${file.name}'`);
-    await upsertDocument(
-      embedResponse.embeddings,
-      forgeParams.userEmail,
-      forgeParams.chunkBatch
-    );
-    endTime = performance.now();
-    sendUpdate(
-      `Upserted '${file.name}' in ${((endTime - startTime) / 1000).toFixed(2)} seconds`
-    );
-
-    startTime = performance.now();
-    sendUpdate(`Cleaning up: '${file.name}'`);
-    await handleFileDeletion(uploadResponse.file, forgeParams.userEmail);
-    endTime = performance.now();
-    sendUpdate(
-      `Cleaned up '${file.name}' in ${((endTime - startTime) / 1000).toFixed(2)} seconds`
-    );
-
-    const totalEndTime = performance.now(); // End timing the total process
-    sendUpdate(
-      `Total process for '${file.name}' completed in ${((totalEndTime - totalStartTime) / 1000).toFixed(2)} seconds`
-    );
-
-    return { success: true, fileName: file.name };
-  } catch (error: any) {
-    const totalEndTime = performance.now(); // End timing even if there is an error
-    sendUpdate(`Error processing ${file.name}: ${error.message}`);
-    sendUpdate(
-      `Total process for '${file.name}' completed in ${((totalEndTime - totalStartTime) / 1000).toFixed(2)} seconds`
-    );
-    return {
-      success: false,
-      fileName: file.name,
-      error: error.message,
-    };
-  }
+  controller.enqueue(JSON.stringify({ type, message }));
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
     const files = data.getAll('files') as File[];
+    const userEmail = data.get('userEmail') as string;
     const forgeParams = JSON.parse(
       data.get('forgeParams') as string
     ) as ForgeParams;
 
-    if (!forgeParams.userEmail) {
+    if (!userEmail) {
       return NextResponse.json(
         { error: 'User email is required' },
         { status: 400 }
@@ -129,17 +35,40 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     const stream = new ReadableStream({
       async start(controller) {
-        const send = (message: string) => sendUpdate(controller, message);
+        const send = (type: string, message: string) =>
+          sendUpdate(type, controller, message);
 
-        const results = await Promise.all(
-          files.map((file) => processDocument(file, forgeParams, send))
-        );
+        try {
+          const results = await Promise.all(
+            files.map((file) => {
+              if (file.type === 'application/pdf') {
+                return processDocument(file, userEmail, forgeParams, send);
+              } else if (file.type.includes('text')) {
+                return processDocumentViaOpenAi(file, userEmail, send);
+              } else {
+                sendUpdate(
+                  'notification',
+                  controller,
+                  `Unsupported file type: ${file.type}`
+                );
+                return Promise.resolve({
+                  success: false,
+                  fileName: file.name,
+                  error: `Unsupported file type: ${file.type}`,
+                });
+              }
+            })
+          );
 
-        const success = results.filter((result) => result.success).length;
-        const failed = results.filter((result) => !result.success).length;
+          const success = results.filter((result) => result.success).length;
+          const failed = results.filter((result) => !result.success).length;
 
-        send(`Success: ${success}. Failed: ${failed}`);
-        controller.close();
+          send('notification', `Success: ${success}. Failed: ${failed}`);
+        } catch (error: any) {
+          send('notification', `Error processing files: ${error.message}`);
+        } finally {
+          controller.close();
+        }
       },
     });
 

@@ -3,13 +3,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { forge } from '@/app/services/client/atlas';
+import { forge } from '@/lib/client/atlas';
 import { ForgeParams } from '@/lib/types';
 
 interface DropzoneProps {
   onChange: React.Dispatch<React.SetStateAction<string[]>>;
-  className?: string;
   fileExtension?: string;
+  userEmail: string;
   forgeParams: ForgeParams;
   isUploadCompleted: boolean;
   setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
@@ -17,8 +17,8 @@ interface DropzoneProps {
 
 export function Dropzone({
   onChange,
-  className,
   fileExtension,
+  userEmail,
   forgeParams,
   isUploadCompleted,
   setIsUploadCompleted,
@@ -97,7 +97,7 @@ export function Dropzone({
         handleFileInfo(message);
       };
 
-      await forge(files, forgeParams, onUpdate);
+      await forge(files, userEmail, forgeParams, onUpdate);
     } catch (error) {
       setError((error as Error).message);
     }
@@ -115,8 +115,7 @@ export function Dropzone({
         'disabled:cursor-not-allowed disabled:opacity-50',
         isDragging
           ? 'border-blue-500'
-          : 'border-input bg-transparent placeholder:text-muted-foreground',
-        className
+          : 'border-input bg-transparent placeholder:text-muted-foreground'
       )}
       {...props}
       onDragOver={handleDragOver}

@@ -3,14 +3,14 @@ import 'server-only';
 import { createAI, createStreamableUI, getMutableAIState } from 'ai/rsc';
 import OpenAI from 'openai';
 
-import { spinner, BotMessage } from '@/components/llm-stocks';
+import { spinner, AssistantMessage } from '@/components/llm-stocks';
 import { runOpenAICompletion } from '@/lib/utils';
 import { prompts } from '@/lib/prompts';
 import { tools } from '@/lib/stocks/tools';
 import { checkIfCalled, confirmPurchase } from '@/lib/stocks/functions';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
+  apiKey: process.env.OPENAI_API_KEY ?? '',
 });
 
 export async function submitUserMessage(content: string, context: string) {
@@ -30,7 +30,11 @@ export async function submitUserMessage(content: string, context: string) {
     },
   ]);
   const reply = createStreamableUI(
-    <BotMessage className="items-center">{spinner}</BotMessage>
+    <AssistantMessage
+      role={'spinner'}
+      text={spinner}
+      className="items-center"
+    />
   );
 
   const profile = process.env.NEXT_PUBLIC_PERSONA ?? 'atlas';
@@ -60,7 +64,7 @@ export async function submitUserMessage(content: string, context: string) {
   });
 
   completion.onTextContent((content: string, isFinal: boolean) => {
-    reply.update(<BotMessage>{content}</BotMessage>);
+    reply.update(<AssistantMessage role="text" text={content} />);
     if (isFinal) {
       reply.done();
       aiState.done([...aiState.get(), { role: 'assistant', content }]);
