@@ -127,9 +127,9 @@ export default function Page() {
     let context = '';
     if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Scribe') {
       await scribe(message, archiveParams, (update) => {
-        const text = JSON.parse(update).message;
+        const text = JSON.parse(update);
         if (text.type === 'final-notification') {
-          context += text + '\n';
+          context += text.message + '\n';
         }
       });
     }
