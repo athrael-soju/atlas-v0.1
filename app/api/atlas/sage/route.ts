@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { summon, reform, consult, dismiss } from '@/lib/utils/analysis/sage';
 import { SageAction, SageParams } from '@/lib/types';
-import { AssistantStream } from 'openai/lib/AssistantStream';
 
 export const runtime = 'nodejs';
 
@@ -10,59 +9,11 @@ function sendUpdate(
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
-  controller.enqueue(JSON.stringify({ type, message }));
-}
-
-async function readStreamContent(
-  stream: ReadableStream,
-  controller: ReadableStreamDefaultController
-): Promise<void> {
-  AssistantStream.fromReadableStream(stream)
-    .on('textCreated', (text) => {
-      sendUpdate('text_created', controller, 'text_created');
-    })
-    .on('textDelta', (textDelta, snapshot) => {
-      if (textDelta.value != null) {
-        sendUpdate('text', controller, textDelta.value);
-      }
-    })
-    .on('toolCallCreated', (toolCall) => {
-      sendUpdate('code_created', controller, 'text_created');
-    })
-    .on('toolCallDelta', (toolCallDelta, snapshot) => {
-      if (toolCallDelta.type === 'code_interpreter') {
-        if (!toolCallDelta.code_interpreter) {
-          return;
-        }
-        if (toolCallDelta.code_interpreter.input) {
-          sendUpdate('code', controller, toolCallDelta.code_interpreter.input);
-        }
-        if (toolCallDelta.code_interpreter?.outputs) {
-          toolCallDelta.code_interpreter.outputs.forEach((output) => {
-            if (output.type === 'logs') {
-              console.log(`\nlog: ${output.logs}\n`);
-            }
-          });
-        }
-      } else {
-        return;
-      }
-    })
-    .on('imageFileDone', (image) => {
-      const imageUrl = `\n![${image.file_id}](/api/files/${image.file_id})\n`;
-      sendUpdate('image', controller, imageUrl);
-    })
-    .on('event', (event) => {
-      if (event.event === 'thread.run.requires_action') {
-        sendUpdate('notification', controller, 'requires_action');
-      }
-      if (event.event === 'thread.run.completed') {
-        sendUpdate('notification', controller, 'events_completed');
-      }
-    })
-    .on('end', () => {
-      controller.close();
-    });
+  try {
+    controller.enqueue(JSON.stringify({ type, message }));
+  } catch (error) {
+    console.error('Failed to send update:', error);
+  }
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -80,33 +31,35 @@ export async function POST(req: NextRequest): Promise<Response> {
       );
     }
 
-    let response;
     const stream = new ReadableStream({
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
         try {
+          let response;
           switch (action) {
             case 'summon':
               response = await summon(sageParams, send);
+              sendUpdate('notification', controller, JSON.stringify(response));
               break;
             case 'reform':
               response = await reform(sageParams, send);
+              sendUpdate('notification', controller, JSON.stringify(response));
               break;
             case 'consult':
               response = await consult(sageParams, send);
-              if (response) {
-                await readStreamContent(response, controller);
-              }
               break;
             case 'dismiss':
               response = await dismiss(sageParams, send);
+              sendUpdate('notification', controller, JSON.stringify(response));
               break;
             default:
               sendUpdate('notification', controller, 'Invalid Action');
           }
         } catch (error: any) {
+          console.error('Error:', error);
           sendUpdate('notification', controller, error.message);
+        } finally {
           controller.close();
         }
       },

@@ -2,6 +2,7 @@ import { openai } from '@/lib/client/openai';
 import { SageParams, User } from '@/lib/types';
 import clientPromise from '@/lib/client/mongodb';
 import { threadId } from 'worker_threads';
+import { AssistantStream } from 'openai/lib/AssistantStream';
 
 export async function summon(
   sageParams: SageParams,
@@ -108,6 +109,48 @@ export async function reform(
   return updatedSageResponse;
 }
 
+export async function dismiss(
+  sageParams: any,
+  sendUpdate: (type: string, message: string) => void
+): Promise<any> {
+  const { userEmail, sageId } = sageParams;
+
+  if (!userEmail || !sageId) {
+    throw new Error('User email and sage id are required');
+  }
+
+  const client = await clientPromise;
+  const db = client.db('Atlas');
+  if (!userEmail) {
+    throw new Error('User email not found in the database');
+  }
+
+  const userCollection = db.collection<User>('users');
+
+  const user = await userCollection.findOne({ email: userEmail });
+
+  if (!user?.sageId || !user?.threadId) {
+    throw new Error('User does not have a sage ID or thread ID');
+  }
+  console.log(user);
+  await userCollection.updateOne(
+    { email: userEmail },
+    {
+      $unset: {
+        sageId: '',
+        threadId: '',
+      },
+    }
+  );
+  sendUpdate('notification', 'User updated successfully');
+
+  sendUpdate('notification', 'Dismissing sage...');
+  const response = await openai.beta.assistants.del(`${user.sageId}`);
+  sendUpdate('notification', 'Sage dismissed successfully');
+
+  return response;
+}
+
 export async function consult(
   sageParams: SageParams,
   sendUpdate: (type: string, message: string) => void
@@ -151,48 +194,56 @@ export async function consult(
   const stream = openai.beta.threads.runs.stream(myThread.id, {
     assistant_id: user.sageId,
   });
-
-  return stream.toReadableStream();
-}
-
-export async function dismiss(
-  sageParams: any,
-  sendUpdate: (type: string, message: string) => void
-): Promise<any> {
-  const { userEmail, sageId } = sageParams;
-
-  if (!userEmail || !sageId) {
-    throw new Error('User email and sage id are required');
-  }
-
-  const client = await clientPromise;
-  const db = client.db('Atlas');
-  if (!userEmail) {
-    throw new Error('User email not found in the database');
-  }
-
-  const userCollection = db.collection<User>('users');
-
-  const user = await userCollection.findOne({ email: userEmail });
-
-  if (!user?.sageId || !user?.threadId) {
-    throw new Error('User does not have a sage ID or thread ID');
-  }
-  console.log(user)
-  await userCollection.updateOne(
-    { email: userEmail },
-    {
-      $unset: {
-        'sageId': '',
-        'threadId': '',
-      },
-    }
+  const assistantStream = AssistantStream.fromReadableStream(
+    stream.toReadableStream()
   );
-  sendUpdate('notification', 'User updated successfully');
 
-  sendUpdate('notification', 'Dismissing sage...');
-  const response = await openai.beta.assistants.del(`${user.sageId}`);
-  sendUpdate('notification', 'Sage dismissed successfully');
-
-  return response;
+  return new Promise((resolve, reject) => {
+    assistantStream
+      .on('textCreated', (text) => {
+        sendUpdate('text_created', 'text_created');
+      })
+      .on('textDelta', (textDelta, snapshot) => {
+        if (textDelta.value != null) {
+          sendUpdate('text', textDelta.value);
+        }
+      })
+      .on('toolCallCreated', (toolCall) => {
+        sendUpdate('code_created', 'text_created');
+      })
+      .on('toolCallDelta', (toolCallDelta, snapshot) => {
+        if (toolCallDelta.type === 'code_interpreter') {
+          if (!toolCallDelta.code_interpreter) {
+            return;
+          }
+          if (toolCallDelta.code_interpreter.input) {
+            sendUpdate('code', toolCallDelta.code_interpreter.input);
+          }
+          if (toolCallDelta.code_interpreter?.outputs) {
+            toolCallDelta.code_interpreter.outputs.forEach((output) => {
+              if (output.type === 'logs') {
+                console.log(`\nlog: ${output.logs}\n`);
+              }
+            });
+          }
+        }
+      })
+      .on('imageFileDone', (image) => {
+        const imageUrl = `\n![${image.file_id}](/api/files/${image.file_id})\n`;
+        sendUpdate('image', imageUrl);
+      })
+      .on('event', (event) => {
+        if (event.event === 'thread.run.requires_action') {
+          sendUpdate('notification', 'requires_action');
+        }
+        if (event.event === 'thread.run.completed') {
+          sendUpdate('notification', 'events_completed');
+          resolve(event);
+        }
+      })
+      .on('error', (error) => {
+        sendUpdate('notification', 'error');
+        reject(error);
+      });
+  });
 }
