@@ -86,15 +86,17 @@ export function Dropzone({
         'Cleaning up',
       ];
 
-      const onUpdate = (message: string) => {
-        if (allowedStates.some((state) => message.startsWith(state))) {
+      const onUpdate = (stringMessage: string) => {
+        const jsonMessage = JSON.parse(stringMessage);
+        const msg = jsonMessage.message;
+        if (allowedStates.some((state) => msg.startsWith(state))) {
           setProgress((prev) => prev + 20.0 / files.length);
-        } else if (message.startsWith('Success')) {
+        } else if (msg.startsWith('Success')) {
           setProgress(100);
           setIsUploadCompleted(true);
         }
 
-        handleFileInfo(message);
+        handleFileInfo(msg);
       };
 
       await forge(files, userEmail, forgeParams, onUpdate);
