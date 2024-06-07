@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef, useState, FormEvent } from 'react';
 import { useUIState, useActions } from 'ai/rsc';
-import { AssistantMessage, UserMessage } from '@/components/llm-stocks/message';
+import { AssistantMessage, UserMessage } from '@/components/message';
 import { type AI } from './action';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import Textarea from 'react-textarea-autosize';
