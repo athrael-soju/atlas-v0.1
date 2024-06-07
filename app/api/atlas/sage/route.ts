@@ -36,29 +36,24 @@ export async function POST(req: NextRequest): Promise<Response> {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
         try {
-          let response;
           switch (action) {
             case 'summon':
-              response = await summon(sageParams, send);
-              sendUpdate('notification', controller, JSON.stringify(response));
+              await summon(sageParams, send);
               break;
             case 'reform':
-              response = await reform(sageParams, send);
-              sendUpdate('notification', controller, JSON.stringify(response));
+              await reform(sageParams, send);
               break;
             case 'consult':
-              response = await consult(sageParams, send);
+              await consult(sageParams, send);
               break;
             case 'dismiss':
-              response = await dismiss(sageParams, send);
-              sendUpdate('notification', controller, JSON.stringify(response));
+              await dismiss(sageParams, send);
               break;
             default:
               sendUpdate('notification', controller, 'Invalid Action');
           }
         } catch (error: any) {
-          console.error('Error:', error);
-          sendUpdate('notification', controller, error.message);
+          sendUpdate('error', controller, error.message);
         } finally {
           controller.close();
         }
@@ -73,7 +68,6 @@ export async function POST(req: NextRequest): Promise<Response> {
       },
     });
   } catch (error: any) {
-    console.error('Failed to process request:', error);
     return NextResponse.json(
       { error: `Failed to process request: ${error.message}` },
       { status: 500 }

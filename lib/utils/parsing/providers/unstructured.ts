@@ -2,13 +2,18 @@ import { FileEntry } from '@/lib/types';
 import { UnstructuredClient } from 'unstructured-client';
 import * as fs from 'fs';
 
-const apiKey = process.env.UNSTRUCTURED_API as string;
+const apiKey = process.env.UNSTRUCTURED_API;
+const serverURL = process.env.UNSTRUCTURED_SERVER_URL;
+
+if (!apiKey) {
+  throw new Error('UNSTRUCTURED_API is not set');
+}
 
 const unstructuredClient = new UnstructuredClient({
   security: {
     apiKeyAuth: apiKey,
   },
-  serverURL: process.env.UNSTRUCTURED_SERVER_URL, // Optional if you have access to the SaaS platform
+  serverURL, // Optional if you have access to the SaaS platform
 });
 
 export async function parseUnstructured(
@@ -16,16 +21,22 @@ export async function parseUnstructured(
   chunkSize: number,
   overlap: number
 ) {
-  const fileData = fs.readFileSync(file.path);
-  let parsedDataResponse = await unstructuredClient.general.partition({
-    files: {
-      content: fileData,
-      fileName: file.name,
-    },
-    strategy: 'fast', // TODO: Add support for user-selected strategy
-    chunkingStrategy: 'by_title',
-    maxCharacters: chunkSize,
-    overlap: overlap,
-  });
-  return parsedDataResponse?.elements || [];
+  try {
+    const fileData = fs.readFileSync(file.path);
+
+    const parsedDataResponse = await unstructuredClient.general.partition({
+      files: {
+        content: fileData,
+        fileName: file.name,
+      },
+      strategy: 'fast', // TODO: Add support for user-selected strategy
+      chunkingStrategy: 'by_title',
+      maxCharacters: chunkSize,
+      overlap: overlap,
+    });
+
+    return parsedDataResponse?.elements || [];
+  } catch (error: any) {
+    throw new Error('Failed to parse unstructured data', error.message);
+  }
 }

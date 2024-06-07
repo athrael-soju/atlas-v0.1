@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-
 import { ForgeParams } from '@/lib/types';
 import { processDocument } from '@/lib/utils/processing/forge';
 import { processDocumentViaOpenAi } from '@/lib/utils/processing/openai';
+
 export const runtime = 'nodejs';
 
 function sendUpdate(
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
           send('notification', `Success: ${success}. Failed: ${failed}`);
         } catch (error: any) {
-          send('notification', `Error processing files: ${error.message}`);
+          send('error', error.message);
         } finally {
           controller.close();
         }

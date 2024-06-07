@@ -1,7 +1,6 @@
 import { openai } from '@/lib/client/openai';
 import { SageParams, User } from '@/lib/types';
 import clientPromise from '@/lib/client/mongodb';
-import { threadId } from 'worker_threads';
 import { AssistantStream } from 'openai/lib/AssistantStream';
 
 export async function summon(
@@ -25,46 +24,37 @@ export async function summon(
 
   if (user?.sageId && user?.threadId) {
     throw new Error('User already has a sage');
-  } else {
-    sendUpdate('notification', 'Summoning sage...');
-    const sage = await openai.beta.assistants.create({
-      instructions,
-      name,
-      tools: [{ type: 'code_interpreter' }],
-      tool_resources: { code_interpreter: { file_ids: [] } },
-      model,
-    });
-    sendUpdate('notification', 'Sage summoned successfully');
-    await userCollection.updateOne(
-      { email: userEmail },
-      {
-        $set: {
-          sageId: sage.id,
-        },
-      }
-    );
-
-    sendUpdate('notification', 'User updated with sage ID.');
-
-    sendUpdate('notification', 'Creating thread...');
-    const thread = await openai.beta.threads.create();
-    sendUpdate('notification', 'Thread created successfully');
-
-    await userCollection.updateOne(
-      { email: userEmail },
-      {
-        $set: {
-          threadId: thread.id,
-        },
-      }
-    );
-    sendUpdate('notification', 'User updated with thread ID.');
-
-    return {
-      sage: sage,
-      threadId: thread.id,
-    };
   }
+
+  sendUpdate('notification', 'Summoning sage...');
+  const sage = await openai.beta.assistants.create({
+    instructions,
+    name,
+    tools: [{ type: 'code_interpreter' }],
+    tool_resources: { code_interpreter: { file_ids: [] } },
+    model,
+  });
+  sendUpdate('notification', 'Sage summoned successfully. Sage ID: ' + sage.id);
+
+  await userCollection.updateOne(
+    { email: userEmail },
+    { $set: { sageId: sage.id } }
+  );
+
+  sendUpdate('notification', 'User updated with sage ID.');
+
+  sendUpdate('notification', 'Creating thread...');
+  const thread = await openai.beta.threads.create();
+  sendUpdate(
+    'notification',
+    'Thread created successfully. Thread ID: ' + thread.id
+  );
+
+  await userCollection.updateOne(
+    { email: userEmail },
+    { $set: { threadId: thread.id } }
+  );
+  sendUpdate('notification', 'User updated with thread ID.');
 }
 
 export async function reform(
@@ -72,11 +62,13 @@ export async function reform(
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const { userEmail, name, instructions, model, file_ids } = sageParams;
-  const client = await clientPromise;
-  const db = client.db('Atlas');
+
   if (!userEmail) {
     throw new Error('User email is required');
   }
+
+  const client = await clientPromise;
+  const db = client.db('Atlas');
   const userCollection = db.collection<User>('users');
 
   const user = await userCollection.findOne({ email: userEmail });
@@ -104,27 +96,24 @@ export async function reform(
       model: model ?? currentSage.model,
     }
   );
-  sendUpdate('notification', 'Sage reformed successfully');
-
-  return updatedSageResponse;
+  sendUpdate(
+    'notification',
+    `Sage reformed successfully - ${updatedSageResponse.id}`
+  );
 }
 
 export async function dismiss(
-  sageParams: any,
+  sageParams: { userEmail: string },
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
-  const { userEmail, sageId } = sageParams;
+  const { userEmail } = sageParams;
 
-  if (!userEmail || !sageId) {
-    throw new Error('User email and sage id are required');
+  if (!userEmail) {
+    throw new Error('User email is required');
   }
 
   const client = await clientPromise;
   const db = client.db('Atlas');
-  if (!userEmail) {
-    throw new Error('User email not found in the database');
-  }
-
   const userCollection = db.collection<User>('users');
 
   const user = await userCollection.findOne({ email: userEmail });
@@ -132,23 +121,19 @@ export async function dismiss(
   if (!user?.sageId || !user?.threadId) {
     throw new Error('User does not have a sage ID or thread ID');
   }
-  console.log(user);
+
   await userCollection.updateOne(
     { email: userEmail },
-    {
-      $unset: {
-        sageId: '',
-        threadId: '',
-      },
-    }
+    { $unset: { sageId: '', threadId: '' } }
   );
   sendUpdate('notification', 'User updated successfully');
 
   sendUpdate('notification', 'Dismissing sage...');
-  const response = await openai.beta.assistants.del(`${user.sageId}`);
-  sendUpdate('notification', 'Sage dismissed successfully');
-
-  return response;
+  const response = await openai.beta.assistants.del(user.sageId);
+  sendUpdate(
+    'notification',
+    `Sage dismissed: ${response.deleted} - ${response.id}`
+  );
 }
 
 export async function consult(
@@ -156,12 +141,13 @@ export async function consult(
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const { userEmail, message, file_ids } = sageParams;
-  const client = await clientPromise;
-  const db = client.db('Atlas');
+
   if (!userEmail || !message) {
     throw new Error('User email and message are required');
   }
 
+  const client = await clientPromise;
+  const db = client.db('Atlas');
   const userCollection = db.collection<User>('users');
 
   const user = await userCollection.findOne({ email: userEmail });
@@ -178,7 +164,7 @@ export async function consult(
     sendUpdate('notification', 'Updating thread...');
     await openai.beta.threads.update(myThread.id, {
       metadata: { modified: 'true', user: user.email },
-      tool_resources: { code_interpreter: { file_ids: file_ids } },
+      tool_resources: { code_interpreter: { file_ids } },
     });
     sendUpdate('notification', 'Thread updated successfully');
   }
@@ -204,7 +190,7 @@ export async function consult(
         sendUpdate('text_created', 'text_created');
       })
       .on('textDelta', (textDelta, snapshot) => {
-        if (textDelta.value != null) {
+        if (textDelta.value) {
           sendUpdate('text', textDelta.value);
         }
       })
@@ -213,16 +199,13 @@ export async function consult(
       })
       .on('toolCallDelta', (toolCallDelta, snapshot) => {
         if (toolCallDelta.type === 'code_interpreter') {
-          if (!toolCallDelta.code_interpreter) {
-            return;
-          }
-          if (toolCallDelta.code_interpreter.input) {
+          if (toolCallDelta.code_interpreter?.input) {
             sendUpdate('code', toolCallDelta.code_interpreter.input);
           }
           if (toolCallDelta.code_interpreter?.outputs) {
             toolCallDelta.code_interpreter.outputs.forEach((output) => {
               if (output.type === 'logs') {
-                console.log(`\nlog: ${output.logs}\n`);
+                sendUpdate('log', output.logs as string);
               }
             });
           }
@@ -242,7 +225,6 @@ export async function consult(
         }
       })
       .on('error', (error) => {
-        sendUpdate('notification', 'error');
         reject(error);
       });
   });

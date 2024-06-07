@@ -47,7 +47,7 @@ export async function POST(req: NextRequest): Promise<Response> {
             JSON.stringify(response.content)
           );
         } catch (error: any) {
-          sendUpdate('notification', controller, `Error: ${error.message}`);
+          sendUpdate('error', controller, `Error: ${error.message}`);
         } finally {
           controller.close();
         }
