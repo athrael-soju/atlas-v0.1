@@ -9,13 +9,13 @@ import {
   Stocks,
   Events,
   SystemMessage,
-} from '@/components/llm-stocks';
+} from './';
 
 import { runAsyncFnWithoutBlocking, sleep, formatNumber } from '@/lib/utils';
 
-import { StockSkeleton } from '@/components/llm-stocks/stock-skeleton';
-import { EventsSkeleton } from '@/components/llm-stocks/events-skeleton';
-import { StocksSkeleton } from '@/components/llm-stocks/stocks-skeleton';
+import { StockSkeleton } from './stock-skeleton';
+import { EventsSkeleton } from './events-skeleton';
+import { StocksSkeleton } from './stocks-skeleton';
 import { createStreamableUI, getMutableAIState } from 'ai/rsc';
 import { AI } from '@/app/action';
 

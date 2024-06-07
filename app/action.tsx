@@ -3,11 +3,15 @@ import 'server-only';
 import { createAI, createStreamableUI, getMutableAIState } from 'ai/rsc';
 import OpenAI from 'openai';
 
-import { spinner, AssistantMessage } from '@/components/llm-stocks';
+import { spinner } from '@/components/ui/spinner';
+import { AssistantMessage } from '@/components/message';
 import { runOpenAICompletion } from '@/lib/utils';
 import { prompts } from '@/lib/prompts';
 import { tools } from '@/lib/stocks/tools';
-import { checkIfCalled, confirmPurchase } from '@/lib/stocks/functions';
+import {
+  checkIfCalled,
+  confirmPurchase,
+} from '@/components/examples/llm-stocks/functions';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY ?? '',
