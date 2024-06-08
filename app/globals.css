@@ -69,13 +69,42 @@
     --destructive-foreground: 0 85.7% 97.3%;
     --ring: 240 3.7% 15.9%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  .userMessage,
+  .assistantMessage,
+  .codeMessage {
+    @apply m-2 p-2.5 self-start rounded-xl max-w-[80%] break-words;
+  }
+
+  .assistantMessage img {
+    @apply max-w-full my-2 rounded-lg;
+  }
+
+  .userMessage {
+    @apply self-end text-primary-foreground bg-primary;
+  }
+
+  .assistantMessage {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  .codeMessage {
+    @apply p-2.5 bg-muted text-muted-foreground font-mono;
+    counter-reset: line;
+  }
+
+  .codeMessage > div {
+    @apply mt-1;
+  }
+
+  .codeMessage span {
+    @apply text-muted-foreground mr-2;
   }
 }

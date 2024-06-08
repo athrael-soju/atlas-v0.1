@@ -4,7 +4,6 @@ import { IconAI, IconUser } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import styles from './chat.module.css';
 import { MessageProps } from '@/lib/types';
 
 export function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
@@ -26,7 +25,7 @@ export function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
 
 const CodeContent = ({ text }: { text: string }) => {
   return (
-    <div className={styles.codeMessage}>
+    <div className="codeMessage">
       {text.split('\n').map((line, index) => (
         <div key={index}>
           <span>{`${index + 1}. `}</span>
@@ -38,7 +37,7 @@ const CodeContent = ({ text }: { text: string }) => {
 };
 const TextContent = ({ text }: { text: string }) => {
   return (
-    <div className={styles.assistantMessage}>
+    <div className="assistantMessage">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
     </div>
   );
@@ -95,7 +94,9 @@ export function BotCard({
   );
 }
 
-export function SystemMessage({ children }: { children: React.ReactNode }) {
+export function SystemMessage({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <div className="mt-2 flex items-center justify-center gap-2 text-xs text-gray-500">
       <div className="max-w-[600px] flex-initial px-2 py-2">{children}</div>
