@@ -2,7 +2,7 @@
 
 import {
   spinner,
-  BotCard,
+  AssistantCard,
   AssistantMessage,
   Stock,
   Purchase,
@@ -46,17 +46,17 @@ export async function checkIfCalled(completion: any, reply: any, aiState: any) {
     'list_stocks',
     async ({ stocks }: ListStocksInfo) => {
       reply.update(
-        <BotCard>
+        <AssistantCard>
           <StocksSkeleton />
-        </BotCard>
+        </AssistantCard>
       );
 
       await sleep(1000);
 
       reply.done(
-        <BotCard>
+        <AssistantCard>
           <Stocks stocks={stocks} />
-        </BotCard>
+        </AssistantCard>
       );
 
       aiState.done([
@@ -74,17 +74,17 @@ export async function checkIfCalled(completion: any, reply: any, aiState: any) {
     'get_events',
     async ({ events }: { events: EventInfo[] }) => {
       reply.update(
-        <BotCard>
+        <AssistantCard>
           <EventsSkeleton />
-        </BotCard>
+        </AssistantCard>
       );
 
       await sleep(1000);
 
       reply.done(
-        <BotCard>
+        <AssistantCard>
           <Events events={events} />
-        </BotCard>
+        </AssistantCard>
       );
 
       aiState.done([
@@ -102,17 +102,17 @@ export async function checkIfCalled(completion: any, reply: any, aiState: any) {
     'show_stock_price',
     async ({ symbol, price, delta }: StockPriceInfo) => {
       reply.update(
-        <BotCard>
+        <AssistantCard>
           <StockSkeleton />
-        </BotCard>
+        </AssistantCard>
       );
 
       await sleep(1000);
 
       reply.done(
-        <BotCard>
+        <AssistantCard>
           <Stock name={symbol} price={price} delta={delta} />
-        </BotCard>
+        </AssistantCard>
       );
 
       aiState.done([
@@ -154,13 +154,13 @@ export async function checkIfCalled(completion: any, reply: any, aiState: any) {
             }
           />
 
-          <BotCard showAvatar={false}>
+          <AssistantCard showAvatar={false}>
             <Purchase
               defaultAmount={numberOfShares}
               name={symbol}
               price={+price}
             />
-          </BotCard>
+          </AssistantCard>
         </>
       );
       aiState.done([

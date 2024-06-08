@@ -6,7 +6,7 @@ import { StocksSkeleton } from './stocks-skeleton';
 import { EventsSkeleton } from './events-skeleton';
 
 export { spinner } from '../../ui/spinner';
-export { BotCard, AssistantMessage, SystemMessage } from '@/components/message';
+export { AssistantCard, AssistantMessage, SystemMessage } from '@/components/message';
 
 const Stock = dynamic(() => import('./stock').then((mod) => mod.Stock), {
   ssr: false,

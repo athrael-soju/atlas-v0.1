@@ -4,7 +4,7 @@ import { IconAI, IconUser } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { MessageProps } from '@/lib/types';
+import { CodeProps, MessageProps } from '@/lib/types';
 
 export function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
   return (
@@ -27,18 +27,34 @@ const CodeContent = ({ text }: { text: string }) => {
   return (
     <div className="codeMessage">
       {text.split('\n').map((line, index) => (
-        <div key={index}>
-          <span>{`${index + 1}. `}</span>
-          {line}
+        <div key={index} className="flex">
+          <span className="text-gray-500">{`${index + 1}. `}</span>
+          <pre className="ml-2">{line}</pre>
         </div>
       ))}
     </div>
   );
 };
+
 const TextContent = ({ text }: { text: string }) => {
   return (
-    <div className="assistantMessage">
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+    <div>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          code: ({ inline, children, ...props }: CodeProps) => {
+            return inline ? (
+              <code className="inlineCode" {...props}>
+                {children}
+              </code>
+            ) : (
+              <CodeContent text={String(children).replace(/\n$/, '')} />
+            );
+          },
+        }}
+      >
+        {text}
+      </ReactMarkdown>
     </div>
   );
 };
@@ -65,14 +81,14 @@ export function AssistantMessage({
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
         <IconAI />
       </div>
-      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
+      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1 assistantMessage">
         {typeof text === 'string' ? <Message role={role} text={text} /> : text}
       </div>
     </div>
   );
 }
 
-export function BotCard({
+export function AssistantCard({
   children,
   showAvatar = true,
 }: Readonly<{
@@ -80,7 +96,7 @@ export function BotCard({
   showAvatar?: boolean;
 }>) {
   return (
-    <div className="group relative flex items-start md:-ml-12">
+    <div className="group relative flex items-start">
       <div
         className={cn(
           'flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground',

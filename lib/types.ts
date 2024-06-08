@@ -87,6 +87,11 @@ export interface User {
   files: UserFile[];
 }
 
+export interface CodeProps extends React.HTMLAttributes<HTMLElement> {
+  inline?: boolean;
+  children?: React.ReactNode;
+}
+
 export type MessageProps = {
   role: 'text' | 'code' | 'image' | 'spinner';
   text: string;

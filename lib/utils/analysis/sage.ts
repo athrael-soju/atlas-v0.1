@@ -21,7 +21,7 @@ export async function summon(
 
   const user = await measurePerformance(
     () => userCollection.findOne({ email: userEmail }),
-    'Checking if user has sage',
+    'Checking for sage',
     sendUpdate
   );
 
@@ -29,7 +29,9 @@ export async function summon(
     throw new Error('User already has a sage');
   }
 
-  const sage = await measurePerformance(
+  const sage: {
+    id: string;
+  } = await measurePerformance(
     () =>
       openai.beta.assistants.create({
         instructions,
@@ -52,7 +54,9 @@ export async function summon(
     sendUpdate
   );
 
-  const thread = await measurePerformance(
+  const thread: {
+    id: string;
+  } = await measurePerformance(
     () => openai.beta.threads.create(),
     'Creating thread',
     sendUpdate
@@ -85,7 +89,7 @@ export async function reform(
 
   const user = await measurePerformance(
     () => userCollection.findOne({ email: userEmail }),
-    'Checking if user has sage',
+    'Checking for sage',
     sendUpdate
   );
 
@@ -93,7 +97,7 @@ export async function reform(
     throw new Error('User does not have a sage');
   }
 
-  const currentSage = await measurePerformance(
+  const currentSage: any = await measurePerformance(
     () => openai.beta.assistants.retrieve(user.sageId as string),
     'Retrieving current sage',
     sendUpdate
@@ -135,7 +139,7 @@ export async function dismiss(
 
   const user = await measurePerformance(
     () => userCollection.findOne({ email: userEmail }),
-    'Checking if user has sage',
+    'Checking for sage',
     sendUpdate
   );
 
@@ -176,7 +180,7 @@ export async function consult(
 
   const user = await measurePerformance(
     () => userCollection.findOne({ email: userEmail }),
-    'Checking if user has sage',
+    'Checking for sage',
     sendUpdate
   );
 
@@ -184,7 +188,9 @@ export async function consult(
     throw new Error('User does not have a sage or thread ID');
   }
 
-  const myThread = await measurePerformance(
+  const myThread: {
+    id: string;
+  } = await measurePerformance(
     () => openai.beta.threads.retrieve(user.threadId as string),
     'Retrieving thread',
     sendUpdate
@@ -212,46 +218,54 @@ export async function consult(
     sendUpdate
   );
 
+  const stream: any = AssistantStream.fromReadableStream(
+    openai.beta.threads.runs
+      .stream(myThread.id, {
+        assistant_id: user.sageId,
+      })
+      .toReadableStream()
+  );
+
   await measurePerformance(
     () =>
       new Promise((resolve, reject) => {
-        AssistantStream.fromReadableStream(
-          openai.beta.threads.runs
-            .stream(myThread.id, {
-              assistant_id: user.sageId as string,
-            })
-            .toReadableStream()
-        )
-          .on('textCreated', (text) => {
+        stream
+          .on('textCreated', () => {
             sendUpdate('text_created', 'text_created');
           })
-          .on('textDelta', (textDelta, snapshot) => {
+          .on('textDelta', (textDelta: { value: string }) => {
             if (textDelta.value) {
               sendUpdate('text', textDelta.value);
             }
           })
-          .on('toolCallCreated', (toolCall) => {
+          .on('toolCallCreated', () => {
             sendUpdate('code_created', 'text_created');
           })
-          .on('toolCallDelta', (toolCallDelta, snapshot) => {
-            if (toolCallDelta.type === 'code_interpreter') {
-              if (toolCallDelta.code_interpreter?.input) {
-                sendUpdate('code', toolCallDelta.code_interpreter.input);
-              }
-              if (toolCallDelta.code_interpreter?.outputs) {
-                toolCallDelta.code_interpreter.outputs.forEach((output) => {
-                  if (output.type === 'logs') {
-                    sendUpdate('log', output.logs as string);
-                  }
-                });
+          .on(
+            'toolCallDelta',
+            (toolCallDelta: {
+              type: string;
+              code_interpreter: { input: string; outputs: any[] };
+            }) => {
+              if (toolCallDelta.type === 'code_interpreter') {
+                if (toolCallDelta.code_interpreter?.input) {
+                  sendUpdate('code', toolCallDelta.code_interpreter.input);
+                }
+                if (toolCallDelta.code_interpreter?.outputs) {
+                  toolCallDelta.code_interpreter.outputs.forEach((output) => {
+                    if (output.type === 'logs') {
+                      sendUpdate('log', output.logs as string);
+                    }
+                  });
+                }
               }
             }
-          })
-          .on('imageFileDone', (image) => {
+          )
+          .on('imageFileDone', (image: { file_id: any }) => {
             const imageUrl = `\n![${image.file_id}](/api/files/${image.file_id})\n`;
             sendUpdate('image', imageUrl);
           })
-          .on('event', (event) => {
+          .on('event', (event: any) => {
             if (event.event === 'thread.run.requires_action') {
               sendUpdate('notification', 'requires_action');
             }
@@ -260,8 +274,8 @@ export async function consult(
               resolve(event);
             }
           })
-          .on('error', (error) => {
-            reject(error);
+          .on('error', (error: any) => {
+            reject(new Error(error.message));
           });
       }),
     'Consulting sage',
