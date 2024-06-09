@@ -1,10 +1,10 @@
-import { AtlasFile, FileActionResponse, ForgeParams, User } from '@/lib/types';
+import { AtlasFile, FileActionResponse, ForgeParams } from '@/lib/types';
 import { handleFileDeletion, handleFileUpload } from '../storage/handler';
 import { embedDocument } from '../embedding/openai';
 import { upsertDocument } from '../indexing/pinecone';
 import { parse } from '../parsing/handler';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
-import clientPromise from '@/lib/client/mongodb';
+import { db } from '../db/mongodb';
 
 const fsProvider = process.env.FILESYSTEM_PROVIDER ?? 'local';
 
@@ -18,28 +18,15 @@ export async function processDocument(
 
   try {
     // Upload File
-    const uploadResponse: AtlasFile | FileActionResponse =
-      await measurePerformance(
-        () => handleFileUpload(file, userEmail, fsProvider),
-        `Uploading: '${file.name}'`,
-        sendUpdate
-      );
+    const uploadResponse: FileActionResponse = await measurePerformance(
+      () => handleFileUpload(file, userEmail, fsProvider),
+      `Uploading: '${file.name}'`,
+      sendUpdate
+    );
 
-    // Save File to User Files on MongoDB
-    const client = await clientPromise;
-    const db = client.db('Atlas');
-    const userCollection = db.collection<User>('users');
-
+    const dbInstance = await db();
     await measurePerformance(
-      () =>
-        userCollection.updateOne(
-          { email: userEmail },
-          {
-            $push: {
-              files: uploadResponse.file as AtlasFile,
-            },
-          }
-        ),
+      () => dbInstance.addFile(userEmail, uploadResponse.file as AtlasFile),
       `Updating DB: '${file.name}'`,
       sendUpdate
     );

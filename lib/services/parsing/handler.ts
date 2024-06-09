@@ -1,5 +1,5 @@
-import { parseUnstructured } from '@/lib/utils/parsing/providers/unstructured';
-import { parseLocal } from '@/lib/utils/parsing/providers/local';
+import { parseUnstructured } from '@/lib/services/parsing/providers/unstructured';
+import { parseLocal } from '@/lib/services/parsing/providers/local';
 import { AtlasFile } from '@/lib/types';
 
 export async function parse(

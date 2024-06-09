@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { summon, reform, consult, dismiss } from '@/lib/utils/analysis/sage';
+import { summon, reform, consult, dismiss } from '@/lib/services/analysis/sage';
 import { SageAction, SageParams } from '@/lib/types';
 
 export const runtime = 'nodejs';

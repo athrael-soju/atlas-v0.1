@@ -1,4 +1,3 @@
-// parseLocal.ts
 import fs from 'fs/promises';
 import pdfParse from 'pdf-parse';
 import { Chunk, AtlasFile, Page } from '@/lib/types';

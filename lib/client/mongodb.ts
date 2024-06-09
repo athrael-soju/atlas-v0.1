@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import { Db, MongoClient } from 'mongodb';
 
 const uri = process.env.MONGODB_URI as string;
 const options = {
@@ -6,8 +6,9 @@ const options = {
 };
 
 let client: MongoClient;
+let db: Db;
 
-const getClientPromise = async (): Promise<MongoClient> => {
+export const getClientPromise = async (): Promise<MongoClient> => {
   let clientPromise: Promise<MongoClient>;
   if (process.env.NODE_ENV === 'development') {
     let globalWithMongo = global as typeof globalThis & {
@@ -33,6 +34,11 @@ const getClientPromise = async (): Promise<MongoClient> => {
   }
   return clientPromise;
 };
-const clientPromise = getClientPromise();
 
-export default clientPromise;
+export const getDb = async () => {
+  if (!db) {
+    const client = await getClientPromise();
+    db = client.db('Atlas');
+  }
+  return db;
+};

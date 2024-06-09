@@ -1,12 +1,3 @@
-export interface OpenAiFileUploadResponse {
-  id: string;
-  object: string;
-  bytes: number;
-  created_at: number;
-  filename: string;
-  purpose: string;
-}
-
 export interface EmbeddingResponse {
   message: string;
   chunks: any[];
@@ -65,25 +56,28 @@ export enum Purpose {
 
 export interface FileActionResponse {
   message: string;
-  file: AtlasFile | OpenAiFileUploadResponse;
+  file: AtlasFile;
 }
 
-export interface AtlasFile {
-  id: string;
-  userEmail: string;
+export interface AtlasFile extends BaseFile {
   content: File;
   path: string;
-  uploadDate: number;
-  purpose: Purpose.Scribe;
 }
 
-export interface User {
+export interface BaseFile {
+  id: string;
+  userEmail: string;
+  uploadDate: number;
+  purpose: Purpose.Scribe | Purpose.Sage;
+}
+
+export interface AtlasUser {
   id: string;
   email: string;
   image?: string;
   sageId?: string;
   threadId?: string;
-  files: AtlasFile[];
+  files: BaseFile[] | AtlasFile[];
 }
 
 export interface CodeProps extends React.HTMLAttributes<HTMLElement> {
