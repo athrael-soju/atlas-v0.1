@@ -2,16 +2,16 @@ import { rerank } from '@/lib/utils/reranking/cohere';
 import { embedMessage } from '@/lib/utils/embedding/openai';
 import { query } from '@/lib/utils/indexing/pinecone';
 import { performance } from 'perf_hooks';
-import { ArchiveParams } from '@/lib/types';
+import { ScribeParams } from '@/lib/types';
 import { measurePerformance, getTotalTime } from '../metrics';
 
 export async function retrieveContext(
   content: string,
-  archiveParams: ArchiveParams,
+  scribeParams: ScribeParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<{ success: boolean; userEmail: string; content: any }> {
   const totalStartTime = performance.now();
-  const { userEmail, topK, topN } = archiveParams;
+  const { userEmail, topK, topN } = scribeParams;
 
   try {
     const embeddingResults = await measurePerformance(

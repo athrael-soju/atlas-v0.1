@@ -1,6 +1,6 @@
 import {
   ForgeParams,
-  ArchiveParams,
+  ScribeParams,
   SageParams,
   SageAction,
 } from '@/lib/types';
@@ -72,12 +72,12 @@ export const forge = async (
 
 export const scribe = async (
   content: string,
-  archiveParams: ArchiveParams,
+  scribeParams: ScribeParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   formData.append('content', content);
-  formData.append('archiveParams', JSON.stringify(archiveParams));
+  formData.append('scribeParams', JSON.stringify(scribeParams));
   try {
     const response = await fetch(`/api/atlas/scribe`, {
       method: 'POST',

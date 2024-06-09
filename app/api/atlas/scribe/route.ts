@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ArchiveParams } from '@/lib/types';
+import { ScribeParams } from '@/lib/types';
 import { retrieveContext } from '@/lib/utils/retrieval/scribe';
 
 export const runtime = 'nodejs';
@@ -16,11 +16,11 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
     const content = data.get('content') as string;
-    const archiveParams = JSON.parse(
-      data.get('archiveParams') as string
-    ) as ArchiveParams;
+    const scribeParams = JSON.parse(
+      data.get('scribeParams') as string
+    ) as ScribeParams;
 
-    if (!archiveParams.userEmail) {
+    if (!scribeParams.userEmail) {
       return NextResponse.json(
         { error: 'User email is required' },
         { status: 400 }
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           sendUpdate(type, controller, message);
 
         try {
-          const response = await retrieveContext(content, archiveParams, send);
+          const response = await retrieveContext(content, scribeParams, send);
           sendUpdate(
             'final-notification',
             controller,

@@ -19,7 +19,7 @@ import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/dropzone';
 import { scribe, sage } from '@/lib/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
-import { ForgeParams, ArchiveParams } from '@/lib/types';
+import { ForgeParams, ScribeParams } from '@/lib/types';
 import { useSession } from 'next-auth/react';
 import { spinner } from '@/components/ui/spinner';
 
@@ -38,11 +38,11 @@ export default function Page() {
 
   const userEmail = session?.user?.email ?? '';
 
-  const archiveParams = {
+  const scribeParams = {
     userEmail: userEmail,
     topK: parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100,
     topN: parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10,
-  } as ArchiveParams;
+  } as ScribeParams;
 
   const forgeParams = {
     provider: (process.env.NEXT_PUBLIC_PARSING_PROVIDER as string) || 'local',
@@ -126,7 +126,7 @@ export default function Page() {
 
     let context = '';
     if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Scribe') {
-      await scribe(message, archiveParams, (update) => {
+      await scribe(message, scribeParams, (update) => {
         const text = JSON.parse(update);
         if (text.type === 'final-notification') {
           context += text.message + '\n';

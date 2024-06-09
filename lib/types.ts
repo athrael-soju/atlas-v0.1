@@ -50,7 +50,7 @@ export interface Page {
   pageNumber: number;
 }
 
-export interface ArchiveParams {
+export interface ScribeParams {
   userEmail: string;
   topK: number;
   topN: number;
@@ -96,5 +96,7 @@ export type MessageProps = {
   role: 'text' | 'code' | 'image' | 'spinner';
   text: string;
 };
+
+
 
 export type SageAction = 'summon' | 'reform' | 'consult' | 'dismiss';
