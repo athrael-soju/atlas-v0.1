@@ -9,7 +9,7 @@ export const measurePerformance = async <T>(
   sendUpdate('notification', description);
   process.stdout.write(chalk.blue(`${description}\r`));
 
-  const animation = ['.', '..', '...', '....'];
+  const animation = ['.', '..', '...'];
   let i = 0;
   const interval = setInterval(() => {
     process.stdout.write(
@@ -23,10 +23,24 @@ export const measurePerformance = async <T>(
 
   const endTime = performance.now();
   process.stdout.write(
-    chalk.blue(`${description}...`) +
+    chalk.blue(`${description}: `) +
       chalk.green('Completed in ') +
-      chalk.magenta(((endTime - startTime) / 1000).toFixed(2)) +
+      chalk.red(((endTime - startTime) / 1000).toFixed(2)) +
       chalk.green(' seconds\n')
   );
   return result;
+};
+
+export const getTotalTime = (
+  totalStartTime: number,
+  totalEndTime: number,
+  sendUpdate: (type: string, message: string) => void
+): void => {
+  const totalTime = ((totalEndTime - totalStartTime) / 1000).toFixed(2);
+  sendUpdate('notification', `Total process completed in ${totalTime} seconds`);
+
+  process.stdout.write(
+    chalk.magenta('Total process completed in ') +
+      chalk.red(totalTime + chalk.magenta(' seconds\n'))
+  );
 };

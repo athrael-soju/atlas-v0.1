@@ -3,7 +3,7 @@ import { handleFileDeletion, handleFileUpload } from '../storage/handler';
 import { embedDocument } from '../embedding/openai';
 import { upsertDocument } from '../indexing/pinecone';
 import { parse } from '../parsing/handler';
-import { measurePerformance } from '@/lib/utils/metrics';
+import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
 
 const fsProvider = process.env.FILESYSTEM_PROVIDER ?? 'local';
 
@@ -63,20 +63,12 @@ export async function processDocument(
       sendUpdate
     );
 
-    const totalEndTime = performance.now();
-    sendUpdate(
-      'notification',
-      `Total process for '${file.name}' completed in ${((totalEndTime - totalStartTime) / 1000).toFixed(2)} seconds`
-    );
-
     return { success: true, fileName: file.name };
   } catch (error: any) {
-    const totalEndTime = performance.now();
     sendUpdate('error', `Error processing '${file.name}': ${error.message}`);
-    sendUpdate(
-      'error',
-      `Total process for '${file.name}' completed in ${((totalEndTime - totalStartTime) / 1000).toFixed(2)} seconds`
-    );
     return { success: false, fileName: file.name, error: error.message };
+  } finally {
+    const totalEndTime = performance.now();
+    getTotalTime(totalStartTime, totalEndTime, sendUpdate);
   }
 }
