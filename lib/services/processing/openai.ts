@@ -1,5 +1,5 @@
 import { handleFileDeletion, handleFileUpload } from '../storage/handler';
-import { measurePerformance } from '../metrics';
+import { measurePerformance } from '../../utils/metrics';
 
 const fsProvider = 'openai';
 

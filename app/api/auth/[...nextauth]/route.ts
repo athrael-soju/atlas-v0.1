@@ -11,7 +11,8 @@ import { JWT } from 'next-auth/jwt';
 import { Adapter, AdapterUser } from 'next-auth/adapters';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
-import clientPromise from '@/lib/client/mongodb';
+import { db } from '@/lib/services/db/mongodb';
+import { getClientPromise } from '@/lib/client/mongodb';
 import {
   uniqueNamesGenerator,
   Config,
@@ -69,16 +70,13 @@ const providers = [
       const user = createAnonymousUser();
 
       // Get the MongoDB client and database
-      const client = await clientPromise;
-      const db = client.db('Atlas');
+      const dbInstance = await db();
 
       // Check if user already exists
-      const existingUser = await db
-        .collection('users')
-        .findOne({ email: user.email });
+      const existingUser = await dbInstance.getUser(user.email as string);
       if (!existingUser) {
         // Save the new user if not exists
-        await db.collection('users').insertOne(user);
+        await dbInstance.insertUser(user);
       }
 
       return user;
@@ -88,7 +86,7 @@ const providers = [
 
 const options: NextAuthOptions = {
   providers,
-  adapter: MongoDBAdapter(clientPromise) as Adapter,
+  adapter: MongoDBAdapter(getClientPromise()) as Adapter,
   callbacks: {
     async jwt({
       token,

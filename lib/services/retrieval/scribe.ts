@@ -1,9 +1,9 @@
-import { rerank } from '@/lib/utils/reranking/cohere';
-import { embedMessage } from '@/lib/utils/embedding/openai';
-import { query } from '@/lib/utils/indexing/pinecone';
+import { rerank } from '@/lib/services/reranking/cohere';
+import { embedMessage } from '@/lib/services/embedding/openai';
+import { query } from '@/lib/services/indexing/pinecone';
 import { performance } from 'perf_hooks';
 import { ScribeParams } from '@/lib/types';
-import { measurePerformance, getTotalTime } from '../metrics';
+import { measurePerformance, getTotalTime } from '../../utils/metrics';
 
 export async function retrieveContext(
   content: string,

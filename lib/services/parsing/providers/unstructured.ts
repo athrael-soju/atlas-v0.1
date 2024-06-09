@@ -27,7 +27,7 @@ export async function parseUnstructured(
     const parsedDataResponse = await unstructuredClient.general.partition({
       files: {
         content: fileData,
-        fileName: file.name,
+        fileName: file.content.name,
       },
       strategy: 'fast', // TODO: Add support for user-selected strategy
       chunkingStrategy: 'by_title',

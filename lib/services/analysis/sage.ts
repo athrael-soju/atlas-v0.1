@@ -1,6 +1,6 @@
 import { openai } from '@/lib/client/openai';
-import { SageParams, User } from '@/lib/types';
-import clientPromise from '@/lib/client/mongodb';
+import { BaseFile, Purpose, SageParams } from '@/lib/types';
+import { db } from '@/lib/services/db/mongodb';
 import { AssistantStream } from 'openai/lib/AssistantStream';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
 
@@ -10,9 +10,6 @@ export async function summon(
 ): Promise<any> {
   const totalStartTime = performance.now();
   try {
-    const client = await clientPromise;
-    const db = client.db('Atlas');
-    const userCollection = db.collection<User>('users');
     const { userEmail, name, instructions, model } = sageParams;
 
     if (!userEmail || !name || !instructions || !model) {
@@ -21,8 +18,10 @@ export async function summon(
       );
     }
 
+    const dbInstance = await db();
+
     const user = await measurePerformance(
-      () => userCollection.findOne({ email: userEmail }),
+      () => dbInstance.getUser(userEmail),
       'Checking for sage',
       sendUpdate
     );
@@ -47,11 +46,7 @@ export async function summon(
     );
 
     await measurePerformance(
-      () =>
-        userCollection.updateOne(
-          { email: userEmail },
-          { $set: { sageId: sage.id } }
-        ),
+      () => dbInstance.summonSage(userEmail, sage.id),
       'Updating user with sage ID',
       sendUpdate
     );
@@ -65,11 +60,7 @@ export async function summon(
     );
 
     await measurePerformance(
-      () =>
-        userCollection.updateOne(
-          { email: userEmail },
-          { $set: { threadId: thread.id } }
-        ),
+      () => dbInstance.addThreadId(userEmail, thread.id),
       'Updating user with thread ID',
       sendUpdate
     );
@@ -94,12 +85,10 @@ export async function reform(
       throw new Error('User email is required');
     }
 
-    const client = await clientPromise;
-    const db = client.db('Atlas');
-    const userCollection = db.collection<User>('users');
+    const dbInstance = await db();
 
     const user = await measurePerformance(
-      () => userCollection.findOne({ email: userEmail }),
+      () => dbInstance.getUser(userEmail),
       'Checking for sage',
       sendUpdate
     );
@@ -152,12 +141,10 @@ export async function dismiss(
       throw new Error('User email is required');
     }
 
-    const client = await clientPromise;
-    const db = client.db('Atlas');
-    const userCollection = db.collection<User>('users');
+    const dbInstance = await db();
 
     const user = await measurePerformance(
-      () => userCollection.findOne({ email: userEmail }),
+      () => dbInstance.getUser(userEmail),
       'Checking for sage',
       sendUpdate
     );
@@ -167,11 +154,7 @@ export async function dismiss(
     }
 
     await measurePerformance(
-      () =>
-        userCollection.updateOne(
-          { email: userEmail },
-          { $unset: { sageId: '', threadId: '' } }
-        ),
+      () => dbInstance.dismissSage(userEmail),
       'Updating user to remove sage and thread IDs',
       sendUpdate
     );
@@ -201,12 +184,10 @@ export async function consult(
       throw new Error('User email and message are required');
     }
 
-    const client = await clientPromise;
-    const db = client.db('Atlas');
-    const userCollection = db.collection<User>('users');
+    const dbInstance = await db();
 
     const user = await measurePerformance(
-      () => userCollection.findOne({ email: userEmail }),
+      () => dbInstance.getUser(userEmail),
       'Checking for sage',
       sendUpdate
     );
@@ -288,7 +269,20 @@ export async function consult(
                 }
               }
             )
-            .on('imageFileDone', (image: { file_id: any }) => {
+            .on('imageFileDone', async (image: { file_id: any }) => {
+              const atlasFile: BaseFile = {
+                id: image.file_id,
+                userEmail,
+                uploadDate: Date.now(),
+                purpose: Purpose.Sage,
+              };
+
+              await measurePerformance(
+                () => dbInstance.addFile(userEmail, atlasFile),
+                'Storing image file in database',
+                sendUpdate
+              );
+
               const imageUrl = `\n![${image.file_id}](/api/files/${image.file_id})\n`;
               sendUpdate('image', imageUrl);
             })

@@ -13,7 +13,6 @@ export async function GET(_request: any, { params: { fileId } }: any) {
   });
 }
 
-//TODO: Implement delete file method.
 export async function POST(_request: any, { params: { fileId } }: any) {
   const [file, fileContent] = await Promise.all([
     openai.files.retrieve(fileId),

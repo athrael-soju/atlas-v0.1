@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ForgeParams } from '@/lib/types';
-import { processDocument } from '@/lib/utils/processing/forge';
-import { processDocumentViaOpenAi } from '@/lib/utils/processing/openai';
+import { processDocument } from '@/lib/services/processing/forge';
+import { processDocumentViaOpenAi } from '@/lib/services/processing/openai';
 
 export const runtime = 'nodejs';
 
