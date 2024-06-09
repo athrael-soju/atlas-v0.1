@@ -1,13 +1,13 @@
 import { parseUnstructured } from '@/lib/utils/parsing/providers/unstructured';
 import { parseLocal } from '@/lib/utils/parsing/providers/local';
-import { FileEntry } from '@/lib/types';
+import { AtlasFile } from '@/lib/types';
 
 export async function parse(
   provider: string,
   minChunkSize: number,
   maxChunkSize: number,
   overlap: number,
-  file: FileEntry
+  file: AtlasFile
 ): Promise<any[]> {
   if (provider === 'unstructured') {
     return await parseUnstructured(file, maxChunkSize, overlap);

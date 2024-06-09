@@ -1,12 +1,3 @@
-export interface FileEntry {
-  id: string;
-  userEmail: string;
-  name: string;
-  path: string;
-  uploadDate: number;
-  contentType: string;
-}
-
 export interface OpenAiFileUploadResponse {
   id: string;
   object: string;
@@ -14,11 +5,6 @@ export interface OpenAiFileUploadResponse {
   created_at: number;
   filename: string;
   purpose: string;
-}
-
-export interface FileActionResponse {
-  message: string;
-  file: FileEntry | OpenAiFileUploadResponse;
 }
 
 export interface EmbeddingResponse {
@@ -72,10 +58,23 @@ export interface SageParams {
   model?: string;
   file_ids?: string[];
 }
+export enum Purpose {
+  Scribe = 'scribe',
+  Sage = 'sage',
+}
 
-export interface UserFile {
+export interface FileActionResponse {
+  message: string;
+  file: AtlasFile | OpenAiFileUploadResponse;
+}
+
+export interface AtlasFile {
   id: string;
-  purpose: string;
+  userEmail: string;
+  content: File;
+  path: string;
+  uploadDate: number;
+  purpose: Purpose.Scribe;
 }
 
 export interface User {
@@ -84,7 +83,7 @@ export interface User {
   image?: string;
   sageId?: string;
   threadId?: string;
-  files: UserFile[];
+  files: AtlasFile[];
 }
 
 export interface CodeProps extends React.HTMLAttributes<HTMLElement> {
@@ -96,7 +95,5 @@ export type MessageProps = {
   role: 'text' | 'code' | 'image' | 'spinner';
   text: string;
 };
-
-
 
 export type SageAction = 'summon' | 'reform' | 'consult' | 'dismiss';

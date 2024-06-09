@@ -1,4 +1,4 @@
-import { FileEntry } from '@/lib/types';
+import { AtlasFile } from '@/lib/types';
 import { UnstructuredClient } from 'unstructured-client';
 import * as fs from 'fs';
 
@@ -17,7 +17,7 @@ const unstructuredClient = new UnstructuredClient({
 });
 
 export async function parseUnstructured(
-  file: FileEntry,
+  file: AtlasFile,
   chunkSize: number,
   overlap: number
 ) {

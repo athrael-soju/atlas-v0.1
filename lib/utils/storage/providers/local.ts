@@ -2,25 +2,25 @@ import fs from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
-import { FileEntry } from '@/lib/types';
+import { AtlasFile, Purpose } from '@/lib/types';
 
-export async function writeFile(
+export async function uploadDocumentLocally(
   file: File,
   userEmail: string
-): Promise<FileEntry> {
+): Promise<AtlasFile> {
   try {
     const path = join(tmpdir(), file.name);
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     await fs.writeFile(path, buffer);
 
-    const response: FileEntry = {
+    const response: AtlasFile = {
       id: randomUUID(),
       userEmail: userEmail,
-      name: file.name,
+      content: file,
       path: path,
       uploadDate: Date.now(),
-      contentType: file.type,
+      purpose: Purpose.Scribe,
     };
 
     return response;
@@ -30,7 +30,7 @@ export async function writeFile(
 }
 
 export async function deleteFile(
-  file: FileEntry,
+  file: AtlasFile,
   userEmail: string
 ): Promise<void> {
   if (file.userEmail !== userEmail) {

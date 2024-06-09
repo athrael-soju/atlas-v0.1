@@ -1,18 +1,18 @@
 // parseLocal.ts
 import fs from 'fs/promises';
 import pdfParse from 'pdf-parse';
-import { Chunk, FileEntry, Page } from '@/lib/types';
+import { Chunk, AtlasFile, Page } from '@/lib/types';
 import { getChunkingStrategy } from './strategy-selector';
 
 export async function parseLocal(
-  file: FileEntry,
+  file: AtlasFile,
   minChunkSize: number,
   maxChunkSize: number
 ): Promise<Chunk[]> {
   const fileData = await fs.readFile(file.path);
-  const documentContents = await processFile(fileData, file.contentType);
-  const fileName = file.name;
-  const fileType = file.contentType;
+  const documentContents = await processFile(fileData, file.content.type);
+  const fileName = file.content.name;
+  const fileType = file.content.type;
   const parentId = file.id;
 
   const chunkingStrategy = getChunkingStrategy();

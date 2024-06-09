@@ -1,9 +1,9 @@
 import {
-  FileEntry,
+  AtlasFile,
   FileActionResponse,
   OpenAiFileUploadResponse,
 } from '@/lib/types';
-import { writeFile, deleteFile } from './providers/local';
+import { uploadDocumentLocally, deleteFile } from './providers/local';
 import { uploadToS3, deleteFromS3 } from './providers/s3';
 import { uploadDocumentToOpenAi } from './providers/openai';
 
@@ -28,11 +28,11 @@ export async function handleFileUpload(
       throw new StorageError('FILESYSTEM_PROVIDER is not set');
     }
 
-    let fileData: FileEntry | OpenAiFileUploadResponse;
+    let fileData: AtlasFile | OpenAiFileUploadResponse;
 
     switch (fsProvider) {
       case 'local':
-        fileData = await writeFile(file, userEmail);
+        fileData = await uploadDocumentLocally(file, userEmail);
         break;
       case 'openai':
         fileData = await uploadDocumentToOpenAi(file, userEmail);
@@ -56,7 +56,7 @@ export async function handleFileUpload(
 }
 
 export async function handleFileDeletion(
-  file: FileEntry,
+  file: AtlasFile,
   userEmail: string
 ): Promise<FileActionResponse> {
   try {

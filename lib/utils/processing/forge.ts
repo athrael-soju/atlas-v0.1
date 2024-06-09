@@ -1,9 +1,10 @@
-import { FileEntry, ForgeParams } from '@/lib/types';
+import { AtlasFile, FileActionResponse, ForgeParams, User } from '@/lib/types';
 import { handleFileDeletion, handleFileUpload } from '../storage/handler';
 import { embedDocument } from '../embedding/openai';
 import { upsertDocument } from '../indexing/pinecone';
 import { parse } from '../parsing/handler';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
+import clientPromise from '@/lib/client/mongodb';
 
 const fsProvider = process.env.FILESYSTEM_PROVIDER ?? 'local';
 
@@ -17,9 +18,29 @@ export async function processDocument(
 
   try {
     // Upload File
-    const uploadResponse = await measurePerformance(
-      () => handleFileUpload(file, userEmail, fsProvider),
-      `Uploading: '${file.name}'`,
+    const uploadResponse: AtlasFile | FileActionResponse =
+      await measurePerformance(
+        () => handleFileUpload(file, userEmail, fsProvider),
+        `Uploading: '${file.name}'`,
+        sendUpdate
+      );
+
+    // Save File to User Files on MongoDB
+    const client = await clientPromise;
+    const db = client.db('Atlas');
+    const userCollection = db.collection<User>('users');
+
+    await measurePerformance(
+      () =>
+        userCollection.updateOne(
+          { email: userEmail },
+          {
+            $push: {
+              files: uploadResponse.file as AtlasFile,
+            },
+          }
+        ),
+      `Updating DB: '${file.name}'`,
       sendUpdate
     );
 
@@ -31,7 +52,7 @@ export async function processDocument(
           forgeParams.minChunkSize,
           forgeParams.maxChunkSize,
           forgeParams.overlap,
-          uploadResponse.file as FileEntry
+          uploadResponse.file as AtlasFile
         ),
       `Parsing: '${file.name}'`,
       sendUpdate
@@ -58,7 +79,7 @@ export async function processDocument(
 
     // Clean Up
     await measurePerformance(
-      () => handleFileDeletion(uploadResponse.file as FileEntry, userEmail),
+      () => handleFileDeletion(uploadResponse.file as AtlasFile, userEmail),
       `Cleaning up: '${file.name}'`,
       sendUpdate
     );
