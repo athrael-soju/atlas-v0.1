@@ -34,49 +34,59 @@ const transformObjectValues = (
 
 export async function embedMessage(userEmail: string, content: string) {
   const messageToEmbed = `Date: ${new Date().toLocaleString()}. User: ${userEmail}. Message: ${content}. Metadata: ${''}`;
-  const response = await openai.embeddings.create({
-    model: embeddingApiModel,
-    input: messageToEmbed,
-    encoding_format: 'float',
-  });
+  try {
+    const response = await openai.embeddings.create({
+      model: embeddingApiModel,
+      input: messageToEmbed,
+      encoding_format: 'float',
+    });
 
-  const embeddingValues = response.data[0].embedding;
+    const embeddingValues = response.data[0].embedding;
 
-  return {
-    message: 'Message embeddings generated successfully',
-    values: embeddingValues,
-  };
+    return {
+      message: 'Message embeddings generated successfully',
+      values: embeddingValues,
+    };
+  } catch (error: any) {
+    throw new Error('Failed to generate message embedding', error.message);
+  }
 }
 
 export async function embedDocument(data: any[], userEmail: string) {
   const chunkIdList: string[] = [];
-  const embeddings = await Promise.all(
-    data.map(async (item: any) => {
-      await delay(13); // Temporary fix for rate limiting 5000 RPM
-      const response = await openai.embeddings.create({
-        model: embeddingApiModel,
-        input: item.text,
-        encoding_format: 'float',
-      });
-      const transformedMetadata = transformObjectValues(item.metadata);
-      const newId = crypto.randomUUID();
-      chunkIdList.push(newId);
-      const embeddingValues = response.data[0].embedding;
-      return {
-        id: newId,
-        values: embeddingValues,
-        metadata: {
-          ...transformedMetadata,
-          text: item.text,
-          user_email: userEmail,
-        },
-      };
-    })
-  );
+  try {
+    const embeddings = await Promise.all(
+      data.map(async (item: any) => {
+        await delay(13); // Temporary fix for rate limiting 5000 RPM
+        const response = await openai.embeddings.create({
+          model: embeddingApiModel,
+          input: item.text,
+          encoding_format: 'float',
+        });
 
-  return {
-    message: 'Embeddings generated successfully',
-    chunks: chunkIdList || [],
-    embeddings: embeddings || [],
-  };
+        const transformedMetadata = transformObjectValues(item.metadata);
+        const newId = crypto.randomUUID();
+        chunkIdList.push(newId);
+        const embeddingValues = response.data[0].embedding;
+
+        return {
+          id: newId,
+          values: embeddingValues,
+          metadata: {
+            ...transformedMetadata,
+            text: item.text,
+            user_email: userEmail,
+          },
+        };
+      })
+    );
+
+    return {
+      message: 'Embeddings generated successfully',
+      chunks: chunkIdList || [],
+      embeddings: embeddings || [],
+    };
+  } catch (error: any) {
+    throw new Error('Failed to generate document embeddings', error.message);
+  }
 }

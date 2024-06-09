@@ -6,7 +6,7 @@ import { subMonths, format } from 'date-fns';
 import { useResizeObserver } from 'usehooks-ts';
 import { useAIState } from 'ai/rsc';
 
-import type { AI } from '../../app/action';
+import type { AI } from '@/app/action';
 
 export function Stock({ name = 'DOGE', price = 12.34, delta = 1 }) {
   const [history, setHistory] = useAIState<typeof AI>();

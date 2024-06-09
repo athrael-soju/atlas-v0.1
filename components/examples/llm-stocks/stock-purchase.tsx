@@ -4,17 +4,17 @@ import { useId, useState } from 'react';
 import { useActions, useAIState, useUIState } from 'ai/rsc';
 import { formatNumber } from '@/lib/utils';
 
-import type { AI } from '../../app/action';
+import type { AI } from '@/app/action';
 
 export function Purchase({
   defaultAmount,
   name,
   price,
-}: {
+}: Readonly<{
   defaultAmount?: number;
   name: string;
   price: number;
-}) {
+}>) {
   const [value, setValue] = useState(defaultAmount || 100);
   const [purchasingUI, setPurchasingUI] = useState<null | React.ReactNode>(
     null,

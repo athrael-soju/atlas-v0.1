@@ -79,3 +79,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+.codeMessage {
+  border-radius: var(--radius);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  font-family: 'Courier New', Courier, monospace;
+  font-size: small;
+  overflow-x: auto;
+  padding: 10px;
+}

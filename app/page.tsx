@@ -16,12 +16,12 @@ import { IconArrowElbow, IconPlus } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
-import { Dropzone } from '@/components/ui/dropzone';
+import { Dropzone } from '@/components/dropzone';
 import { scribe, sage } from '@/lib/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
 import { ForgeParams, ArchiveParams } from '@/lib/types';
 import { useSession } from 'next-auth/react';
-import { spinner } from '@/components/llm-stocks';
+import { spinner } from '@/components/ui/spinner';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;

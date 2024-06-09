@@ -1,69 +1,83 @@
 import { openai } from '@/lib/client/openai';
 import { SageParams, User } from '@/lib/types';
 import clientPromise from '@/lib/client/mongodb';
-import { threadId } from 'worker_threads';
 import { AssistantStream } from 'openai/lib/AssistantStream';
+import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
 
 export async function summon(
   sageParams: SageParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
-  const client = await clientPromise;
-  const db = client.db('Atlas');
+  const totalStartTime = performance.now();
+  try {
+    const client = await clientPromise;
+    const db = client.db('Atlas');
+    const userCollection = db.collection<User>('users');
+    const { userEmail, name, instructions, model } = sageParams;
 
-  const userCollection = db.collection<User>('users');
+    if (!userEmail || !name || !instructions || !model) {
+      throw new Error(
+        'User email, sage name, instructions, and model are required'
+      );
+    }
 
-  const { userEmail, name, instructions, model } = sageParams;
-
-  if (!userEmail || !name || !instructions || !model) {
-    throw new Error(
-      'User email, sage name, instructions, and model are required'
-    );
-  }
-
-  const user = await userCollection.findOne({ email: userEmail });
-
-  if (user?.sageId && user?.threadId) {
-    throw new Error('User already has a sage');
-  } else {
-    sendUpdate('notification', 'Summoning sage...');
-    const sage = await openai.beta.assistants.create({
-      instructions,
-      name,
-      tools: [{ type: 'code_interpreter' }],
-      tool_resources: { code_interpreter: { file_ids: [] } },
-      model,
-    });
-    sendUpdate('notification', 'Sage summoned successfully');
-    await userCollection.updateOne(
-      { email: userEmail },
-      {
-        $set: {
-          sageId: sage.id,
-        },
-      }
+    const user = await measurePerformance(
+      () => userCollection.findOne({ email: userEmail }),
+      'Checking for sage',
+      sendUpdate
     );
 
-    sendUpdate('notification', 'User updated with sage ID.');
+    if (user?.sageId && user?.threadId) {
+      throw new Error('User already has summoned a sage');
+    }
 
-    sendUpdate('notification', 'Creating thread...');
-    const thread = await openai.beta.threads.create();
-    sendUpdate('notification', 'Thread created successfully');
-
-    await userCollection.updateOne(
-      { email: userEmail },
-      {
-        $set: {
-          threadId: thread.id,
-        },
-      }
+    const sage: {
+      id: string;
+    } = await measurePerformance(
+      () =>
+        openai.beta.assistants.create({
+          instructions,
+          name,
+          tools: [{ type: 'code_interpreter' }],
+          tool_resources: { code_interpreter: { file_ids: [] } },
+          model,
+        }),
+      'Summoning sage',
+      sendUpdate
     );
-    sendUpdate('notification', 'User updated with thread ID.');
 
-    return {
-      sage: sage,
-      threadId: thread.id,
-    };
+    await measurePerformance(
+      () =>
+        userCollection.updateOne(
+          { email: userEmail },
+          { $set: { sageId: sage.id } }
+        ),
+      'Updating user with sage ID',
+      sendUpdate
+    );
+
+    const thread: {
+      id: string;
+    } = await measurePerformance(
+      () => openai.beta.threads.create(),
+      'Creating thread',
+      sendUpdate
+    );
+
+    await measurePerformance(
+      () =>
+        userCollection.updateOne(
+          { email: userEmail },
+          { $set: { threadId: thread.id } }
+        ),
+      'Updating user with thread ID',
+      sendUpdate
+    );
+  } catch (error: any) {
+    sendUpdate('error', error.message);
+  } finally {
+    const totalEndTime = performance.now();
+    getTotalTime(totalStartTime, totalEndTime, sendUpdate);
   }
 }
 
@@ -71,179 +85,233 @@ export async function reform(
   sageParams: SageParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
-  const { userEmail, name, instructions, model, file_ids } = sageParams;
-  const client = await clientPromise;
-  const db = client.db('Atlas');
-  if (!userEmail) {
-    throw new Error('User email is required');
-  }
-  const userCollection = db.collection<User>('users');
+  const totalStartTime = performance.now();
 
-  const user = await userCollection.findOne({ email: userEmail });
+  try {
+    const { userEmail, name, instructions, model, file_ids } = sageParams;
 
-  if (!user?.sageId) {
-    throw new Error('User does not have a sage');
-  }
-
-  const currentSage = await openai.beta.assistants.retrieve(user.sageId);
-
-  if (!currentSage) {
-    throw new Error('Sage not found');
-  }
-
-  sendUpdate('notification', 'Reforming sage...');
-  const updatedSageResponse = await openai.beta.assistants.update(
-    currentSage.id,
-    {
-      instructions: instructions ?? currentSage.instructions,
-      name: name ?? currentSage.name,
-      tools: [{ type: 'code_interpreter' }],
-      tool_resources: currentSage.tool_resources ?? {
-        code_interpreter: { file_ids: file_ids ?? [] },
-      },
-      model: model ?? currentSage.model,
+    if (!userEmail) {
+      throw new Error('User email is required');
     }
-  );
-  sendUpdate('notification', 'Sage reformed successfully');
 
-  return updatedSageResponse;
+    const client = await clientPromise;
+    const db = client.db('Atlas');
+    const userCollection = db.collection<User>('users');
+
+    const user = await measurePerformance(
+      () => userCollection.findOne({ email: userEmail }),
+      'Checking for sage',
+      sendUpdate
+    );
+
+    if (!user?.sageId) {
+      throw new Error('User does not have a sage');
+    }
+
+    const currentSage: any = await measurePerformance(
+      () => openai.beta.assistants.retrieve(user.sageId as string),
+      'Retrieving current sage',
+      sendUpdate
+    );
+
+    if (!currentSage) {
+      throw new Error('Sage not found');
+    }
+
+    await measurePerformance(
+      () =>
+        openai.beta.assistants.update(currentSage.id, {
+          instructions: instructions ?? currentSage.instructions,
+          name: name ?? currentSage.name,
+          tools: [{ type: 'code_interpreter' }],
+          tool_resources: currentSage.tool_resources ?? {
+            code_interpreter: { file_ids: file_ids ?? [] },
+          },
+          model: model ?? currentSage.model,
+        }),
+      'Reforming sage',
+      sendUpdate
+    );
+  } catch (error: any) {
+    sendUpdate('error', error.message);
+  } finally {
+    const totalEndTime = performance.now();
+    getTotalTime(totalStartTime, totalEndTime, sendUpdate);
+  }
 }
 
 export async function dismiss(
-  sageParams: any,
+  sageParams: { userEmail: string },
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
-  const { userEmail, sageId } = sageParams;
+  const totalStartTime = performance.now();
+  try {
+    const { userEmail } = sageParams;
 
-  if (!userEmail || !sageId) {
-    throw new Error('User email and sage id are required');
-  }
-
-  const client = await clientPromise;
-  const db = client.db('Atlas');
-  if (!userEmail) {
-    throw new Error('User email not found in the database');
-  }
-
-  const userCollection = db.collection<User>('users');
-
-  const user = await userCollection.findOne({ email: userEmail });
-
-  if (!user?.sageId || !user?.threadId) {
-    throw new Error('User does not have a sage ID or thread ID');
-  }
-  console.log(user);
-  await userCollection.updateOne(
-    { email: userEmail },
-    {
-      $unset: {
-        sageId: '',
-        threadId: '',
-      },
+    if (!userEmail) {
+      throw new Error('User email is required');
     }
-  );
-  sendUpdate('notification', 'User updated successfully');
 
-  sendUpdate('notification', 'Dismissing sage...');
-  const response = await openai.beta.assistants.del(`${user.sageId}`);
-  sendUpdate('notification', 'Sage dismissed successfully');
+    const client = await clientPromise;
+    const db = client.db('Atlas');
+    const userCollection = db.collection<User>('users');
 
-  return response;
+    const user = await measurePerformance(
+      () => userCollection.findOne({ email: userEmail }),
+      'Checking for sage',
+      sendUpdate
+    );
+
+    if (!user?.sageId || !user?.threadId) {
+      throw new Error('User does not have a sage ID or thread ID');
+    }
+
+    await measurePerformance(
+      () =>
+        userCollection.updateOne(
+          { email: userEmail },
+          { $unset: { sageId: '', threadId: '' } }
+        ),
+      'Updating user to remove sage and thread IDs',
+      sendUpdate
+    );
+
+    await measurePerformance(
+      () => openai.beta.assistants.del(user.sageId as string),
+      'Dismissing sage',
+      sendUpdate
+    );
+  } catch (error: any) {
+    sendUpdate('error', error.message);
+  } finally {
+    const totalEndTime = performance.now();
+    getTotalTime(totalStartTime, totalEndTime, sendUpdate);
+  }
 }
 
 export async function consult(
   sageParams: SageParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
-  const { userEmail, message, file_ids } = sageParams;
-  const client = await clientPromise;
-  const db = client.db('Atlas');
-  if (!userEmail || !message) {
-    throw new Error('User email and message are required');
-  }
+  const totalStartTime = performance.now();
+  try {
+    const { userEmail, message, file_ids } = sageParams;
 
-  const userCollection = db.collection<User>('users');
+    if (!userEmail || !message) {
+      throw new Error('User email and message are required');
+    }
 
-  const user = await userCollection.findOne({ email: userEmail });
+    const client = await clientPromise;
+    const db = client.db('Atlas');
+    const userCollection = db.collection<User>('users');
 
-  if (!user?.sageId || !user?.threadId) {
-    throw new Error('User does not have a sage or thread ID');
-  }
-  sendUpdate('notification', 'User found with sage and thread ID.');
+    const user = await measurePerformance(
+      () => userCollection.findOne({ email: userEmail }),
+      'Checking for sage',
+      sendUpdate
+    );
 
-  const myThread = await openai.beta.threads.retrieve(user.threadId);
-  sendUpdate('notification', 'Thread retrieved successfully');
+    if (!user?.sageId || !user?.threadId) {
+      throw new Error('User does not have a sage or thread ID');
+    }
 
-  if ((file_ids?.length ?? 0) > 0) {
-    sendUpdate('notification', 'Updating thread...');
-    await openai.beta.threads.update(myThread.id, {
-      metadata: { modified: 'true', user: user.email },
-      tool_resources: { code_interpreter: { file_ids: file_ids } },
-    });
-    sendUpdate('notification', 'Thread updated successfully');
-  }
+    const myThread: {
+      id: string;
+    } = await measurePerformance(
+      () => openai.beta.threads.retrieve(user.threadId as string),
+      'Retrieving thread',
+      sendUpdate
+    );
 
-  sendUpdate('notification', 'Creating message...');
-  await openai.beta.threads.messages.create(myThread.id, {
-    role: 'user',
-    content: message,
-  });
-  sendUpdate('notification', 'Message created successfully');
+    if ((file_ids?.length ?? 0) > 0) {
+      await measurePerformance(
+        () =>
+          openai.beta.threads.update(myThread.id, {
+            metadata: { modified: 'true', user: user.email },
+            tool_resources: { code_interpreter: { file_ids } },
+          }),
+        'Updating thread',
+        sendUpdate
+      );
+    }
 
-  sendUpdate('notification', 'Consulting sage...');
-  const stream = openai.beta.threads.runs.stream(myThread.id, {
-    assistant_id: user.sageId,
-  });
-  const assistantStream = AssistantStream.fromReadableStream(
-    stream.toReadableStream()
-  );
+    await measurePerformance(
+      () =>
+        openai.beta.threads.messages.create(myThread.id, {
+          role: 'user',
+          content: message,
+        }),
+      'Creating message',
+      sendUpdate
+    );
 
-  return new Promise((resolve, reject) => {
-    assistantStream
-      .on('textCreated', (text) => {
-        sendUpdate('text_created', 'text_created');
-      })
-      .on('textDelta', (textDelta, snapshot) => {
-        if (textDelta.value != null) {
-          sendUpdate('text', textDelta.value);
-        }
-      })
-      .on('toolCallCreated', (toolCall) => {
-        sendUpdate('code_created', 'text_created');
-      })
-      .on('toolCallDelta', (toolCallDelta, snapshot) => {
-        if (toolCallDelta.type === 'code_interpreter') {
-          if (!toolCallDelta.code_interpreter) {
-            return;
-          }
-          if (toolCallDelta.code_interpreter.input) {
-            sendUpdate('code', toolCallDelta.code_interpreter.input);
-          }
-          if (toolCallDelta.code_interpreter?.outputs) {
-            toolCallDelta.code_interpreter.outputs.forEach((output) => {
-              if (output.type === 'logs') {
-                console.log(`\nlog: ${output.logs}\n`);
+    const stream: any = AssistantStream.fromReadableStream(
+      openai.beta.threads.runs
+        .stream(myThread.id, {
+          assistant_id: user.sageId,
+        })
+        .toReadableStream()
+    );
+
+    await measurePerformance(
+      () =>
+        new Promise((resolve, reject) => {
+          stream
+            .on('textCreated', () => {
+              sendUpdate('text_created', 'text_created');
+            })
+            .on('textDelta', (textDelta: { value: string }) => {
+              if (textDelta.value) {
+                sendUpdate('text', textDelta.value);
               }
+            })
+            .on('toolCallCreated', () => {
+              sendUpdate('code_created', 'text_created');
+            })
+            .on(
+              'toolCallDelta',
+              (toolCallDelta: {
+                type: string;
+                code_interpreter: { input: string; outputs: any[] };
+              }) => {
+                if (toolCallDelta.type === 'code_interpreter') {
+                  if (toolCallDelta.code_interpreter?.input) {
+                    sendUpdate('code', toolCallDelta.code_interpreter.input);
+                  }
+                  if (toolCallDelta.code_interpreter?.outputs) {
+                    toolCallDelta.code_interpreter.outputs.forEach((output) => {
+                      if (output.type === 'logs') {
+                        sendUpdate('log', output.logs as string);
+                      }
+                    });
+                  }
+                }
+              }
+            )
+            .on('imageFileDone', (image: { file_id: any }) => {
+              const imageUrl = `\n![${image.file_id}](/api/files/${image.file_id})\n`;
+              sendUpdate('image', imageUrl);
+            })
+            .on('event', (event: any) => {
+              if (event.event === 'thread.run.requires_action') {
+                sendUpdate('notification', 'requires_action');
+              }
+              if (event.event === 'thread.run.completed') {
+                sendUpdate('notification', 'events_completed');
+                resolve(event);
+              }
+            })
+            .on('error', (error: any) => {
+              reject(new Error(error.message));
             });
-          }
-        }
-      })
-      .on('imageFileDone', (image) => {
-        const imageUrl = `\n![${image.file_id}](/api/files/${image.file_id})\n`;
-        sendUpdate('image', imageUrl);
-      })
-      .on('event', (event) => {
-        if (event.event === 'thread.run.requires_action') {
-          sendUpdate('notification', 'requires_action');
-        }
-        if (event.event === 'thread.run.completed') {
-          sendUpdate('notification', 'events_completed');
-          resolve(event);
-        }
-      })
-      .on('error', (error) => {
-        sendUpdate('notification', 'error');
-        reject(error);
-      });
-  });
+        }),
+      'Consulting sage',
+      sendUpdate
+    );
+  } catch (error: any) {
+    sendUpdate('error', error.message);
+  } finally {
+    const totalEndTime = performance.now();
+    getTotalTime(totalStartTime, totalEndTime, sendUpdate);
+  }
 }

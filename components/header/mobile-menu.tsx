@@ -33,8 +33,12 @@ export default function MobileMenu({
     >
       <div className="fixed inset-0 z-10" />
       <DialogPanel className="fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
-        <button type="button" className="-m-1.5 p-1.5" onClick={() => {}}>
-          <span className="sr-only">Atlas</span>
+        <button
+          type="button"
+          className="-m-1.5 p-1.5"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <span className="sr-only">Close menu</span>
           <img className="h-8 w-8" src="/atlas.png" alt="Atlas Logo" />
         </button>
         <div className="mt-6 flow-root">
@@ -81,13 +85,23 @@ export default function MobileMenu({
                 Company
               </button>
             </div>
-            <button
-              onClick={handleLogout}
-              className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-              type="button"
-            >
-              Log out
-            </button>
+            {session ? (
+              <button
+                onClick={handleLogout}
+                className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                type="button"
+              >
+                Log out
+              </button>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                type="button"
+              >
+                Log in
+              </button>
+            )}
           </div>
         </div>
       </DialogPanel>

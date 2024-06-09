@@ -7,6 +7,13 @@ import { writeFile, deleteFile } from './providers/local';
 import { uploadToS3, deleteFromS3 } from './providers/s3';
 import { uploadDocumentToOpenAi } from './providers/openai';
 
+class StorageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StorageError';
+  }
+}
+
 export async function handleFileUpload(
   file: File,
   userEmail: string,
@@ -44,8 +51,7 @@ export async function handleFileUpload(
       file: fileData,
     };
   } catch (error: any) {
-    console.error(`Error uploading file: ${error.message}`);
-    throw new StorageError(error.message);
+    throw new StorageError(`Error uploading file: ${error.message}`);
   }
 }
 
@@ -59,10 +65,6 @@ export async function handleFileDeletion(
     }
 
     const fsProvider = process.env.FILESYSTEM_PROVIDER || 'local';
-
-    if (!fsProvider) {
-      throw new StorageError('FILESYSTEM_PROVIDER is not set');
-    }
 
     switch (fsProvider) {
       case 'local':
@@ -82,7 +84,6 @@ export async function handleFileDeletion(
       file: file,
     };
   } catch (error: any) {
-    console.error(`Error deleting file: ${error.message}`);
-    throw new StorageError(error.message);
+    throw new StorageError(`Error deleting file: ${error.message}`);
   }
 }
