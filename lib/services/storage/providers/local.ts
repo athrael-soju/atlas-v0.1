@@ -17,6 +17,7 @@ export async function uploadDocumentLocally(
     const response: AtlasFile = {
       id: randomUUID(),
       userEmail: userEmail,
+      name: file.name,
       content: file,
       path: path,
       uploadDate: Date.now(),

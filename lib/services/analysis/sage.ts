@@ -1,5 +1,5 @@
 import { openai } from '@/lib/client/openai';
-import { BaseFile, Purpose, SageParams } from '@/lib/types';
+import { AtlasFile, Purpose, SageParams } from '@/lib/types';
 import { db } from '@/lib/services/db/mongodb';
 import { AssistantStream } from 'openai/lib/AssistantStream';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
@@ -270,8 +270,11 @@ export async function consult(
               }
             )
             .on('imageFileDone', async (image: { file_id: any }) => {
-              const atlasFile: BaseFile = {
+              const atlasFile: AtlasFile = {
                 id: image.file_id,
+                name: image.file_id,
+                content: image,
+                path: '(Sage)',
                 userEmail,
                 uploadDate: Date.now(),
                 purpose: Purpose.Sage,

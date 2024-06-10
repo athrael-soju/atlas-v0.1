@@ -23,7 +23,7 @@ import { EmptyScreen } from '@/components/empty-screen';
 import { Dropzone } from '@/components/dropzone';
 import { scribe, sage } from '@/lib/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
-import { ForgeParams, ScribeParams } from '@/lib/types';
+import { ForgeParams, ScribeParams, AtlasFile } from '@/lib/types';
 import { useSession } from 'next-auth/react';
 import { spinner } from '@/components/ui/spinner';
 import {
@@ -34,6 +34,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { fetchFileList } from '@/lib/services/files/retrieve-file-list';
+import { DataTableDemo } from '@/components/data-table';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -47,6 +49,7 @@ export default function Page() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
+  const [fileList, setFileList] = useState<AtlasFile[]>([]);
 
   const userEmail = session?.user?.email ?? '';
 
@@ -201,6 +204,22 @@ export default function Page() {
     await submitMessage(value);
   };
 
+  useEffect(() => {
+    const retrieveFiles = async () => {
+      try {
+        const files = await fetchFileList(userEmail);
+        console.log('Files:', files[0]);
+        setFileList(files);
+      } catch (error) {
+        console.error('Error fetching file list:', error);
+      }
+    };
+
+    if (session) {
+      retrieveFiles();
+    }
+  }, [session, userEmail]);
+
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center bg-background p-16">
@@ -314,7 +333,13 @@ export default function Page() {
           <SheetContent>
             <SheetHeader>
               <SheetTitle>File List</SheetTitle>
-              <SheetDescription>File list goes here...</SheetDescription>
+              <SheetDescription>
+                {fileList.length > 0 ? (
+                  <DataTableDemo files={fileList} />
+                ) : (
+                  <p>No files uploaded yet.</p>
+                )}
+              </SheetDescription>
             </SheetHeader>
           </SheetContent>
         </Sheet>

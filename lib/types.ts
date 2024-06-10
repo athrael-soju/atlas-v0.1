@@ -60,12 +60,13 @@ export interface FileActionResponse {
 }
 
 export interface AtlasFile extends BaseFile {
-  content: File;
+  content: File | object;
   path: string;
 }
 
 export interface BaseFile {
   id: string;
+  name: string;
   userEmail: string;
   uploadDate: number;
   purpose: Purpose.Scribe | Purpose.Sage;

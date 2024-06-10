@@ -17,6 +17,7 @@ export async function uploadDocumentToOpenAi(
       id: response.id,
       userEmail: userEmail,
       content: file,
+      name: file.name,
       path: response.filename,
       uploadDate: Date.now(),
       purpose: Purpose.Sage,
