@@ -12,7 +12,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { IconArrowElbow, IconPlus } from '@/components/ui/icons';
+import {
+  IconArrowElbow,
+  IconPlus,
+  IconChevronRight,
+} from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
@@ -22,6 +26,14 @@ import { ExampleMessages } from '@/components/example-messages';
 import { ForgeParams, ScribeParams } from '@/lib/types';
 import { useSession } from 'next-auth/react';
 import { spinner } from '@/components/ui/spinner';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -293,6 +305,19 @@ export default function Page() {
             </form>
           </div>
         </div>
+      </div>
+      <div className="fixed left-0 top-1/2 transform -translate-y-1/2">
+        <Sheet>
+          <SheetTrigger>
+            <IconChevronRight />
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>File List</SheetTitle>
+              <SheetDescription>File list goes here...</SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );
