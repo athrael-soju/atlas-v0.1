@@ -35,7 +35,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { fetchFileList } from '@/lib/services/files/retrieve-file-list';
-import { DataTableDemo } from '@/components/data-table';
+import { DataTable } from '@/components/data-table';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -208,7 +208,6 @@ export default function Page() {
     const retrieveFiles = async () => {
       try {
         const files = await fetchFileList(userEmail);
-        console.log('Files:', files[0]);
         setFileList(files);
       } catch (error) {
         console.error('Error fetching file list:', error);
@@ -333,14 +332,15 @@ export default function Page() {
           <SheetContent>
             <SheetHeader>
               <SheetTitle>File List</SheetTitle>
-              <SheetDescription>
-                {fileList.length > 0 ? (
-                  <DataTableDemo files={fileList} />
-                ) : (
-                  <p>No files uploaded yet.</p>
-                )}
-              </SheetDescription>
+              <SheetDescription>test</SheetDescription>
             </SheetHeader>
+            {fileList.length > 0 ? (
+              <div>
+                <DataTable files={fileList} />
+              </div>
+            ) : (
+              <div>No files uploaded yet.</div>
+            )}
           </SheetContent>
         </Sheet>
       </div>

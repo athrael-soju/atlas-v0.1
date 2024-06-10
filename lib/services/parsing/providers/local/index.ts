@@ -9,9 +9,10 @@ export async function parseLocal(
   maxChunkSize: number
 ): Promise<Chunk[]> {
   const fileData = await fs.readFile(file.path);
-  const documentContents = await processFile(fileData, file.content.type);
-  const fileName = file.content.name;
-  const fileType = file.content.type;
+  const fileContent = file.content as File;
+  const documentContents = await processFile(fileData, fileContent.type);
+  const fileName = fileContent.name;
+  const fileType = fileContent.type;
   const parentId = file.id;
 
   const chunkingStrategy = getChunkingStrategy();

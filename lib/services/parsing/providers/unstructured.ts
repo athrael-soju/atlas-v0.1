@@ -23,11 +23,11 @@ export async function parseUnstructured(
 ) {
   try {
     const fileData = fs.readFileSync(file.path);
-
+    const fileContent = file.content as File;
     const parsedDataResponse = await unstructuredClient.general.partition({
       files: {
         content: fileData,
-        fileName: file.content.name,
+        fileName: fileContent.name,
       },
       strategy: 'fast', // TODO: Add support for user-selected strategy
       chunkingStrategy: 'by_title',

@@ -76,6 +76,7 @@ export const columns: ColumnDef<AtlasFile>[] = [
       </Button>
     ),
     cell: ({ row }) => <div>{row.getValue('name')}</div>,
+    filterFn: 'includesString',
   },
   {
     accessorKey: 'uploadDate',
@@ -123,7 +124,7 @@ export const columns: ColumnDef<AtlasFile>[] = [
   },
 ];
 
-export function DataTableDemo({ files }: DataTableDemoProps) {
+export function DataTable({ files }: DataTableDemoProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -150,18 +151,18 @@ export function DataTableDemo({ files }: DataTableDemoProps) {
       rowSelection,
     },
   });
-
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter filenames..."
-          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-          onChange={(event) =>
-            table.getColumn('name')?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        <div>
+          <Input
+            placeholder="Filter filenames..."
+            value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
+            onChange={(event) => {
+              table.getColumn('name')?.setFilterValue(event.target.value);
+            }}
+          />
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
