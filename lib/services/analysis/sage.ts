@@ -269,7 +269,7 @@ export async function consult(
                 }
               }
             )
-            .on('imageFileDone', async (image: { file_id: any }) => {
+            .on('imageFileDone', async (image: { file_id: string }) => {
               const atlasFile: AtlasFile = {
                 id: image.file_id,
                 name: image.file_id,

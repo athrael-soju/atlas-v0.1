@@ -204,21 +204,6 @@ export default function Page() {
     await submitMessage(value);
   };
 
-  useEffect(() => {
-    const retrieveFiles = async () => {
-      try {
-        const files = await fetchFileList(userEmail);
-        setFileList(files);
-      } catch (error) {
-        console.error('Error fetching file list:', error);
-      }
-    };
-
-    if (session) {
-      retrieveFiles();
-    }
-  }, [session, userEmail]);
-
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center bg-background p-16">
@@ -327,7 +312,11 @@ export default function Page() {
       <div className="fixed left-0 top-1/2 transform -translate-y-1/2">
         <Sheet>
           <SheetTrigger>
-            <IconChevronRight />
+            <IconChevronRight
+              onClick={async () => {
+                setFileList(await fetchFileList(userEmail));
+              }}
+            />
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
