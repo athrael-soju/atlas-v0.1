@@ -321,7 +321,9 @@ export default function Page() {
           <SheetContent>
             <SheetHeader>
               <SheetTitle>File List</SheetTitle>
-              <SheetDescription>test</SheetDescription>
+              <SheetDescription>
+                Here you can find all files uploaded by your user account
+              </SheetDescription>
             </SheetHeader>
             {fileList.length > 0 ? (
               <div>
