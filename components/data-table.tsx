@@ -157,10 +157,8 @@ export const columns: ColumnDef<AtlasFile>[] = [
             <DropdownMenuItem
               onClick={() => {
                 handleDeleteFile(file.id, email as string);
-                // hide this row, since it will be deleted
-                row.toggleSelected(false);                                                
+                // TODO: hide this row, since it will be deleted
               }}
-
             >
               Delete
             </DropdownMenuItem>
@@ -177,7 +175,11 @@ export const columns: ColumnDef<AtlasFile>[] = [
     },
   },
 ];
-
+// TODO: Pass getFiles here, so that we can update as soon as a file gets deleted
+// TODO: Add a loading spinner when deleting a file
+// TODO: Add a toast notification when a file is deleted
+// TODO: Fix the download file functionality
+// TODO: Implement deletion of files from Vector DB and OpenAI
 export function DataTable({ files, userEmail }: DataTableProps) {
   if (!userEmail) {
     throw new Error('User email is required');
