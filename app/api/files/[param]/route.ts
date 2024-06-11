@@ -4,6 +4,7 @@ import { AtlasUser } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
+// TODO: Refactor these routes into the Archivist route.
 export async function GET(_request: any, { params: { param } }: any) {
   if (param.includes('@')) {
     // Handle as userEmail
