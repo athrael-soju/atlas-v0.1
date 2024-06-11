@@ -1,5 +1,5 @@
 import { getDb, getClientPromise } from '@/lib/client/mongodb';
-import { AtlasFile, AtlasUser, BaseFile } from '@/lib/types';
+import { AtlasFile, AtlasUser } from '@/lib/types';
 import { User } from 'next-auth';
 
 export const db = async () => {
@@ -59,7 +59,7 @@ export const db = async () => {
     return updateResult;
   };
 
-  const addFile = async (userEmail: string, file: BaseFile | AtlasFile) => {
+  const addFile = async (userEmail: string, file: AtlasFile) => {
     const updateResult = userCollection.updateOne(
       { email: userEmail },
       {

@@ -38,15 +38,17 @@ import {
 import { AtlasFile, DataTableProps } from '@/lib/types';
 import { archivist } from '@/lib/client/atlas';
 
-let email: string | null = null;
-
-const handleDeleteFile = async (fileId: string, userEmail: string) => {
+const handleDeleteFile = async (
+  fileId: string,
+  userEmail: string,
+  fetchFiles: (userEmail: string) => void
+) => {
   try {
     const onUpdate = (stringMessage: string) => {
       const jsonMessage = JSON.parse(stringMessage);
-      const msg = jsonMessage.message;
-      // show message
-      console.log(msg);
+      if (jsonMessage.type === 'final-notification') {
+        fetchFiles(userEmail);
+      }
     };
     const archivistParams = {
       fileIds: [fileId],
@@ -80,111 +82,14 @@ const handleDownloadFile = async (fileId: string) => {
   }
 };
 
-export const columns: ColumnDef<AtlasFile>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'name',
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      >
-        Filename
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => <div>{row.getValue('name')}</div>,
-    filterFn: 'includesString',
-  },
-  {
-    accessorKey: 'uploadDate',
-    header: () => <div className="text-right">Upload Date</div>,
-    cell: ({ row }) => {
-      const uploadDate = new Date(row.getValue('uploadDate'));
-      const formatted = uploadDate.toLocaleDateString('en-US');
-
-      return <div className="text-right font-medium">{formatted}</div>;
-    },
-  },
-  {
-    accessorKey: 'purpose',
-    header: 'Purpose',
-    cell: ({ row }) => <div>{row.getValue('purpose')}</div>,
-  },
-  {
-    id: 'actions',
-    enableHiding: false,
-    cell: ({ row }) => {
-      const file = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(file.id)}
-            >
-              Copy file ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => {
-                handleDeleteFile(file.id, email as string);
-                // TODO: hide this row, since it will be deleted
-              }}
-            >
-              Delete
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                handleDownloadFile(file.id);
-              }}
-            >
-              Download
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
-// TODO: Pass getFiles here, so that we can update as soon as a file gets deleted
-// TODO: Add a loading spinner when deleting a file
-// TODO: Add a toast notification when a file is deleted
-// TODO: Fix the download file functionality
-// TODO: Implement deletion of files from Vector DB and OpenAI
-export function DataTable({ files, userEmail }: DataTableProps) {
+export const DataTable: React.FC<DataTableProps> = ({
+  userEmail,
+  files,
+  handleFetchFiles,
+}) => {
   if (!userEmail) {
     throw new Error('User email is required');
   }
-  email = userEmail;
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -193,6 +98,107 @@ export function DataTable({ files, userEmail }: DataTableProps) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+
+  const columns: ColumnDef<AtlasFile>[] = React.useMemo(
+    () => [
+      {
+        id: 'select',
+        header: ({ table }) => (
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && 'indeterminate')
+            }
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+            aria-label="Select all"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
+      {
+        accessorKey: 'name',
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Filename
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => <div>{row.getValue('name')}</div>,
+        filterFn: 'includesString',
+      },
+      {
+        accessorKey: 'uploadDate',
+        header: () => <div className="text-right">Upload Date</div>,
+        cell: ({ row }) => {
+          const uploadDate = new Date(row.getValue('uploadDate'));
+          const formatted = uploadDate.toLocaleDateString('en-US');
+
+          return <div className="text-right font-medium">{formatted}</div>;
+        },
+      },
+      {
+        accessorKey: 'purpose',
+        header: 'Purpose',
+        cell: ({ row }) => <div>{row.getValue('purpose')}</div>,
+      },
+      {
+        id: 'actions',
+        enableHiding: false,
+        cell: ({ row }) => {
+          const file = row.original;
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => navigator.clipboard.writeText(file.id)}
+                >
+                  Copy file ID
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => {
+                    handleDeleteFile(file.id, userEmail, handleFetchFiles);
+                  }}
+                >
+                  Delete
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    handleDownloadFile(file.id);
+                  }}
+                >
+                  Download
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+    ],
+    [userEmail, handleFetchFiles]
+  );
+
   const table = useReactTable({
     data: files,
     columns,
@@ -211,6 +217,7 @@ export function DataTable({ files, userEmail }: DataTableProps) {
       rowSelection,
     },
   });
+
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
@@ -326,4 +333,4 @@ export function DataTable({ files, userEmail }: DataTableProps) {
       </div>
     </div>
   );
-}
+};

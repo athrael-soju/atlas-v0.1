@@ -76,7 +76,6 @@ export default function Page() {
     newFiles: React.SetStateAction<string[]>
   ) => {
     setUploadedFiles(newFiles);
-    setIsUploadCompleted(true); // Assuming file upload is instant for this example
   };
 
   const handleFetchFiles = async (userEmail: string) => {
@@ -338,7 +337,11 @@ export default function Page() {
             </SheetHeader>
             {fileList.length > 0 ? (
               <div>
-                <DataTable userEmail={userEmail} files={fileList} />
+                <DataTable
+                  userEmail={userEmail}
+                  files={fileList}
+                  handleFetchFiles={handleFetchFiles}
+                />
               </div>
             ) : (
               <div>No files uploaded yet.</div>

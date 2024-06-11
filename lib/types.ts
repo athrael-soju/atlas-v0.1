@@ -52,7 +52,7 @@ export interface SageParams {
 
 export interface ArchivistParams {
   userEmail: string;
-  fileIds?: string[];  
+  fileIds?: string[];
 }
 
 export enum Purpose {
@@ -65,15 +65,12 @@ export interface FileActionResponse {
   file: AtlasFile;
 }
 
-export interface AtlasFile extends BaseFile {
-  content: File | object;
-  path: string;
-}
-
-export interface BaseFile {
+export interface AtlasFile {
   id: string;
   name: string;
   userEmail: string;
+  content: File | object;
+  path: string;
   uploadDate: number;
   purpose: Purpose.Scribe | Purpose.Sage;
 }
@@ -84,12 +81,13 @@ export interface AtlasUser {
   image?: string;
   sageId?: string;
   threadId?: string;
-  files: BaseFile[] | AtlasFile[];
+  files: AtlasFile[];
 }
 
 export interface DataTableProps {
-  files: AtlasFile[];
   userEmail: string;
+  files: AtlasFile[];
+  handleFetchFiles: (userEmail: string) => Promise<void>;
 }
 
 export interface CodeProps extends React.HTMLAttributes<HTMLElement> {
