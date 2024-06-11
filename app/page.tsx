@@ -34,7 +34,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { fetchFileList } from '@/lib/services/files/retrieve-file-list';
+import { archivist } from '@/lib/client/atlas';
 import { DataTable } from '@/components/data-table';
 
 export const dynamic = 'force-dynamic';
@@ -77,6 +77,21 @@ export default function Page() {
   ) => {
     setUploadedFiles(newFiles);
     setIsUploadCompleted(true); // Assuming file upload is instant for this example
+  };
+
+  const handleFetchFiles = async (userEmail: string) => {
+    try {
+      const onUpdate = (stringMessage: string) => {
+        const leJson = JSON.parse(stringMessage);
+        if (leJson.type === 'final-notification') {
+          setFileList(leJson.message);
+        }
+      };
+      const archivistParams = { userEmail: userEmail };
+      await archivist('retrieve-file-list', archivistParams, onUpdate);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
@@ -312,11 +327,7 @@ export default function Page() {
       <div className="fixed left-0 top-1/2 transform -translate-y-1/2">
         <Sheet>
           <SheetTrigger>
-            <IconChevronRight
-              onClick={async () => {
-                setFileList(await fetchFileList(userEmail));
-              }}
-            />
+            <IconChevronRight onClick={() => handleFetchFiles(userEmail)} />
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
@@ -327,7 +338,7 @@ export default function Page() {
             </SheetHeader>
             {fileList.length > 0 ? (
               <div>
-                <DataTable files={fileList} />
+                <DataTable userEmail={userEmail} files={fileList} />
               </div>
             ) : (
               <div>No files uploaded yet.</div>

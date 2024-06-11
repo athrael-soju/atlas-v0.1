@@ -1,6 +1,5 @@
 import { AtlasFile, FileActionResponse } from '@/lib/types';
-import { uploadDocumentLocally, deleteFile } from './providers/local';
-import { uploadToS3, deleteFromS3 } from './providers/s3';
+import { uploadDocumentLocally, deleteFileFromDisk } from './providers/local';
 import { uploadDocumentToOpenAi } from './providers/openai';
 
 class StorageError extends Error {
@@ -33,9 +32,6 @@ export async function handleFileUpload(
       case 'openai':
         fileData = await uploadDocumentToOpenAi(file, userEmail);
         break;
-      case 's3':
-        fileData = await uploadToS3(file, userEmail);
-        break;
       default:
         throw new StorageError(
           `Unsupported filesystem provider: ${fsProvider}`
@@ -64,10 +60,7 @@ export async function handleFileDeletion(
 
     switch (fsProvider) {
       case 'local':
-        await deleteFile(file, userEmail);
-        break;
-      case 's3':
-        await deleteFromS3(file, userEmail);
+        await deleteFileFromDisk(file, userEmail);
         break;
       default:
         throw new StorageError(

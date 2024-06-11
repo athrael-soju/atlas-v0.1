@@ -30,7 +30,7 @@ export async function uploadDocumentLocally(
   }
 }
 
-export async function deleteFile(
+export async function deleteFileFromDisk(
   file: AtlasFile,
   userEmail: string
 ): Promise<void> {

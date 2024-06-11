@@ -49,6 +49,12 @@ export interface SageParams {
   model?: string;
   file_ids?: string[];
 }
+
+export interface ArchivistParams {
+  userEmail: string;
+  fileIds?: string[];  
+}
+
 export enum Purpose {
   Scribe = 'scribe',
   Sage = 'sage',
@@ -79,6 +85,11 @@ export interface AtlasUser {
   sageId?: string;
   threadId?: string;
   files: BaseFile[] | AtlasFile[];
+}
+
+export interface DataTableProps {
+  files: AtlasFile[];
+  userEmail: string;
 }
 
 export interface CodeProps extends React.HTMLAttributes<HTMLElement> {

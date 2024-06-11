@@ -35,11 +35,50 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { AtlasFile } from '@/lib/types';
+import { AtlasFile, DataTableProps } from '@/lib/types';
+import { archivist } from '@/lib/client/atlas';
 
-export interface DataTableDemoProps {
-  files: AtlasFile[];
-}
+let email: string | null = null;
+
+const handleDeleteFile = async (fileId: string, userEmail: string) => {
+  try {
+    const onUpdate = (stringMessage: string) => {
+      const jsonMessage = JSON.parse(stringMessage);
+      const msg = jsonMessage.message;
+      // show message
+      console.log(msg);
+    };
+    const archivistParams = {
+      fileIds: [fileId],
+      userEmail,
+    };
+    await archivist('purge', archivistParams, onUpdate);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const handleDownloadFile = async (fileId: string) => {
+  try {
+    const response = await fetch(`/api/files/${fileId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileId;
+      a.click();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 export const columns: ColumnDef<AtlasFile>[] = [
   {
@@ -115,8 +154,23 @@ export const columns: ColumnDef<AtlasFile>[] = [
               Copy file ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Delete</DropdownMenuItem>
-            <DropdownMenuItem>Download</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                handleDeleteFile(file.id, email as string);
+                // hide this row, since it will be deleted
+                row.toggleSelected(false);                                                
+              }}
+
+            >
+              Delete
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                handleDownloadFile(file.id);
+              }}
+            >
+              Download
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -124,7 +178,12 @@ export const columns: ColumnDef<AtlasFile>[] = [
   },
 ];
 
-export function DataTable({ files }: DataTableDemoProps) {
+export function DataTable({ files, userEmail }: DataTableProps) {
+  if (!userEmail) {
+    throw new Error('User email is required');
+  }
+  email = userEmail;
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -132,7 +191,6 @@ export function DataTable({ files }: DataTableDemoProps) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-
   const table = useReactTable({
     data: files,
     columns,

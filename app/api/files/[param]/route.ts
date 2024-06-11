@@ -1,5 +1,6 @@
 import { openai } from '@/lib/client/openai';
 import { db } from '@/lib/services/db/mongodb';
+import { AtlasUser } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
@@ -7,7 +8,7 @@ export async function GET(_request: any, { params: { param } }: any) {
   if (param.includes('@')) {
     // Handle as userEmail
     const dbInstance = await db();
-    const user = await dbInstance.getUser(param);
+    const user = (await dbInstance.getUser(param)) as unknown as AtlasUser;
     const fileList = user?.files || [];
 
     return new Response(JSON.stringify(fileList), {

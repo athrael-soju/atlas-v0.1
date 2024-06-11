@@ -3,6 +3,7 @@ import {
   ScribeParams,
   SageParams,
   SageAction,
+  ArchivistParams,
 } from '@/lib/types';
 
 const readStream = async (
@@ -102,6 +103,28 @@ export const sage = async (
 
   try {
     const response = await fetch('/api/atlas/sage', {
+      method: 'POST',
+      body: formData,
+    });
+
+    await readStream(response, onUpdate);
+  } catch (error) {
+    console.error('Error in process:', error);
+    onUpdate(`Error: ${error}`);
+  }
+};
+
+export const archivist = async (
+  action: string,
+  archivistParams: ArchivistParams,
+  onUpdate: (message: string) => void
+): Promise<void> => {
+  const formData = new FormData();
+  formData.append('action', action);
+  formData.append('archivistParams', JSON.stringify(archivistParams));
+
+  try {
+    const response = await fetch('/api/atlas/archivist', {
       method: 'POST',
       body: formData,
     });

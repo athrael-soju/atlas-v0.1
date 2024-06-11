@@ -3,27 +3,39 @@ import { AtlasFile, AtlasUser, BaseFile } from '@/lib/types';
 import { User } from 'next-auth';
 
 export const db = async () => {
-  const insertUser = async (user: User) => {
-    const db = await getDb();
-    const userCollection = db.collection<User>('users');
-    const result = await userCollection.insertOne(user);
-    return result;
-  };
-
-  const getUser = async (userEmail: string) => {
-    const db = await getDb();
-    const userCollection = db.collection<AtlasUser>('users');
-    const user = await userCollection.findOne({ email: userEmail });
-    return user;
-  };
+  const db = await getDb();
+  const userCollection = db.collection<User>('users');
 
   const getClient = async () => {
     return await getClientPromise();
   };
 
+  const insertUser = async (user: User) => {
+    const result = await userCollection.insertOne(user);
+    return result;
+  };
+
+  const getUser = async (userEmail: string) => {
+    const user = await userCollection.findOne({ email: userEmail });
+    return user;
+  };
+
+  const getUserFiles = async (userEmail: string) => {
+    const user = (await userCollection.findOne({
+      email: userEmail,
+    })) as unknown as AtlasUser;
+
+    return user.files;
+  };
+
+  const getUserFile = async (userEmail: string, fileId: string) => {
+    const userFiles = await getUserFiles(userEmail);
+
+    const userFile = userFiles.find((file) => file.id === fileId);
+    return userFile;
+  };
+
   const summonSage = async (userEmail: string, sageId: string) => {
-    const db = await getDb();
-    const userCollection = db.collection<AtlasUser>('users');
     const updateResult = userCollection.updateOne(
       { email: userEmail },
       { $set: { sageId } }
@@ -32,8 +44,6 @@ export const db = async () => {
   };
 
   const addThreadId = async (userEmail: string, threadId: string) => {
-    const db = await getDb();
-    const userCollection = db.collection<AtlasUser>('users');
     const updateResult = userCollection.updateOne(
       { email: userEmail },
       { $set: { threadId } }
@@ -42,8 +52,6 @@ export const db = async () => {
   };
 
   const dismissSage = async (userEmail: string) => {
-    const db = await getDb();
-    const userCollection = db.collection<AtlasUser>('users');
     const updateResult = userCollection.updateOne(
       { email: userEmail },
       { $unset: { sageId: '', threadId: '' } }
@@ -52,8 +60,6 @@ export const db = async () => {
   };
 
   const addFile = async (userEmail: string, file: BaseFile | AtlasFile) => {
-    const db = await getDb();
-    const userCollection = db.collection<AtlasUser>('users');
     const updateResult = userCollection.updateOne(
       { email: userEmail },
       {
@@ -65,13 +71,28 @@ export const db = async () => {
     return updateResult;
   };
 
+  const deleteFile = async (userEmail: string, fileId: string) => {
+    const updateResult = userCollection.updateOne(
+      { email: userEmail },
+      {
+        $pull: {
+          files: { id: fileId },
+        },
+      }
+    );
+    return updateResult;
+  };
+
   return {
+    getClient,
     insertUser,
     getUser,
-    getClient,
+    getUserFiles,
+    getUserFile,
     summonSage,
     addThreadId,
     dismissSage,
     addFile,
+    deleteFile,
   };
 };

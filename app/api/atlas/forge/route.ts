@@ -18,16 +18,17 @@ export async function POST(req: NextRequest): Promise<Response> {
     const data = await req.formData();
     const files = data.getAll('files') as File[];
     const userEmail = data.get('userEmail') as string;
-    const forgeParams = JSON.parse(
-      data.get('forgeParams') as string
-    ) as ForgeParams;
 
-    if (!userEmail) {
+    if (!userEmail || !files) {
       return NextResponse.json(
-        { error: 'User email is required' },
+        { error: 'User email and files are required' },
         { status: 400 }
       );
     }
+
+    const forgeParams = JSON.parse(
+      data.get('forgeParams') as string
+    ) as ForgeParams;
 
     if (!files.length) {
       return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
