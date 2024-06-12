@@ -4,6 +4,7 @@ import { processDocument } from '@/lib/services/processing/forge';
 import { processDocumentViaOpenAi } from '@/lib/services/processing/openai';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 function sendUpdate(
   type: string,
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         Connection: 'keep-alive',
       },
     });

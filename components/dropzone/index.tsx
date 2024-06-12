@@ -90,10 +90,10 @@ export function Dropzone({
       ];
 
       const progressInterval = 100 / allowedStates.length / files.length;
-      const onUpdate = (stringMessage: string) => {
-        const jsonMessage = JSON.parse(stringMessage);
-        const type = jsonMessage.type;
-        const message = jsonMessage.message;
+      const onUpdate = (event: string) => {
+        const parsedData = JSON.parse(event);
+        const type = parsedData.type;
+        const message = parsedData.message;
         if (allowedStates.some((state) => message.startsWith(state))) {
           setProgress((prev) => prev + progressInterval);
         } else if (type === 'final-notification') {
