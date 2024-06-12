@@ -64,7 +64,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           const success = results.filter((result) => result.success).length;
           const failed = results.filter((result) => !result.success).length;
 
-          send('notification', `Success: ${success}. Failed: ${failed}`);
+          send('final-notification', `Success: ${success}. Failed: ${failed}`);
         } catch (error: any) {
           send('error', error.message);
         } finally {

@@ -80,23 +80,26 @@ export function Dropzone({
     try {
       const allowedStates = [
         'Uploading',
+        'Updating DB',
         'Parsing',
         'Embedding',
         'Upserting',
         'Cleaning up',
       ];
 
+      const progressInterval = 100 / allowedStates.length / files.length;
       const onUpdate = (stringMessage: string) => {
         const jsonMessage = JSON.parse(stringMessage);
-        const msg = jsonMessage.message;
-        if (allowedStates.some((state) => msg.startsWith(state))) {
-          setProgress((prev) => prev + 20.0 / files.length);
-        } else if (msg.startsWith('Success')) {
+        const type = jsonMessage.type;
+        const message = jsonMessage.message;
+        if (allowedStates.some((state) => message.startsWith(state))) {
+          setProgress((prev) => prev + progressInterval);
+        } else if (type === 'final-notification') {
           setProgress(100);
           setIsUploadCompleted(true);
         }
 
-        handleFileInfo(msg);
+        handleFileInfo(message);
       };
 
       await forge(files, userEmail, forgeParams, onUpdate);

@@ -18,17 +18,24 @@ export const measurePerformance = async <T>(
     i++;
   }, 500);
 
-  const result = await action();
-  clearInterval(interval);
+  try {
+    const result = await action();
+    clearInterval(interval);
 
-  const endTime = performance.now();
-  process.stdout.write(
-    chalk.blue(`${description}: `) +
-      chalk.green('Completed in ') +
-      chalk.red(((endTime - startTime) / 1000).toFixed(2)) +
-      chalk.green(' seconds\n')
-  );
-  return result;
+    const endTime = performance.now();
+    process.stdout.write(
+      chalk.blue(`${description}: `) +
+        chalk.green('Completed in ') +
+        chalk.red(((endTime - startTime) / 1000).toFixed(2)) +
+        chalk.green(' seconds\n')
+    );
+    return result;
+  } catch (error) {
+    throw error;
+  } finally {
+    clearInterval(interval);
+    process.stdout.write('');
+  }
 };
 
 export const getTotalTime = (
@@ -41,6 +48,7 @@ export const getTotalTime = (
 
   process.stdout.write(
     chalk.magenta('Total process completed in ') +
-      chalk.red(totalTime + chalk.magenta(' seconds\n'))
+      chalk.red(totalTime) +
+      chalk.magenta(' seconds\n')
   );
 };
