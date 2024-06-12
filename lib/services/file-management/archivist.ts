@@ -4,6 +4,7 @@ import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
 import { openai } from '@/lib/client/openai';
 import { FileDeleted } from 'openai/resources/files';
 import { getIndex } from '@/lib/client/pinecone';
+import { Index } from '@pinecone-database/pinecone';
 
 export async function recoverArchives(
   archivistParams: ArchivistParams,
@@ -105,21 +106,70 @@ async function deleteFromVectorDb(
   file: AtlasFile,
   userEmail: string
 ): Promise<unknown> {
+  const pageSize = 100;
+  let paginationToken: string | undefined;
+  let deleteCount = 0;
+
+  const index = await getIndex();
+  const namespace = index.namespace(userEmail);
+
+  do {
+    try {
+      const result = await listArchiveChunks(
+        file.id,
+        namespace,
+        pageSize,
+        paginationToken
+      );
+
+      if (result.chunks.length === 0) {
+        break;
+      }
+
+      const chunkIds = result.chunks.map((chunk) => chunk.id);
+
+      await PurgeArchiveChunks(chunkIds, namespace);
+      deleteCount += chunkIds.length;
+
+      paginationToken = result.paginationToken;
+    } catch (error: any) {
+      throw new Error(
+        `Failed to purge archives from VectorDb: ${error.message}`
+      );
+    }
+  } while (paginationToken !== undefined);
+
+  return deleteCount;
+}
+
+async function listArchiveChunks(
+  documentId: string,
+  namespace: Index,
+  limit: number,
+  paginationToken?: string
+): Promise<{ chunks: { id: string }[]; paginationToken?: string }> {
   try {
-    const index = await getIndex();
-    const results = await index.namespace(userEmail).listPaginated({
-      prefix: `${file.name}#${file.id}`,
+    const listResult = await namespace.listPaginated({
+      prefix: `${documentId}:`,
+      limit: limit,
+      paginationToken: paginationToken,
     });
 
-    const vectorIds = results.vectors?.map((vector) => vector.id);
-
-    if (!vectorIds) {
-      throw new Error('No vectors found to delete');
-    }
-
-    const result = await index.namespace(userEmail).deleteMany(vectorIds);
-    return result;
+    const chunks =
+      listResult.vectors?.map((vector) => ({ id: vector.id || '' })) || [];
+    return { chunks, paginationToken: listResult.pagination?.next };
   } catch (error: any) {
-    throw new Error(`Failed to delete vectors from VectorDB: ${error.message}`);
+    throw new Error(
+      `Failed to list archive chunks for document ${documentId}: ${error.message}`
+    );
+  }
+}
+
+async function PurgeArchiveChunks(chunkIds: string[], namespace: Index) {
+  try {
+    const deletionResult = await namespace.deleteMany(chunkIds);
+    return deletionResult;
+  } catch (error: any) {
+    throw new Error(`Failed to delete document chunks: ${error.message}`);
   }
 }
