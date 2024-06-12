@@ -37,17 +37,24 @@ import {
 } from '@/components/ui/table';
 import { AtlasFile, DataTableProps } from '@/lib/types';
 import { archivist } from '@/lib/client/atlas';
+import { useToast } from '@/components/ui/use-toast';
 
 const handleDeleteFile = async (
   fileId: string,
   userEmail: string,
-  fetchFiles: (userEmail: string) => void
+  fetchFiles: (userEmail: string) => void,
+  toast: any
 ) => {
   try {
     const onUpdate = (stringMessage: string) => {
       const jsonMessage = JSON.parse(stringMessage);
       if (jsonMessage.type === 'final-notification') {
         fetchFiles(userEmail);
+        toast({
+          title: 'Success',
+          description: 'File deleted successfully.',
+          variant: 'default',
+        });
       }
     };
     const archivistParams = {
@@ -57,6 +64,11 @@ const handleDeleteFile = async (
     await archivist('purge-archive', archivistParams, onUpdate);
   } catch (error) {
     console.error(error);
+    toast({
+      title: 'Error',
+      description: 'Failed to delete file.',
+      variant: 'destructive',
+    });
   }
 };
 
@@ -83,7 +95,6 @@ const handleDownloadFile = async (fileId: string) => {
 };
 
 // TODO: Add a loading spinner when deleting a file
-// TODO: Add a toast notification when a file is deleted
 // TODO: Fix the download file functionality
 export const DataTable: React.FC<DataTableProps> = ({
   userEmail,
@@ -93,6 +104,8 @@ export const DataTable: React.FC<DataTableProps> = ({
   if (!userEmail) {
     throw new Error('User email is required');
   }
+
+  const { toast } = useToast();
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -148,7 +161,6 @@ export const DataTable: React.FC<DataTableProps> = ({
         cell: ({ row }) => {
           const uploadDate = new Date(row.getValue('uploadDate'));
           const formatted = uploadDate.toLocaleDateString('en-US');
-
           return <div className="text-right font-medium">{formatted}</div>;
         },
       },
@@ -162,7 +174,6 @@ export const DataTable: React.FC<DataTableProps> = ({
         enableHiding: false,
         cell: ({ row }) => {
           const file = row.original;
-
           return (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -181,7 +192,12 @@ export const DataTable: React.FC<DataTableProps> = ({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
-                    handleDeleteFile(file.id, userEmail, handleFetchFiles);
+                    handleDeleteFile(
+                      file.id,
+                      userEmail,
+                      handleFetchFiles,
+                      toast
+                    );
                   }}
                 >
                   Delete
@@ -199,7 +215,7 @@ export const DataTable: React.FC<DataTableProps> = ({
         },
       },
     ],
-    [userEmail, handleFetchFiles]
+    [userEmail, handleFetchFiles, toast]
   );
 
   const table = useReactTable({

@@ -5,6 +5,7 @@ import { Progress } from './progress';
 import { cn } from '@/lib/utils';
 import { forge } from '@/lib/client/atlas';
 import { ForgeParams } from '@/lib/types';
+import { useToast } from '@/components/ui/use-toast';
 
 interface DropzoneProps {
   onChange: React.Dispatch<React.SetStateAction<string[]>>;
@@ -29,6 +30,7 @@ export function Dropzone({
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [isDragging, setIsDragging] = useState(false);
+  const { toast } = useToast(); // Add this line
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -97,6 +99,11 @@ export function Dropzone({
         } else if (type === 'final-notification') {
           setProgress(100);
           setIsUploadCompleted(true);
+          toast({
+            title: 'Success',
+            description: 'File uploaded successfully.',
+            variant: 'default',
+          });
         }
 
         handleFileInfo(message);
@@ -105,6 +112,11 @@ export function Dropzone({
       await forge(files, userEmail, forgeParams, onUpdate);
     } catch (error) {
       setError((error as Error).message);
+      toast({
+        title: 'Error',
+        description: 'Failed to upload file.',
+        variant: 'destructive',
+      });
     }
   };
 
