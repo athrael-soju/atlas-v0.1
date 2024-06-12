@@ -3,14 +3,15 @@ import { db } from '@/lib/services/db/mongodb';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
 import { openai } from '@/lib/client/openai';
 import { FileDeleted } from 'openai/resources/files';
+import { getIndex } from '@/lib/client/pinecone';
 
 export async function recoverArchives(
-  sageParams: ArchivistParams,
+  archivistParams: ArchivistParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const totalStartTime = performance.now();
   try {
-    const { userEmail } = sageParams;
+    const { userEmail } = archivistParams;
 
     if (!userEmail) {
       throw new Error('User email is required');
@@ -23,9 +24,10 @@ export async function recoverArchives(
       'Checking for archives',
       sendUpdate
     );
+
     return userFiles;
   } catch (error: any) {
-    sendUpdate('error', error.message);
+    sendUpdate('error', `Recover archives failed: ${error.message}`);
   } finally {
     const totalEndTime = performance.now();
     getTotalTime(totalStartTime, totalEndTime, sendUpdate);
@@ -33,28 +35,31 @@ export async function recoverArchives(
 }
 
 export async function purgeArchive(
-  sageParams: ArchivistParams,
+  archivistParams: ArchivistParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const totalStartTime = performance.now();
   try {
-    const { userEmail, fileIds } = sageParams;
+    const { userEmail, fileId } = archivistParams;
 
-    if (!userEmail || fileIds?.length !== 1) {
+    if (!userEmail || !fileId) {
       throw new Error('User email and a single file ID are required');
     }
 
     const dbInstance = await db();
 
     const file = await measurePerformance(
-      () => dbInstance.getUserFile(userEmail, fileIds[0]),
+      () => dbInstance.getUserFile(userEmail, fileId),
       'Retrieving archive from DB',
       sendUpdate
     );
 
-    const purpose = file?.purpose;
+    if (!file) {
+      throw new Error('File not found');
+    }
+
     const deletionResult = await measurePerformance(
-      () => dbInstance.deleteFile(userEmail, file?.id as string),
+      () => dbInstance.deleteFile(userEmail, file.id as string),
       'Purging archive from DB',
       sendUpdate
     );
@@ -63,32 +68,58 @@ export async function purgeArchive(
       throw new Error('Failed to delete file from DB');
     }
 
+    const purpose = file.purpose;
     if (purpose === Purpose.Sage) {
       const fileDeleted = await measurePerformance(
-        () => deleteFromOpenAi(file?.id as string),
-        'Purging sage from OpenAi',
+        () => deleteFromOpenAi(file.id as string),
+        'Purging archives from OpenAi',
         sendUpdate
       );
       return fileDeleted as FileDeleted;
     } else if (purpose === Purpose.Scribe) {
-      await measurePerformance(
-        () => deleteFromVectorDb(file?.id as string),
-        'Purging thread from OpenAi',
+      const fileDeleted = await measurePerformance(
+        () => deleteFromVectorDb(file, userEmail),
+        'Purging archives from VectorDb',
         sendUpdate
       );
+      return fileDeleted;
     }
   } catch (error: any) {
-    sendUpdate('error', error.message);
+    sendUpdate('error', `Purge archive failed: ${error.message}`);
   } finally {
     const totalEndTime = performance.now();
     getTotalTime(totalStartTime, totalEndTime, sendUpdate);
   }
 }
+
 async function deleteFromOpenAi(fileId: string): Promise<unknown> {
-  const result = await openai.files.del(fileId);
-  return result;
+  try {
+    const result = await openai.files.del(fileId);
+    return result;
+  } catch (error: any) {
+    throw new Error(`Failed to delete file from OpenAI: ${error.message}`);
+  }
 }
 
-async function deleteFromVectorDb(fileId: string): Promise<unknown> {
-  return 'Bingo Boingo';
+async function deleteFromVectorDb(
+  file: AtlasFile,
+  userEmail: string
+): Promise<unknown> {
+  try {
+    const index = await getIndex();
+    const results = await index.namespace(userEmail).listPaginated({
+      prefix: `${file.name}#${file.id}`,
+    });
+
+    const vectorIds = results.vectors?.map((vector) => vector.id);
+
+    if (!vectorIds) {
+      throw new Error('No vectors found to delete');
+    }
+
+    const result = await index.namespace(userEmail).deleteMany(vectorIds);
+    return result;
+  } catch (error: any) {
+    throw new Error(`Failed to delete vectors from VectorDB: ${error.message}`);
+  }
 }

@@ -47,7 +47,7 @@ export async function processDocument(
 
     // Embed Document
     const embedResponse = await measurePerformance(
-      () => embedDocument(parseResponse, userEmail),
+      () => embedDocument(uploadResponse.file, parseResponse, userEmail),
       `Embedding: '${file.name}'`,
       sendUpdate
     );

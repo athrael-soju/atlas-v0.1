@@ -39,10 +39,10 @@ export async function POST(req: NextRequest): Promise<Response> {
         let response;
         try {
           switch (action) {
-            case 'retrieve-file-list':
+            case 'retrieve-archives':
               response = await recoverArchives(archivistParams, send);
               break;
-            case 'purge':
+            case 'purge-archive':
               response = await purgeArchive(archivistParams, send);
               break;
             default:

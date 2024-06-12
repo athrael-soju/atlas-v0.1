@@ -87,7 +87,7 @@ export default function Page() {
         }
       };
       const archivistParams = { userEmail: userEmail };
-      await archivist('retrieve-file-list', archivistParams, onUpdate);
+      await archivist('retrieve-archives', archivistParams, onUpdate);
     } catch (error) {
       console.error(error);
     }

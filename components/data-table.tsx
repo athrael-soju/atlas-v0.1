@@ -51,10 +51,10 @@ const handleDeleteFile = async (
       }
     };
     const archivistParams = {
-      fileIds: [fileId],
+      fileId: fileId,
       userEmail,
     };
-    await archivist('purge', archivistParams, onUpdate);
+    await archivist('purge-archive', archivistParams, onUpdate);
   } catch (error) {
     console.error(error);
   }

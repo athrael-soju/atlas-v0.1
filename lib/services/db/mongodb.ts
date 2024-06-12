@@ -30,7 +30,6 @@ export const db = async () => {
 
   const getUserFile = async (userEmail: string, fileId: string) => {
     const userFiles = await getUserFiles(userEmail);
-
     const userFile = userFiles.find((file) => file.id === fileId);
     return userFile;
   };

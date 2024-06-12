@@ -52,7 +52,7 @@ export interface SageParams {
 
 export interface ArchivistParams {
   userEmail: string;
-  fileIds?: string[];
+  fileId?: string;
 }
 
 export enum Purpose {

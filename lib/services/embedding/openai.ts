@@ -1,3 +1,4 @@
+import { AtlasFile } from '@/lib/types';
 import OpenAI, { ClientOptions } from 'openai';
 
 const embeddingApiModel =
@@ -52,9 +53,14 @@ export async function embedMessage(userEmail: string, content: string) {
   }
 }
 
-export async function embedDocument(data: any[], userEmail: string) {
+export async function embedDocument(
+  file: AtlasFile,
+  data: any[],
+  userEmail: string
+) {
   const chunkIdList: string[] = [];
   try {
+    let chunkNumber = 0;
     const embeddings = await Promise.all(
       data.map(async (item: any) => {
         await delay(13); // Temporary fix for rate limiting 5000 RPM
@@ -65,7 +71,7 @@ export async function embedDocument(data: any[], userEmail: string) {
         });
 
         const transformedMetadata = transformObjectValues(item.metadata);
-        const newId = crypto.randomUUID();
+        const newId = `${file.name}#${file.id}#${++chunkNumber}`;
         chunkIdList.push(newId);
         const embeddingValues = response.data[0].embedding;
 
