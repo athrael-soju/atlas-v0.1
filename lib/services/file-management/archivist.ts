@@ -116,7 +116,7 @@ async function deleteFromVectorDb(
   do {
     try {
       const result = await listArchiveChunks(
-        file.id,
+        file,
         namespace,
         pageSize,
         paginationToken
@@ -143,14 +143,14 @@ async function deleteFromVectorDb(
 }
 
 async function listArchiveChunks(
-  documentId: string,
+  file: AtlasFile,
   namespace: Index,
   limit: number,
   paginationToken?: string
 ): Promise<{ chunks: { id: string }[]; paginationToken?: string }> {
   try {
     const listResult = await namespace.listPaginated({
-      prefix: `${documentId}:`,
+      prefix: `${file.name}#${file.id}`,
       limit: limit,
       paginationToken: paginationToken,
     });
@@ -160,7 +160,7 @@ async function listArchiveChunks(
     return { chunks, paginationToken: listResult.pagination?.next };
   } catch (error: any) {
     throw new Error(
-      `Failed to list archive chunks for document ${documentId}: ${error.message}`
+      `Failed to list archive chunks for document ${file.id}: ${error.message}`
     );
   }
 }
