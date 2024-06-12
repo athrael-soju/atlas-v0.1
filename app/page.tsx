@@ -81,10 +81,8 @@ export default function Page() {
   const handleFetchFiles = async (userEmail: string) => {
     try {
       const onUpdate = (event: string) => {
-        const parsedEvent = JSON.parse(event.replace('data: ', ''));
-        const type = parsedEvent.type;
+        const { type, message } = JSON.parse(event.replace('data: ', ''));
         if (type === 'final-notification') {
-          const message = parsedEvent.message;
           setFileList(message);
         }
       };
@@ -173,8 +171,8 @@ export default function Page() {
         await sage(
           'consult',
           { userEmail, message, file_ids: uploadedFiles },
-          (update) => {
-            const { type, message } = JSON.parse(update);
+          (event: string) => {
+            const { type, message } = JSON.parse(event.replace('data: ', ''));
             if (type.includes('created') && firstRun === false) {
               addNewMessage(prevType, currentMessage);
               if (type === 'text_created') {

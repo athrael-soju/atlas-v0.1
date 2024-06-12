@@ -47,8 +47,7 @@ const handleDeleteFile = async (
 ) => {
   try {
     const onUpdate = (event: string) => {
-      const parsedEvent = JSON.parse(event.replace('data: ', ''));
-      const type = parsedEvent.type;
+      const { type } = JSON.parse(event.replace('data: ', ''));
       if (type === 'final-notification') {
         fetchFiles(userEmail);
         toast({

@@ -93,7 +93,7 @@ export async function reform(
       sendUpdate
     );
 
-    if (!user?.sageId) {
+    if (!user.sageId) {
       throw new Error('User does not have a sage');
     }
 
@@ -149,7 +149,7 @@ export async function dismiss(
       sendUpdate
     );
 
-    if (!user?.sageId || !user?.threadId) {
+    if (!user.sageId || !user.threadId) {
       throw new Error('User does not have a sage ID or thread ID');
     }
 
@@ -192,7 +192,7 @@ export async function consult(
       sendUpdate
     );
 
-    if (!user?.sageId || !user?.threadId) {
+    if (!user.sageId || !user.threadId) {
       throw new Error('User does not have a sage or thread ID');
     }
 
