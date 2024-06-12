@@ -9,7 +9,8 @@ function sendUpdate(
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
-  controller.enqueue(JSON.stringify({ type, message }));
+  const data = JSON.stringify({ type, message });
+  controller.enqueue(`data: ${data}\n\n`);
 }
 
 export async function POST(req: NextRequest): Promise<Response> {

@@ -25,7 +25,6 @@ export async function recoverArchives(
       'Checking for archives',
       sendUpdate
     );
-
     return userFiles;
   } catch (error: any) {
     sendUpdate('error', `Recover archives failed: ${error.message}`);

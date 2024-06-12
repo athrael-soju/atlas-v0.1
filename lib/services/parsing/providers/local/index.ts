@@ -76,10 +76,9 @@ async function processFile(
 
     return { content, pages };
   } catch (error: any) {
-    console.error(
+    throw new Error(
       'An error occurred while processing the document:',
       error.message
     );
-    throw error;
   }
 }

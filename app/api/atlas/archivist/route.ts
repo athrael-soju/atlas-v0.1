@@ -12,7 +12,8 @@ function sendUpdate(
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
-  controller.enqueue(JSON.stringify({ type, message }));
+  const data = JSON.stringify({ type, message });
+  controller.enqueue(`data: ${data}\n\n`);
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -48,10 +49,10 @@ export async function POST(req: NextRequest): Promise<Response> {
             default:
               sendUpdate('notification', controller, 'Invalid Action');
           }
+          sendUpdate('final-notification', controller, response);
         } catch (error: any) {
           sendUpdate('error', controller, error.message);
         } finally {
-          sendUpdate('final-notification', controller, response);
           controller.close();
         }
       },

@@ -80,13 +80,15 @@ export default function Page() {
 
   const handleFetchFiles = async (userEmail: string) => {
     try {
-      const onUpdate = (stringMessage: string) => {
-        const leJson = JSON.parse(stringMessage);
-        if (leJson.type === 'final-notification') {
-          setFileList(leJson.message);
+      const onUpdate = (event: string) => {
+        const parsedEvent = JSON.parse(event.replace('data: ', ''));
+        const type = parsedEvent.type;
+        if (type === 'final-notification') {
+          const message = parsedEvent.message;
+          setFileList(message);
         }
       };
-      const archivistParams = { userEmail: userEmail };
+      const archivistParams = { userEmail };
       await archivist('retrieve-archives', archivistParams, onUpdate);
     } catch (error) {
       console.error(error);
@@ -332,7 +334,7 @@ export default function Page() {
             <SheetHeader>
               <SheetTitle>File List</SheetTitle>
               <SheetDescription>
-                Here you can find all files uploaded by your user account
+                {/* Here you can find all files uploaded by your user account */}
               </SheetDescription>
             </SheetHeader>
             {fileList.length > 0 ? (

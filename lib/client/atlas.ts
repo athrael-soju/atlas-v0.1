@@ -29,7 +29,7 @@ const readStream = async (
 
     if (value) {
       buffer += decoder.decode(value, { stream: true });
-      let boundary = buffer.indexOf('}{');
+      let boundary = buffer.indexOf('\n\n');
 
       while (boundary !== -1) {
         const message = buffer.slice(0, boundary + 1);
@@ -37,12 +37,11 @@ const readStream = async (
         if (message) {
           onUpdate(message);
         }
-        boundary = buffer.indexOf('}{');
+        boundary = buffer.indexOf('\n\n');
       }
     }
   }
-
-  if (buffer) {
+  if (buffer.trim()) {
     onUpdate(buffer);
   }
 };
@@ -66,7 +65,6 @@ export const forge = async (
 
     await readStream(response, onUpdate);
   } catch (error) {
-    console.error('Error in process:', error);
     onUpdate(`Error: ${error}`);
   }
 };
@@ -87,7 +85,6 @@ export const scribe = async (
 
     await readStream(response, onUpdate);
   } catch (error) {
-    console.error('Error in retrieve:', error);
     onUpdate(`Error: ${error}`);
   }
 };
@@ -109,7 +106,6 @@ export const sage = async (
 
     await readStream(response, onUpdate);
   } catch (error) {
-    console.error('Error in process:', error);
     onUpdate(`Error: ${error}`);
   }
 };
@@ -131,7 +127,6 @@ export const archivist = async (
 
     await readStream(response, onUpdate);
   } catch (error) {
-    console.error('Error in process:', error);
     onUpdate(`Error: ${error}`);
   }
 };
