@@ -18,7 +18,6 @@ export async function GET(_request: any, { params: { param } }: any) {
       },
     });
   } else {
-    // Handle as fileId
     const [file, fileContent] = await Promise.all([
       openai.files.retrieve(param),
       openai.files.content(param),
