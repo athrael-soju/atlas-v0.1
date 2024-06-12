@@ -2,7 +2,6 @@ import { openai } from '@/lib/client/openai';
 import { AtlasFile, Purpose } from '@/lib/types';
 import { db } from '@/lib/services/db/mongodb';
 
-// TODO: Add a store to keep track of uploaded files, based on userEmail
 export async function uploadDocumentToOpenAi(
   file: File,
   userEmail: string

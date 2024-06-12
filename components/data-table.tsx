@@ -85,7 +85,6 @@ const handleDownloadFile = async (fileId: string) => {
 // TODO: Add a loading spinner when deleting a file
 // TODO: Add a toast notification when a file is deleted
 // TODO: Fix the download file functionality
-// TODO: Implement deletion of files from Vector DB
 export const DataTable: React.FC<DataTableProps> = ({
   userEmail,
   files,
