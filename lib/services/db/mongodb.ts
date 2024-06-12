@@ -17,7 +17,7 @@ export const db = async () => {
 
   const getUser = async (userEmail: string) => {
     const user = await userCollection.findOne({ email: userEmail });
-    return user;
+    return user as unknown as AtlasUser;
   };
 
   const getUserFiles = async (userEmail: string) => {
