@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ForgeParams } from '@/lib/types';
-import { processDocument } from '@/lib/utils/processing/forge';
-import { processDocumentViaOpenAi } from '@/lib/utils/processing/openai';
+import { processDocument } from '@/lib/services/processing/forge';
+import { processDocumentViaOpenAi } from '@/lib/services/processing/openai';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 function sendUpdate(
   type: string,
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
-  controller.enqueue(JSON.stringify({ type, message }));
+  const data = JSON.stringify({ type, message });
+  controller.enqueue(`data: ${data}\n\n`);
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -18,16 +20,17 @@ export async function POST(req: NextRequest): Promise<Response> {
     const data = await req.formData();
     const files = data.getAll('files') as File[];
     const userEmail = data.get('userEmail') as string;
-    const forgeParams = JSON.parse(
-      data.get('forgeParams') as string
-    ) as ForgeParams;
 
-    if (!userEmail) {
+    if (!userEmail || !files) {
       return NextResponse.json(
-        { error: 'User email is required' },
+        { error: 'User email and files are required' },
         { status: 400 }
       );
     }
+
+    const forgeParams = JSON.parse(
+      data.get('forgeParams') as string
+    ) as ForgeParams;
 
     if (!files.length) {
       return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
@@ -63,7 +66,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           const success = results.filter((result) => result.success).length;
           const failed = results.filter((result) => !result.success).length;
 
-          send('notification', `Success: ${success}. Failed: ${failed}`);
+          send('final-notification', `Success: ${success}. Failed: ${failed}`);
         } catch (error: any) {
           send('error', error.message);
         } finally {
@@ -75,7 +78,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         Connection: 'keep-alive',
       },
     });

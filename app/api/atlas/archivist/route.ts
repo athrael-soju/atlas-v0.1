@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ScribeParams } from '@/lib/types';
-import { retrieveContext } from '@/lib/services/retrieval/scribe';
-
+import {} from '@/lib/services/file-management/archivist';
+import { ArchivistParams } from '@/lib/types';
+import {
+  recoverArchives,
+  purgeArchive,
+} from '@/lib/services/file-management/archivist';
 export const runtime = 'nodejs';
 
 function sendUpdate(
@@ -16,14 +19,16 @@ function sendUpdate(
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
-    const content = data.get('content') as string;
-    const scribeParams = JSON.parse(
-      data.get('scribeParams') as string
-    ) as ScribeParams;
+    const action = data.get('action') as string;
+    const archivistParams = JSON.parse(
+      data.get('archivistParams') as string
+    ) as ArchivistParams;
 
-    if (!scribeParams.userEmail || !content) {
+    const userEmail = archivistParams.userEmail;
+
+    if (!userEmail || !action) {
       return NextResponse.json(
-        { error: 'User email and content are required' },
+        { error: 'User email and action are required' },
         { status: 400 }
       );
     }
@@ -32,13 +37,19 @@ export async function POST(req: NextRequest): Promise<Response> {
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
+        let response;
         try {
-          const response = await retrieveContext(content, scribeParams, send);
-          sendUpdate(
-            'final-notification',
-            controller,
-            JSON.stringify(response.content)
-          );
+          switch (action) {
+            case 'retrieve-archives':
+              response = await recoverArchives(archivistParams, send);
+              break;
+            case 'purge-archive':
+              response = await purgeArchive(archivistParams, send);
+              break;
+            default:
+              sendUpdate('notification', controller, 'Invalid Action');
+          }
+          sendUpdate('final-notification', controller, response);
         } catch (error: any) {
           sendUpdate('error', controller, error.message);
         } finally {

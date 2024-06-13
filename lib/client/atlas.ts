@@ -3,6 +3,7 @@ import {
   ScribeParams,
   SageParams,
   SageAction,
+  ArchivistParams,
 } from '@/lib/types';
 
 const readStream = async (
@@ -28,7 +29,7 @@ const readStream = async (
 
     if (value) {
       buffer += decoder.decode(value, { stream: true });
-      let boundary = buffer.indexOf('}{');
+      let boundary = buffer.indexOf('\n\n');
 
       while (boundary !== -1) {
         const message = buffer.slice(0, boundary + 1);
@@ -36,12 +37,11 @@ const readStream = async (
         if (message) {
           onUpdate(message);
         }
-        boundary = buffer.indexOf('}{');
+        boundary = buffer.indexOf('\n\n');
       }
     }
   }
-
-  if (buffer) {
+  if (buffer.trim()) {
     onUpdate(buffer);
   }
 };
@@ -65,7 +65,6 @@ export const forge = async (
 
     await readStream(response, onUpdate);
   } catch (error) {
-    console.error('Error in process:', error);
     onUpdate(`Error: ${error}`);
   }
 };
@@ -86,7 +85,6 @@ export const scribe = async (
 
     await readStream(response, onUpdate);
   } catch (error) {
-    console.error('Error in retrieve:', error);
     onUpdate(`Error: ${error}`);
   }
 };
@@ -108,7 +106,27 @@ export const sage = async (
 
     await readStream(response, onUpdate);
   } catch (error) {
-    console.error('Error in process:', error);
+    onUpdate(`Error: ${error}`);
+  }
+};
+
+export const archivist = async (
+  action: string,
+  archivistParams: ArchivistParams,
+  onUpdate: (message: string) => void
+): Promise<void> => {
+  const formData = new FormData();
+  formData.append('action', action);
+  formData.append('archivistParams', JSON.stringify(archivistParams));
+
+  try {
+    const response = await fetch('/api/atlas/archivist', {
+      method: 'POST',
+      body: formData,
+    });
+
+    await readStream(response, onUpdate);
+  } catch (error) {
     onUpdate(`Error: ${error}`);
   }
 };

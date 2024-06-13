@@ -15,7 +15,6 @@ export function Stocks({ stocks }: Readonly<{ stocks: any[] }>) {
           key={stock.symbol}
           className="flex flex-row gap-2 p-2 text-left rounded-lg cursor-pointer bg-zinc-900 hover:bg-zinc-800 sm:w-52"
           onClick={async () => {
-            // TODO: Bring cotext from the server, when relevant
             const response = await submitUserMessage(
               `View ${stock.symbol}`,
               ''

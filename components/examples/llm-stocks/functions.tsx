@@ -18,6 +18,7 @@ import { EventsSkeleton } from './events-skeleton';
 import { StocksSkeleton } from './stocks-skeleton';
 import { createStreamableUI, getMutableAIState } from 'ai/rsc';
 import { AI } from '@/app/action';
+import { MessageRole } from '@/lib/types';
 
 type ListStocksInfo = {
   stocks: StockPriceInfo[];
@@ -130,7 +131,9 @@ export async function checkIfCalled(completion: any, reply: any, aiState: any) {
     'show_stock_purchase_ui',
     ({ symbol, price, numberOfShares = 100 }: StockPurchaseInfo) => {
       if (numberOfShares <= 0 || numberOfShares > 1000) {
-        reply.done(<AssistantMessage role="text" text="Invalid amount" />);
+        reply.done(
+          <AssistantMessage role={MessageRole.Text} text="Invalid amount" />
+        );
         aiState.done([
           ...aiState.get(),
           {
@@ -145,7 +148,7 @@ export async function checkIfCalled(completion: any, reply: any, aiState: any) {
       reply.done(
         <>
           <AssistantMessage
-            role="text"
+            role={MessageRole.Text}
             text={
               `Sure ` +
               (typeof numberOfShares === 'number'

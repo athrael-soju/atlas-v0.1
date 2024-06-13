@@ -4,16 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from './progress';
 import { cn } from '@/lib/utils';
 import { forge } from '@/lib/client/atlas';
-import { ForgeParams } from '@/lib/types';
-
-interface DropzoneProps {
-  onChange: React.Dispatch<React.SetStateAction<string[]>>;
-  fileExtension?: string;
-  userEmail: string;
-  forgeParams: ForgeParams;
-  isUploadCompleted: boolean;
-  setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
-}
+import { DropzoneProps } from '@/lib/types';
+import { useToast } from '@/components/ui/use-toast';
 
 export function Dropzone({
   onChange,
@@ -22,6 +14,8 @@ export function Dropzone({
   forgeParams,
   isUploadCompleted,
   setIsUploadCompleted,
+  setIsUploading,
+  fetchFiles,
   ...props
 }: Readonly<DropzoneProps>) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -29,6 +23,7 @@ export function Dropzone({
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [isDragging, setIsDragging] = useState(false);
+  const { toast } = useToast();
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -75,33 +70,55 @@ export function Dropzone({
       await handleUpload(files);
     }
   };
-
+  // Add File type error handling and return appropriate errors to be shown by the toaster
   const handleUpload = async (files: FileList) => {
+    setIsUploading(true);
     try {
       const allowedStates = [
         'Uploading',
+        'Updating DB',
         'Parsing',
         'Embedding',
         'Upserting',
         'Cleaning up',
       ];
 
-      const onUpdate = (stringMessage: string) => {
-        const jsonMessage = JSON.parse(stringMessage);
-        const msg = jsonMessage.message;
-        if (allowedStates.some((state) => msg.startsWith(state))) {
-          setProgress((prev) => prev + 20.0 / files.length);
-        } else if (msg.startsWith('Success')) {
+      const progressInterval = 100 / allowedStates.length / files.length;
+      const onUpdate = (event: string) => {
+        const { type, message } = JSON.parse(event.replace('data: ', ''));
+        if (allowedStates.some((state) => message.startsWith(state))) {
+          setProgress((prev) => prev + progressInterval);
+        } else if (type === 'final-notification') {
           setProgress(100);
           setIsUploadCompleted(true);
+          fetchFiles(userEmail);
+          toast({
+            title: 'Success',
+            description: 'File uploaded successfully.',
+            variant: 'default',
+          });
+        } else if (type === 'error') {
+          setError(message);
+          toast({
+            title: 'Error',
+            description: 'Failed to upload file.',
+            variant: 'destructive',
+          });
         }
 
-        handleFileInfo(msg);
+        handleFileInfo(message);
       };
 
       await forge(files, userEmail, forgeParams, onUpdate);
     } catch (error) {
       setError((error as Error).message);
+      toast({
+        title: 'Error',
+        description: 'Failed to upload file.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 

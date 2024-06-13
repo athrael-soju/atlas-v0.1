@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { summon, reform, consult, dismiss } from '@/lib/utils/analysis/sage';
+import { summon, reform, consult, dismiss } from '@/lib/services/analysis/sage';
 import { SageAction, SageParams } from '@/lib/types';
 
 export const runtime = 'nodejs';
@@ -9,11 +9,8 @@ function sendUpdate(
   controller: ReadableStreamDefaultController,
   message: string
 ): void {
-  try {
-    controller.enqueue(JSON.stringify({ type, message }));
-  } catch (error) {
-    console.error('Failed to send update:', error);
-  }
+  const data = JSON.stringify({ type, message });
+  controller.enqueue(`data: ${data}\n\n`);
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
