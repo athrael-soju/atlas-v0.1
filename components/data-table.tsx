@@ -96,6 +96,7 @@ const handleDownloadFile = async (fileId: string) => {
 
 // TODO: Add a loading spinner when deleting a file
 // TODO: Fix the download file functionality
+// TODO: Fix the SSE animation
 export const DataTable: React.FC<DataTableProps> = ({
   userEmail,
   files,
