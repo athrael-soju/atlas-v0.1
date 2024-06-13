@@ -75,9 +75,14 @@ const handleDeleteFile = async (
   }
 };
 
-const handleDownloadFile = async (fileId: string) => {
-  // TODO: Implement download file
+const handleDownloadFile = async (fileId: string, toast: any) => {
+  toast({
+    title: 'Failure',
+    description: 'Downloaded functionality not yet supported',
+    variant: 'destructive',
+  });
 };
+
 export const DataTable: React.FC<DataTableProps> = ({
   userEmail,
   files,
@@ -188,7 +193,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
-                    handleDownloadFile(file.id);
+                    handleDownloadFile(file.id, toast);
                   }}
                 >
                   Download
