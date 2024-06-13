@@ -21,16 +21,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       data.get('scribeParams') as string
     ) as ScribeParams;
 
-    if (!scribeParams.userEmail) {
+    if (!scribeParams.userEmail || !content) {
       return NextResponse.json(
-        { error: 'User email is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!content) {
-      return NextResponse.json(
-        { error: 'No content in user message' },
+        { error: 'User email and content are required' },
         { status: 400 }
       );
     }
@@ -39,7 +32,6 @@ export async function POST(req: NextRequest): Promise<Response> {
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
-
         try {
           const response = await retrieveContext(content, scribeParams, send);
           sendUpdate(

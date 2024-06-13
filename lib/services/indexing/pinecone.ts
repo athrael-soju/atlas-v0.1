@@ -11,14 +11,12 @@ function chunkArray<T>(array: T[], chunkSize: number): T[][] {
 export async function query(userEmail: string, embeddings: any, topK: number) {
   try {
     const response = await queryByNamespace(userEmail, topK, embeddings.values);
-
     const context = response.matches.map((item: any) => ({
       text: item.metadata.text,
-      filename: item.metadata.file_name,
-      filetype: item.metadata.file_type,
-      languages: item.metadata.language,
-      pageNumber: item.metadata.pages,
-      parentId: item.metadata.parent_id,
+      filename: item.metadata.filename,
+      filetype: item.metadata.filetype,
+      languages: item.metadata.languages,
+      pageNumber: item.metadata.page_number,
       userEmail: item.metadata.user_email,
     }));
 

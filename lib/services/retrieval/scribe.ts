@@ -6,7 +6,7 @@ import { ScribeParams } from '@/lib/types';
 import { measurePerformance, getTotalTime } from '../../utils/metrics';
 
 export async function retrieveContext(
-  content: string,
+  userMessage: string,
   scribeParams: ScribeParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<{ success: boolean; userEmail: string; content: any }> {
@@ -15,7 +15,7 @@ export async function retrieveContext(
 
   try {
     const embeddingResults = await measurePerformance(
-      () => embedMessage(userEmail, content),
+      () => embedMessage(userEmail, userMessage),
       'Embedding',
       sendUpdate
     );
@@ -27,11 +27,10 @@ export async function retrieveContext(
     );
 
     const rerankingResults = await measurePerformance(
-      () => rerank(content, queryResults.context, topN),
+      () => rerank(userMessage, queryResults.context, topN),
       'Reranking',
       sendUpdate
     );
-    sendUpdate('notification', 'Query Success!');
     return { success: true, userEmail, content: rerankingResults.values };
   } catch (error: any) {
     sendUpdate('error', error.message);

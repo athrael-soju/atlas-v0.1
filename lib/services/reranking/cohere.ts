@@ -11,11 +11,17 @@ if (!process.env.COHERE_API_KEY) {
 const model = process.env.COHERE_API_MODEL || 'rerank-multilingual-v3.0';
 
 export async function rerank(
-  content: string,
+  userMessage: string,
   queryResults: any[],
   topN: number
 ): Promise<{ message: string; values: string }> {
   try {
+    if (queryResults.length < 1) {
+      return {
+        message: 'Query results are empty. Reranking skipped',
+        values: '',
+      };
+    }
     const rerankResults = await cohere.rerank({
       model: model,
       documents: queryResults,
@@ -28,11 +34,10 @@ export async function rerank(
         'parent_id',
         'user_email',
       ],
-      query: content,
+      query: userMessage,
       topN: topN,
       returnDocuments: true,
     });
-
     const formattedResults = formatResults(rerankResults.results);
 
     return {
@@ -47,7 +52,7 @@ export async function rerank(
 function formatResults(data: any[]): string {
   return data
     .map((item) => {
-      const record = `Filename: ${item.document.filename}\nFiletype: ${item.document.filetype}\nLanguages: ${item.document.languages}\nPage Number: ${item.document.page_number}\nText: ${item.document.text}\nUser Email: ${item.document.user_email}\nRelevance Score: ${item.relevance_score}`;
+      const record = `Filename: ${item.document.filename}. Filetype: ${item.document.filetype}. Languages: ${item.document.languages}. Page Number: ${item.document.page_number}. Text: ${item.document.text}. User Email: ${item.document.user_email}. Relevance Score: ${item.relevance_score}.`;
       return record;
     })
     .join('\n\n');
