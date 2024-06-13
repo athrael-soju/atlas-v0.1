@@ -4,6 +4,8 @@ import * as fs from 'fs';
 
 const apiKey = process.env.UNSTRUCTURED_API;
 const serverURL = process.env.UNSTRUCTURED_SERVER_URL;
+const parsingStrategy = process.env.UNSTRUCTURED_PARSING_STRATEGY;
+const chunkingStrategy = process.env.UNSTRUCTURED_CHUNKING_STRATEGY;
 
 if (!apiKey) {
   throw new Error('UNSTRUCTURED_API is not set');
@@ -29,8 +31,8 @@ export async function parseUnstructured(
         content: fileData,
         fileName: fileContent.name,
       },
-      strategy: 'fast', // TODO: Add support for user-selected strategy
-      chunkingStrategy: 'by_title',
+      strategy: parsingStrategy,
+      chunkingStrategy: chunkingStrategy,
       maxCharacters: chunkSize,
       overlap: overlap,
     });
