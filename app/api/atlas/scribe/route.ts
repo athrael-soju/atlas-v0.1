@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ScribeParams } from '@/lib/types';
-import { retrieveContext } from '@/lib/services/retrieval/scribe';
+import { retrieveContext } from '@/lib/services/atlas/scribe';
 
 export const runtime = 'nodejs';
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ForgeParams } from '@/lib/types';
-import { processDocument } from '@/lib/services/processing/forge';
+import { processDocument } from '@/lib/services/atlas/forge';
 import { processDocumentViaOpenAi } from '@/lib/services/processing/openai';
 
 export const runtime = 'nodejs';
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest): Promise<Response> {
             files.map((file) => {
               if (file.type === 'application/pdf') {
                 return processDocument(file, userEmail, forgeParams, send);
-              } else if (file.type.includes('text')) {
+              } else if (file.type === 'text/csv') {
                 return processDocumentViaOpenAi(file, userEmail, send);
               } else {
                 sendUpdate(

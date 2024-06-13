@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {} from '@/lib/services/file-management/archivist';
+import {} from '@/lib/services/atlas/archivist';
 import { ArchivistParams } from '@/lib/types';
 import {
   recoverArchives,
   purgeArchive,
-} from '@/lib/services/file-management/archivist';
+} from '@/lib/services/atlas/archivist';
 export const runtime = 'nodejs';
 
 function sendUpdate(
