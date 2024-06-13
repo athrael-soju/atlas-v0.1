@@ -24,13 +24,6 @@ export async function processDocument(
       sendUpdate
     );
 
-    const dbInstance = await db();
-    await measurePerformance(
-      () => dbInstance.addFile(userEmail, uploadResponse.file as AtlasFile),
-      `Updating DB: '${file.name}'`,
-      sendUpdate
-    );
-
     // Parse File
     const parseResponse = await measurePerformance(
       () =>
@@ -61,6 +54,14 @@ export async function processDocument(
           forgeParams.chunkBatch
         ),
       `Upserting: '${file.name}'`,
+      sendUpdate
+    );
+
+    // Update DB
+    const dbInstance = await db();
+    await measurePerformance(
+      () => dbInstance.addFile(userEmail, uploadResponse.file as AtlasFile),
+      `Updating DB: '${file.name}'`,
       sendUpdate
     );
 

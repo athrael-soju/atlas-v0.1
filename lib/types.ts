@@ -84,10 +84,22 @@ export interface AtlasUser {
   files: AtlasFile[];
 }
 
+export interface DropzoneProps {
+  onChange: React.Dispatch<React.SetStateAction<string[]>>;
+  fileExtension?: string;
+  userEmail: string;
+  forgeParams: ForgeParams;
+  isUploadCompleted: boolean;
+  setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
+  fetchFiles: (userEmail: string) => void;
+  setIsDeleting: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
 export interface DataTableProps {
   userEmail: string;
   files: AtlasFile[];
   handleFetchFiles: (userEmail: string) => Promise<void>;
+  setIsDeleting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface CodeProps extends React.HTMLAttributes<HTMLElement> {

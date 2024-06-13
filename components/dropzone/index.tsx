@@ -4,17 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from './progress';
 import { cn } from '@/lib/utils';
 import { forge } from '@/lib/client/atlas';
-import { ForgeParams } from '@/lib/types';
+import { DropzoneProps } from '@/lib/types';
 import { useToast } from '@/components/ui/use-toast';
-
-interface DropzoneProps {
-  onChange: React.Dispatch<React.SetStateAction<string[]>>;
-  fileExtension?: string;
-  userEmail: string;
-  forgeParams: ForgeParams;
-  isUploadCompleted: boolean;
-  setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
-}
 
 export function Dropzone({
   onChange,
@@ -23,6 +14,8 @@ export function Dropzone({
   forgeParams,
   isUploadCompleted,
   setIsUploadCompleted,
+  fetchFiles,
+  setIsDeleting,
   ...props
 }: Readonly<DropzoneProps>) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -79,6 +72,7 @@ export function Dropzone({
   };
   // Add File type error handling and return appropriate errors to be shown by the toaster
   const handleUpload = async (files: FileList) => {
+    setIsDeleting(true);
     try {
       const allowedStates = [
         'Uploading',
@@ -97,6 +91,7 @@ export function Dropzone({
         } else if (type === 'final-notification') {
           setProgress(100);
           setIsUploadCompleted(true);
+          fetchFiles(userEmail);
           toast({
             title: 'Success',
             description: 'File uploaded successfully.',
@@ -122,6 +117,8 @@ export function Dropzone({
         description: 'Failed to upload file.',
         variant: 'destructive',
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 

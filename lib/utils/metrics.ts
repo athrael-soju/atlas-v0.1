@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 
+// TODO: find the issue of the animation stopping after the first interval. It should continue until the action is completed
 export const measurePerformance = async <T>(
   action: () => Promise<T>,
   description: string,

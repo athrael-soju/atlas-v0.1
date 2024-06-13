@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/sheet';
 import { archivist } from '@/lib/client/atlas';
 import { DataTable } from '@/components/data-table';
+import { CircleLoader } from 'react-spinners';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -50,6 +51,7 @@ export default function Page() {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
   const [fileList, setFileList] = useState<AtlasFile[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const userEmail = session?.user?.email ?? '';
 
@@ -238,6 +240,11 @@ export default function Page() {
 
   return (
     <div>
+      {isLoading && (
+        <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
+          <CircleLoader color="var(--spinner-color)" size={200} />
+        </div>
+      )}
       <div className="pb-[200px] pt-4 md:pt-10">
         {messages.length ? <ChatList messages={messages} /> : <EmptyScreen />}
         <ChatScrollAnchor trackVisibility={true} />
@@ -259,6 +266,8 @@ export default function Page() {
                   forgeParams={forgeParams}
                   isUploadCompleted={isUploadCompleted}
                   setIsUploadCompleted={setIsUploadCompleted}
+                  fetchFiles={handleFetchFiles}
+                  setIsDeleting={setIsLoading}
                 />
                 {uploadedFiles.length > 0 && (
                   <div className="mt-4">
@@ -341,6 +350,7 @@ export default function Page() {
                   userEmail={userEmail}
                   files={fileList}
                   handleFetchFiles={handleFetchFiles}
+                  setIsDeleting={setIsLoading}
                 />
               </div>
             ) : (

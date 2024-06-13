@@ -43,8 +43,10 @@ const handleDeleteFile = async (
   fileId: string,
   userEmail: string,
   fetchFiles: (userEmail: string) => void,
-  toast: any
+  toast: any,
+  setIsDeleting: (isDeleting: boolean) => void
 ) => {
+  setIsDeleting(true);
   try {
     const onUpdate = (event: string) => {
       const { type } = JSON.parse(event.replace('data: ', ''));
@@ -69,38 +71,19 @@ const handleDeleteFile = async (
       description: 'Failed to delete file.',
       variant: 'destructive',
     });
+  } finally {
+    setIsDeleting(false);
   }
 };
 
 const handleDownloadFile = async (fileId: string) => {
-  try {
-    const response = await fetch(`/api/files/${fileId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (response.ok) {
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileId;
-      a.click();
-    }
-  } catch (error) {
-    console.error(error);
-  }
+  // TODO: Implement download file
 };
-
-// TODO: Add a loading spinner when deleting a file
-// TODO: Fix the download file functionality
-// TODO: Fix the SSE animation
 export const DataTable: React.FC<DataTableProps> = ({
   userEmail,
   files,
   handleFetchFiles,
+  setIsDeleting,
 }) => {
   if (!userEmail) {
     throw new Error('User email is required');
@@ -197,7 +180,8 @@ export const DataTable: React.FC<DataTableProps> = ({
                       file.id,
                       userEmail,
                       handleFetchFiles,
-                      toast
+                      toast,
+                      setIsDeleting
                     );
                   }}
                 >
