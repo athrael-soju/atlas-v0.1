@@ -39,6 +39,7 @@ export interface ForgeParams {
   minChunkSize: number;
   overlap: number;
   chunkBatch: number;
+  parsingStrategy: string;
 }
 
 export interface SageParams {
@@ -84,15 +85,22 @@ export interface AtlasUser {
   files: AtlasFile[];
 }
 
+export interface MessageFormProps {
+  inputValue: string;
+  setInputValue: React.Dispatch<React.SetStateAction<string>>;
+  onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  inputRef: React.RefObject<HTMLTextAreaElement>;
+}
+
 export interface DropzoneProps {
-  onChange: React.Dispatch<React.SetStateAction<string[]>>;
+  onChange: (newFiles: string[]) => void;
   fileExtension?: string;
   userEmail: string;
   forgeParams: ForgeParams;
   isUploadCompleted: boolean;
   setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsUploading: React.Dispatch<React.SetStateAction<boolean>>;
   fetchFiles: (userEmail: string) => void;
-  setIsDeleting: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export interface DataTableProps {
@@ -106,9 +114,18 @@ export interface CodeProps extends React.HTMLAttributes<HTMLElement> {
   inline?: boolean;
   children?: React.ReactNode;
 }
+export enum MessageRole {
+  User = 'user',
+  Text = 'text',
+  Code = 'code',
+  Error = 'error',
+  Image = 'image',
+  Spinner = 'spinner',
+  Assistant = 'assistant',
+}
 
 export type MessageProps = {
-  role: 'text' | 'code' | 'image' | 'spinner';
+  role: MessageRole;
   text: string;
 };
 

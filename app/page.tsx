@@ -1,29 +1,12 @@
 'use client';
 
-import { ReactNode, useEffect, useRef, useState, FormEvent } from 'react';
-import { useUIState, useActions } from 'ai/rsc';
-import { AssistantMessage, UserMessage } from '@/components/message';
-import { type AI } from './action';
+import { useRef } from 'react';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
-import Textarea from 'react-textarea-autosize';
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  IconArrowElbow,
-  IconPlus,
-  IconChevronRight,
-} from '@/components/ui/icons';
-import { Button } from '@/components/ui/button';
+import { IconChevronRight } from '@/components/ui/icons';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
-import { Dropzone } from '@/components/dropzone';
-import { scribe, sage } from '@/lib/client/atlas';
 import { ExampleMessages } from '@/components/example-messages';
-import { ForgeParams, ScribeParams, AtlasFile } from '@/lib/types';
 import { useSession } from 'next-auth/react';
 import { spinner } from '@/components/ui/spinner';
 import {
@@ -34,191 +17,45 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { archivist } from '@/lib/client/atlas';
 import { DataTable } from '@/components/data-table';
 import { CircleLoader } from 'react-spinners';
+import { FileUploadManager } from '@/components/file-upload-manager';
+import { useKeyboardShortcut } from '@/lib/hooks/use-keyboard-shortcuts';
+import { useFileHandling } from '@/lib/hooks/use-file-handling';
+import { MessageForm } from '@/components/message-form';
+import { useMessaging } from '@/lib/hooks/use-messaging';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export default function Page() {
   const { data: session } = useSession();
-  const [messages, setMessages] = useUIState<typeof AI>();
-  const { submitUserMessage } = useActions<typeof AI>();
-  const [inputValue, setInputValue] = useState('');
   const { formRef, onKeyDown } = useEnterSubmit();
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-  const [isUploadCompleted, setIsUploadCompleted] = useState(false);
-  const [fileList, setFileList] = useState<AtlasFile[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+
+  useKeyboardShortcut(inputRef);
 
   const userEmail = session?.user?.email ?? '';
 
-  const scribeParams = {
-    userEmail: userEmail,
-    topK: parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100,
-    topN: parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10,
-  } as ScribeParams;
+  const {
+    uploadedFiles,
+    fileList,
+    isUploadCompleted,
+    isLoading,
+    handleFileChange,
+    handleFetchFiles,
+    setIsUploadCompleted,
+    setIsLoading,
+  } = useFileHandling(userEmail);
 
-  const forgeParams = {
-    provider: (process.env.NEXT_PUBLIC_PARSING_PROVIDER as string) || 'local',
-    maxChunkSize:
-      parseInt(process.env.NEXT_PUBLIC_MAX_CHUNK_SIZE as string) || 1024,
-    minChunkSize:
-      parseInt(process.env.NEXT_PUBLIC_MIN_CHUNK_SIZE as string) || 256,
-    overlap: parseInt(process.env.NEXT_PUBLIC_OVERLAP as string) || 128,
-    chunkBatch: parseInt(process.env.NEXT_PUBLIC_CHUNK_BATCH as string) || 150,
-    parsingStrategy:
-      (process.env.NEXT_PUBLIC_UNSTRUCTURED_PARSING_STRATEGY as string) ||
-      'auto',
-  } as ForgeParams;
-
-  const handleFileChange: React.Dispatch<React.SetStateAction<string[]>> = (
-    newFiles: React.SetStateAction<string[]>
-  ) => {
-    setUploadedFiles(newFiles);
-  };
-
-  const handleFetchFiles = async (userEmail: string) => {
-    try {
-      const onUpdate = (event: string) => {
-        const { type, message } = JSON.parse(event.replace('data: ', ''));
-        if (type === 'final-notification') {
-          setFileList(message);
-        }
-      };
-      const archivistParams = { userEmail };
-      await archivist('retrieve-archives', archivistParams, onUpdate);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/') {
-        if (
-          e.target &&
-          ['INPUT', 'TEXTAREA'].includes((e.target as any).nodeName)
-        ) {
-          return;
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        if (inputRef?.current) {
-          inputRef.current.focus();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [inputRef]);
-
-  const updateLastMessage = (role: any, content: string) => {
-    setMessages((currentMessages) => {
-      const newMessages = [...currentMessages];
-      newMessages[newMessages.length - 1].display = (
-        <AssistantMessage role={role} text={content} />
-      );
-      return newMessages;
-    });
-  };
-
-  const addNewMessage = (role: any, content: ReactNode) => {
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      {
-        id: Date.now(),
-        display: (
-          <AssistantMessage
-            role={role}
-            text={content}
-            className="items-center"
-          />
-        ),
-      },
-    ]);
-  };
-
-  const submitMessage = async (message: string) => {
-    setInputValue('');
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      {
-        id: Date.now(),
-        display: <UserMessage text={message} />,
-      },
-    ]);
-
-    let context = '';
-    if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Scribe') {
-      await scribe(message, scribeParams, (update) => {
-        const text = JSON.parse(update);
-        if (text.type === 'final-notification') {
-          context += text.message + '\n';
-        }
-      });
-    }
-    try {
-      if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Sage') {
-        addNewMessage('spinner', spinner);
-        let firstRun = true;
-        let prevType: 'text' | 'code' | 'image';
-        let currentMessage: string = '';
-        await sage(
-          'consult',
-          { userEmail, message, file_ids: uploadedFiles },
-          (event: string) => {
-            const { type, message } = JSON.parse(event.replace('data: ', ''));
-            if (type.includes('created') && firstRun === false) {
-              addNewMessage(prevType, currentMessage);
-              if (type === 'text_created') {
-                prevType = 'text';
-              } else if (type === 'tool_created') {
-                prevType = 'code';
-              }
-              currentMessage = '';
-            } else if (type === 'text' || type === 'code' || type === 'image') {
-              currentMessage += message;
-              prevType = type;
-              firstRun = false;
-              updateLastMessage(type, currentMessage);
-            }
-          }
-        );
-      } else {
-        const responseMessage = await submitUserMessage(message, context);
-        setMessages((currentMessages) => [...currentMessages, responseMessage]);
-      }
-    } catch (error) {
-      console.error(error);
-      setMessages((currentMessages) => [
-        ...currentMessages,
-        {
-          id: Date.now(),
-          display: <AssistantMessage role="text" text={'Error'} />,
-        },
-      ]);
-    }
-  };
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-
-    if (window.innerWidth < 600) {
-      (e.target as HTMLFormElement)['message']?.blur();
-    }
-
-    const value = inputValue.trim();
-    if (!value) return;
-
-    await submitMessage(value);
-  };
+  const {
+    messages,
+    inputValue,
+    forgeParams,
+    setInputValue,
+    submitMessage,
+    handleSubmit,
+  } = useMessaging({ userEmail, uploadedFiles, spinner });
 
   if (!session) {
     return (
@@ -242,7 +79,7 @@ export default function Page() {
     <div>
       {isLoading && (
         <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
-          <CircleLoader color="var(--spinner-color)" size={200} />
+          <CircleLoader color="var(--spinner-color)" size={150} />
         </div>
       )}
       <div className="pb-[200px] pt-4 md:pt-10">
@@ -260,74 +97,23 @@ export default function Page() {
                 className="relative p-2 rounded-lg w-full max-w-4xl mb-2"
                 onClick={(e) => e.stopPropagation()}
               >
-                <Dropzone
+                <FileUploadManager
                   onChange={handleFileChange}
                   userEmail={userEmail}
                   forgeParams={forgeParams}
+                  uploadedFiles={uploadedFiles}
                   isUploadCompleted={isUploadCompleted}
                   setIsUploadCompleted={setIsUploadCompleted}
                   fetchFiles={handleFetchFiles}
-                  setIsDeleting={setIsLoading}
+                  setIsUploading={setIsLoading}
                 />
-                {uploadedFiles.length > 0 && (
-                  <div className="mt-4">
-                    <h3 className="text-lg font-medium">Uploaded Files</h3>
-                    <ul className="list-disc pl-5">
-                      {uploadedFiles.map((file, index) => (
-                        <li key={`${file}-${index}`}>{file}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
-              <div className="relative flex max-h-60 w-full grow flex-col overflow-hidden bg-secondary px-12 sm:rounded-3xl sm:px-12">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="absolute left-4 top-[14px] size-8 rounded-full bg-background p-0 sm:left-4"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.location.reload();
-                      }}
-                    >
-                      <IconPlus />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>New Chat</TooltipContent>
-                </Tooltip>
-                <Textarea
-                  ref={inputRef}
-                  tabIndex={0}
-                  onKeyDown={onKeyDown}
-                  placeholder="Send a message."
-                  className="min-h-[60px] w-full bg-transparent placeholder:text-muted-foreground resize-none px-8 py-[1.3rem] focus-within:outline-none sm:text-sm"
-                  autoFocus
-                  spellCheck={false}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  name="message"
-                  rows={1}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                />
-                <div className="absolute right-4 top-[13px] sm:right-4 flex items-center space-x-1">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="submit"
-                        size="icon"
-                        className="bg-transparent shadow-none text-secondary-foreground rounded-full hover:bg-secondary-foreground/25"
-                      >
-                        <IconArrowElbow />
-                        <span className="sr-only">Send message</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Send message</TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
+              <MessageForm
+                inputValue={inputValue}
+                setInputValue={setInputValue}
+                onKeyDown={onKeyDown}
+                inputRef={inputRef}
+              />
             </form>
           </div>
         </div>
@@ -335,7 +121,7 @@ export default function Page() {
       <div className="fixed left-0 top-1/2 transform -translate-y-1/2">
         <Sheet>
           <SheetTrigger>
-            <IconChevronRight onClick={() => handleFetchFiles(userEmail)} />
+            <IconChevronRight onClick={() => handleFetchFiles()} />
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>

@@ -14,8 +14,8 @@ export function Dropzone({
   forgeParams,
   isUploadCompleted,
   setIsUploadCompleted,
+  setIsUploading,
   fetchFiles,
-  setIsDeleting,
   ...props
 }: Readonly<DropzoneProps>) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -23,7 +23,7 @@ export function Dropzone({
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number>(0);
   const [isDragging, setIsDragging] = useState(false);
-  const { toast } = useToast(); // Add this line
+  const { toast } = useToast();
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -72,7 +72,7 @@ export function Dropzone({
   };
   // Add File type error handling and return appropriate errors to be shown by the toaster
   const handleUpload = async (files: FileList) => {
-    setIsDeleting(true);
+    setIsUploading(true);
     try {
       const allowedStates = [
         'Uploading',
@@ -118,7 +118,7 @@ export function Dropzone({
         variant: 'destructive',
       });
     } finally {
-      setIsDeleting(false);
+      setIsUploading(false);
     }
   };
 

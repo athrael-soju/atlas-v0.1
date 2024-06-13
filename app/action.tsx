@@ -12,6 +12,7 @@ import {
   checkIfCalled,
   confirmPurchase,
 } from '@/components/examples/llm-stocks/functions';
+import { MessageRole } from '@/lib/types';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY ?? '',
@@ -35,7 +36,7 @@ export async function submitUserMessage(content: string, context: string) {
   ]);
   const reply = createStreamableUI(
     <AssistantMessage
-      role={'spinner'}
+      role={MessageRole.Spinner}
       text={spinner}
       className="items-center"
     />
@@ -68,7 +69,7 @@ export async function submitUserMessage(content: string, context: string) {
   });
 
   completion.onTextContent((content: string, isFinal: boolean) => {
-    reply.update(<AssistantMessage role="text" text={content} />);
+    reply.update(<AssistantMessage role={MessageRole.Text} text={content} />);
     if (isFinal) {
       reply.done();
       aiState.done([...aiState.get(), { role: 'assistant', content }]);

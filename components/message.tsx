@@ -4,7 +4,7 @@ import { IconAI, IconUser } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { CodeProps, MessageProps } from '@/lib/types';
+import { CodeProps, MessageProps, MessageRole } from '@/lib/types';
 
 export function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
   return (
@@ -60,7 +60,7 @@ const TextContent = ({ text }: { text: string }) => {
 };
 
 export const Message = ({ role, text }: MessageProps) => {
-  if (role === 'code') {
+  if (role === MessageRole.Code) {
     return <CodeContent text={text} />;
   } else {
     return <TextContent text={text} />;
@@ -72,7 +72,7 @@ export function AssistantMessage({
   text,
   className,
 }: Readonly<{
-  role: 'text' | 'code' | 'image' | 'spinner';
+  role: MessageRole;
   text: React.ReactNode;
   className?: string;
 }>) {
