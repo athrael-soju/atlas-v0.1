@@ -15,7 +15,7 @@ export async function processDocument(
   sendUpdate: (type: string, message: string) => void
 ): Promise<{ success: boolean; fileName: string; error?: string }> {
   const totalStartTime = performance.now();
-
+  const dbInstance = await db();
   try {
     // Upload File
     const uploadResponse: FileActionResponse = await measurePerformance(
@@ -58,7 +58,6 @@ export async function processDocument(
     );
 
     // Update DB
-    const dbInstance = await db();
     await measurePerformance(
       () => dbInstance.addFile(userEmail, uploadResponse.file as AtlasFile),
       `Updating DB: '${file.name}'`,
