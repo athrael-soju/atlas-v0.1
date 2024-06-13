@@ -24,9 +24,9 @@ export const useFileHandling = (userEmail: string) => {
       };
       const archivistParams = { userEmail };
       await archivist('retrieve-archives', archivistParams, onUpdate);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
       setIsLoading(false);
+      throw new Error(error.message);
     }
   };
 

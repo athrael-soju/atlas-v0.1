@@ -133,7 +133,7 @@ const options: NextAuthOptions = {
       profile?: Profile;
     }): Promise<void> {
       console.info(
-        `signIn of ${user.name} from ${user?.provider ?? account?.provider}`
+        `${user.name} from ${user?.provider ?? account?.provider} has just signed in!`
       );
     },
     async signOut({
@@ -143,7 +143,7 @@ const options: NextAuthOptions = {
       session: Session;
       token: JWT;
     }): Promise<void> {
-      console.info(`signOut of ${token.name} from ${token.provider}`);
+      console.info(`${token.name} from ${token.provider} has just signed out!`);
     },
   },
   session: {

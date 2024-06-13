@@ -73,8 +73,6 @@ export async function submitUserMessage(content: string, context: string) {
     if (isFinal) {
       reply.done();
       aiState.done([...aiState.get(), { role: 'assistant', content }]);
-
-      console.info('AI: ', content);
     }
   });
   process.env.ENABLE_FUNCTIONS === 'true'

@@ -64,11 +64,10 @@ const handleDeleteFile = async (
       userEmail,
     };
     await archivist('purge-archive', archivistParams, onUpdate);
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
     toast({
       title: 'Error',
-      description: 'Failed to delete file.',
+      description: `Failed to delete file: ${error.message}`,
       variant: 'destructive',
     });
   } finally {

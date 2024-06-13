@@ -120,11 +120,10 @@ export const useMessaging = ({
         const responseMessage = await submitUserMessage(message, context);
         setMessages((currentMessages) => [...currentMessages, responseMessage]);
       }
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
       addNewMessage(
         MessageRole.Error,
-        <AssistantMessage role={MessageRole.Text} text="Error" />
+        <AssistantMessage role={MessageRole.Text} text={error.message} />
       );
     }
   };
