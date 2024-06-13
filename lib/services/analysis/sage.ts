@@ -270,24 +270,28 @@ export async function consult(
               }
             )
             .on('imageFileDone', async (image: { file_id: string }) => {
-              const atlasFile: AtlasFile = {
-                id: image.file_id,
-                name: image.file_id,
-                content: image,
-                path: '(Sage)',
-                userEmail,
-                uploadDate: Date.now(),
-                purpose: Purpose.Sage,
-              };
-
-              await measurePerformance(
-                () => dbInstance.addFile(userEmail, atlasFile),
-                'Storing image file in database',
-                sendUpdate
-              );
-
-              const imageUrl = `\n![${image.file_id}](/api/files/${image.file_id})\n`;
+              const imageUrl = `\n![${image.file_id}](/api/atlas/archivist/${image.file_id})\n`;
               sendUpdate('image', imageUrl);
+
+              if (imageUrl) {
+                const atlasFile: AtlasFile = {
+                  id: image.file_id,
+                  name: image.file_id,
+                  content: image,
+                  path: 'N/A',
+                  userEmail,
+                  uploadDate: Date.now(),
+                  purpose: Purpose.Sage,
+                };
+
+                const addFile = await dbInstance.addFile(userEmail, atlasFile);
+                if (!addFile) {
+                  throw new Error('Error adding image to database');
+                }
+                sendUpdate('notification', 'image_added to database');
+              } else {
+                sendUpdate('error', 'Failed to generate image');
+              }
             })
             .on('event', (event: any) => {
               if (event.event === 'thread.run.requires_action') {
