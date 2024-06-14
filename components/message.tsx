@@ -8,16 +8,18 @@ import { CodeProps, MessageProps, MessageRole } from '@/lib/types';
 
 export function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
   return (
-    <div className="group relative flex items-start md:-ml-12">
+    <div className="group relative flex items-start justify-end md:-mr-12">
+      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1 text-right">
+        <div className="rounded-lg bg-primary-foreground p-2 shadow-sm inline-block">
+          {typeof text === 'string' ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+          ) : (
+            text
+          )}
+        </div>
+      </div>
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-background">
         <IconUser />
-      </div>
-      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
-        {typeof text === 'string' ? (
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
-        ) : (
-          text
-        )}
       </div>
     </div>
   );
@@ -82,7 +84,13 @@ export function AssistantMessage({
         <IconAI />
       </div>
       <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1 assistantMessage">
-        {typeof text === 'string' ? <Message role={role} text={text} /> : text}
+        <div className="rounded-lg bg-secondary p-2 shadow-sm inline-block">
+          {typeof text === 'string' ? (
+            <Message role={role} text={text} />
+          ) : (
+            text
+          )}
+        </div>
       </div>
     </div>
   );
