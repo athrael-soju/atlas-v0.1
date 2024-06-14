@@ -78,7 +78,7 @@ export async function processDocument(
   } catch (error: any) {
     sendUpdate('error', `Error processing '${file.name}': ${error.message}`);
 
-    // Rollback
+    // Rollback changes
     await deleteFromVectorDb(atlasFile!, userEmail);
     await dbInstance.deleteFile(userEmail, atlasFile!.id);
     await handleFileDeletion(atlasFile!, userEmail);
