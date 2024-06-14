@@ -281,6 +281,10 @@ export async function consult(
               }
             })
             .on('event', (event: any) => {
+              // TODO: For debugging purposes
+              if (process.env.SAGE_EVENT_DEBUG === 'true') {
+                console.info('Event:', event);
+              }
               if (event.event === 'thread.run.requires_action') {
                 sendUpdate('notification', 'requires_action');
               }
