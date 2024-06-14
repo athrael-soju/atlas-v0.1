@@ -42,6 +42,6 @@ export async function uploadDocumentToOpenAi(
 
     return fileData;
   } catch (error: any) {
-    throw new Error('Failed to upload document to OpenAI', error.message);
+    throw new Error(error.message);
   }
 }

@@ -20,6 +20,13 @@ export const db = async () => {
     return user as unknown as AtlasUser;
   };
 
+  const updateUser = async (
+    userEmail: string,
+    updateData: Partial<AtlasUser>
+  ) => {
+    await userCollection.updateOne({ email: userEmail }, { $set: updateData });
+  };
+
   const getAllUserFiles = async (userEmail: string) => {
     const user = (await userCollection.findOne({
       email: userEmail,
@@ -104,6 +111,7 @@ export const db = async () => {
     getClient,
     insertUser,
     getUser,
+    updateUser,
     getAllUserFiles,
     getUserFilesByPurpose,
     getUserFile,

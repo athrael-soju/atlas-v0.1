@@ -22,18 +22,20 @@ import {
 } from 'unique-names-generator';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { randomUUID } from 'crypto';
+import { AtlasUser } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
 interface CustomUser extends User {
   provider?: string;
+  files?: AtlasUser[];
 }
 
 interface CustomSession extends Session {
   token_provider?: string;
 }
 
-const createAnonymousUser = (): User => {
+const createAnonymousUser = (): CustomUser => {
   const customConfig: Config = {
     dictionaries: [adjectives, colors, starWars],
     separator: '-',
@@ -51,6 +53,7 @@ const createAnonymousUser = (): User => {
     name: unique_realname,
     email: `${unique_handle.toLowerCase()}@atlas-guest.com`,
     image: '',
+    files: [],
   };
 };
 
@@ -102,7 +105,7 @@ const options: NextAuthOptions = {
         token.expires_at = account.expires_at;
         token.refresh_token = account.refresh_token;
         token.refresh_token_expires_in = account.refresh_token_expires_in;
-        token.provider = 'github';
+        token.provider = account.provider;
       }
       if (!token.provider) token.provider = 'Atlas';
       return token;
@@ -127,11 +130,17 @@ const options: NextAuthOptions = {
       user,
       account,
       profile,
+      isNewUser,
     }: {
       user: CustomUser;
       account: Account | null;
       profile?: Profile;
+      isNewUser?: boolean;
     }): Promise<void> {
+      if (isNewUser) {
+        const dbInstance = await db();
+        await dbInstance.updateUser(user.email as string, { files: [] });
+      }
       console.info(
         `${user.name} from ${user?.provider ?? account?.provider} has just signed in!`
       );
