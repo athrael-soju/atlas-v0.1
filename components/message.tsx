@@ -8,18 +8,16 @@ import { CodeProps, MessageProps, MessageRole } from '@/lib/types';
 
 export function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
   return (
-    <div className="group relative flex items-start justify-end md:-mr-12">
-      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1 text-right">
-        <div className="rounded-lg bg-primary-foreground p-2 shadow-sm inline-block">
-          {typeof text === 'string' ? (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
-          ) : (
-            text
-          )}
-        </div>
-      </div>
+    <div className="group relative flex items-start md:-ml-12">
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-background">
         <IconUser />
+      </div>
+      <div className="ml-4 space-y-2 overflow-hidden rounded-lg bg-primary-foreground p-4 shadow-sm inline-block">
+        {typeof text === 'string' ? (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+        ) : (
+          text
+        )}
       </div>
     </div>
   );
@@ -83,14 +81,8 @@ export function AssistantMessage({
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
         <IconAI />
       </div>
-      <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1 assistantMessage">
-        <div className="rounded-lg bg-secondary p-2 shadow-sm inline-block">
-          {typeof text === 'string' ? (
-            <Message role={role} text={text} />
-          ) : (
-            text
-          )}
-        </div>
+      <div className="ml-4 space-y-2 overflow-hidden rounded-lg bg-secondary p-4 shadow-sm inline-block">
+        {typeof text === 'string' ? <Message role={role} text={text} /> : text}
       </div>
     </div>
   );
