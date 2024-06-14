@@ -117,18 +117,24 @@ export default function Page() {
                     )}
                   </button>
                 </div>
-                {isUploadManagerVisible && (
-                  <FileUploadManager
-                    onChange={handleFileChange}
-                    userEmail={userEmail}
-                    forgeParams={forgeParams}
-                    uploadedFiles={uploadedFiles}
-                    isUploadCompleted={isUploadCompleted}
-                    setIsUploadCompleted={setIsUploadCompleted}
-                    fetchFiles={handleFetchFiles}
-                    setIsUploading={setIsLoading}
-                  />
-                )}
+                <div
+                  className={`transition-opacity duration-500 ${
+                    isUploadManagerVisible ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  {isUploadManagerVisible && (
+                    <FileUploadManager
+                      onChange={handleFileChange}
+                      userEmail={userEmail}
+                      forgeParams={forgeParams}
+                      uploadedFiles={uploadedFiles}
+                      isUploadCompleted={isUploadCompleted}
+                      setIsUploadCompleted={setIsUploadCompleted}
+                      fetchFiles={handleFetchFiles}
+                      setIsUploading={setIsLoading}
+                    />
+                  )}
+                </div>
               </div>
               <MessageForm
                 inputValue={inputValue}
