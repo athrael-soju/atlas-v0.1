@@ -8,16 +8,16 @@ import { CodeProps, MessageProps, MessageRole } from '@/lib/types';
 
 export function UserMessage({ text }: Readonly<{ text: React.ReactNode }>) {
   return (
-    <div className="group relative flex items-start md:-ml-12">
-      <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-background">
-        <IconUser />
-      </div>
-      <div className="ml-4 space-y-2 overflow-hidden rounded-lg bg-primary-foreground p-4 shadow-sm inline-block">
+    <div className="group relative flex items-start md:-mr-12 justify-end">
+      <div className="mr-4 space-y-2 overflow-hidden rounded-lg bg-primary-foreground p-4 shadow-sm inline-block">
         {typeof text === 'string' ? (
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
         ) : (
           text
         )}
+      </div>
+      <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-background">
+        <IconUser />
       </div>
     </div>
   );
