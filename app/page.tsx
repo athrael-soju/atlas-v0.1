@@ -1,8 +1,13 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { CircleLoader } from 'react-spinners';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
+import { useKeyboardShortcut } from '@/lib/hooks/use-keyboard-shortcuts';
+import { useFileHandling } from '@/lib/hooks/use-file-handling';
+import { useMessaging } from '@/lib/hooks/use-messaging';
 import {
   IconChevronRight,
   IconChevronUp,
@@ -11,7 +16,6 @@ import {
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { ExampleMessages } from '@/components/example-messages';
-import { useSession } from 'next-auth/react';
 import { spinner } from '@/components/ui/spinner';
 import {
   Sheet,
@@ -22,12 +26,8 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { DataTable } from '@/components/data-table';
-import { CircleLoader } from 'react-spinners';
 import { FileUploadManager } from '@/components/file-upload-manager';
-import { useKeyboardShortcut } from '@/lib/hooks/use-keyboard-shortcuts';
-import { useFileHandling } from '@/lib/hooks/use-file-handling';
 import { MessageForm } from '@/components/message-form';
-import { useMessaging } from '@/lib/hooks/use-messaging';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -73,7 +73,7 @@ export default function Page() {
           <img
             src="/atlas.png"
             alt="Atlas Logo"
-            className="w-[100%] rounded-full shadow-lg"
+            className="w-full rounded-full shadow-lg"
           />
         </div>
       </div>
@@ -87,15 +87,13 @@ export default function Page() {
           <CircleLoader color="var(--spinner-color)" size={150} />
         </div>
       )}
-      <div className="pb-[200px] pt-4 md:pt-10">
+      <div className="pb-52 pt-4 md:pt-10">
         {messages.length ? <ChatList messages={messages} /> : <EmptyScreen />}
         <ChatScrollAnchor trackVisibility={true} />
       </div>
-      <div className="fixed inset-x-0 bottom-0 w-full duration-300 ease-in-out peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px] dark:from-10%">
+      <div className="fixed inset-x-0 bottom-0 w-full">
         <div className="mx-auto sm:max-w-2xl sm:px-4">
-          {messages.length === 0 ? (
-            <ExampleMessages onClick={submitMessage} />
-          ) : null}
+          {!messages.length && <ExampleMessages onClick={submitMessage} />}
           <div className="mb-4 grid gap-2 sm:gap-4 px-4 sm:px-0">
             <form ref={formRef} onSubmit={handleSubmit}>
               <div
@@ -159,14 +157,12 @@ export default function Page() {
               </SheetDescription>
             </SheetHeader>
             {fileList.length > 0 ? (
-              <div>
-                <DataTable
-                  userEmail={userEmail}
-                  files={fileList}
-                  handleFetchFiles={handleFetchFiles}
-                  setIsDeleting={setIsLoading}
-                />
-              </div>
+              <DataTable
+                userEmail={userEmail}
+                files={fileList}
+                handleFetchFiles={handleFetchFiles}
+                setIsDeleting={setIsLoading}
+              />
             ) : (
               <div>No files uploaded yet.</div>
             )}

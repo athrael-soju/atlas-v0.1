@@ -76,7 +76,7 @@ export default function UserMenu({
     <Menu as="div" className="relative inline-block text-left">
       <MenuButton className="inline-flex">
         <img
-          src={session.user?.image || '/default-avatar.png'}
+          src={session.user?.image || '/atlas.png'}
           alt="User Avatar"
           className="h-8 rounded-full"
         />
