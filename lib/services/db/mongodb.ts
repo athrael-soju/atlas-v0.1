@@ -1,5 +1,5 @@
 import { getDb, getClientPromise } from '@/lib/client/mongodb';
-import { AtlasFile, AtlasUser } from '@/lib/types';
+import { AtlasFile, AtlasUser, Purpose } from '@/lib/types';
 import { User } from 'next-auth';
 
 export const db = async () => {
@@ -20,7 +20,7 @@ export const db = async () => {
     return user as unknown as AtlasUser;
   };
 
-  const getUserFiles = async (userEmail: string) => {
+  const getAllUserFiles = async (userEmail: string) => {
     const user = (await userCollection.findOne({
       email: userEmail,
     })) as unknown as AtlasUser;
@@ -28,10 +28,23 @@ export const db = async () => {
     return user.files;
   };
 
+  const getUserFilesByPurpose = async (userEmail: string, purpose: Purpose) => {
+    const userFiles = await getAllUserFiles(userEmail);
+    const userFilesByPurpose = userFiles.filter(
+      (file) => file.purpose === purpose
+    );
+    return userFilesByPurpose;
+  };
+
   const getUserFile = async (userEmail: string, fileId: string) => {
-    const userFiles = await getUserFiles(userEmail);
+    const userFiles = await getAllUserFiles(userEmail);
     const userFile = userFiles.find((file) => file.id === fileId);
     return userFile;
+  };
+
+  const getSageId = async (userEmail: string) => {
+    const user = await getUser(userEmail);
+    return user.sageId;
   };
 
   const summonSage = async (userEmail: string, sageId: string) => {
@@ -48,6 +61,11 @@ export const db = async () => {
       { $set: { threadId } }
     );
     return updateResult;
+  };
+
+  const getThreadId = async (userEmail: string) => {
+    const user = await getUser(userEmail);
+    return user.threadId;
   };
 
   const dismissSage = async (userEmail: string) => {
@@ -86,10 +104,13 @@ export const db = async () => {
     getClient,
     insertUser,
     getUser,
-    getUserFiles,
+    getAllUserFiles,
+    getUserFilesByPurpose,
     getUserFile,
+    getSageId,
     summonSage,
     addThreadId,
+    getThreadId,
     dismissSage,
     addFile,
     deleteFile,

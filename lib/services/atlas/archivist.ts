@@ -1,10 +1,10 @@
 import { ArchivistParams, AtlasFile, Purpose } from '@/lib/types';
 import { db } from '@/lib/services/db/mongodb';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
-import { openai } from '@/lib/client/openai';
 import { FileDeleted } from 'openai/resources/files';
 import { getIndex } from '@/lib/client/pinecone';
 import { Index } from '@pinecone-database/pinecone';
+import { updateSage, deleteFromOpenAi } from '@/lib/services/processing/openai';
 
 export async function recoverArchives(
   archivistParams: ArchivistParams,
@@ -21,7 +21,7 @@ export async function recoverArchives(
     const dbInstance = await db();
 
     const userFiles = await measurePerformance(
-      () => dbInstance.getUserFiles(userEmail),
+      () => dbInstance.getAllUserFiles(userEmail),
       'Checking for archives',
       sendUpdate
     );
@@ -68,15 +68,21 @@ export async function purgeArchive(
       throw new Error('Failed to delete file from DB');
     }
 
-    const purpose = file.purpose;
-    if (purpose === Purpose.Sage) {
-      const fileDeleted = await measurePerformance(
+    if (file.purpose === Purpose.Sage) {
+      const openAiFileDeleted = await measurePerformance(
         () => deleteFromOpenAi(file.id as string),
-        'Purging archives from OpenAi',
+        'Purging Sage archives from OpenAI',
         sendUpdate
       );
-      return fileDeleted as FileDeleted;
-    } else if (purpose === Purpose.Scribe) {
+
+      await measurePerformance(
+        () => updateSage(dbInstance, userEmail),
+        'Updating Sage in OpenAI',
+        sendUpdate
+      );
+
+      return openAiFileDeleted as FileDeleted;
+    } else if (file.purpose === Purpose.Scribe) {
       const fileDeleted = await measurePerformance(
         () => deleteFromVectorDb(file, userEmail),
         'Purging archives from VectorDb',
@@ -89,15 +95,6 @@ export async function purgeArchive(
   } finally {
     const totalEndTime = performance.now();
     getTotalTime(totalStartTime, totalEndTime, sendUpdate);
-  }
-}
-
-async function deleteFromOpenAi(fileId: string): Promise<unknown> {
-  try {
-    const result = await openai.files.del(fileId);
-    return result;
-  } catch (error: any) {
-    throw new Error(`Failed to delete file from OpenAI: ${error.message}`);
   }
 }
 

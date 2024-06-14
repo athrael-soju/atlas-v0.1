@@ -20,7 +20,7 @@ export async function processDocument(
     // Upload File
     const uploadResponse: FileActionResponse = await measurePerformance(
       () => handleFileUpload(file, userEmail, fsProvider),
-      `Uploading: '${file.name}'`,
+      `Uploading to Scribe: '${file.name}'`,
       sendUpdate
     );
 

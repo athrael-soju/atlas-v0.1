@@ -178,7 +178,7 @@ export async function consult(
 ): Promise<any> {
   const totalStartTime = performance.now();
   try {
-    const { userEmail, message, file_ids } = sageParams;
+    const { userEmail, message } = sageParams;
 
     if (!userEmail || !message) {
       throw new Error('User email and message are required');
@@ -203,18 +203,6 @@ export async function consult(
       'Retrieving thread',
       sendUpdate
     );
-
-    if ((file_ids?.length ?? 0) > 0) {
-      await measurePerformance(
-        () =>
-          openai.beta.threads.update(myThread.id, {
-            metadata: { modified: 'true', user: user.email },
-            tool_resources: { code_interpreter: { file_ids } },
-          }),
-        'Updating thread',
-        sendUpdate
-      );
-    }
 
     await measurePerformance(
       () =>
@@ -276,7 +264,7 @@ export async function consult(
               if (imageUrl) {
                 const atlasFile: AtlasFile = {
                   id: image.file_id,
-                  name: image.file_id,
+                  name: `Sage Image ${Date.now()}`,
                   content: image,
                   path: 'N/A',
                   userEmail,

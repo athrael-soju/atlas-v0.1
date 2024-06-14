@@ -70,7 +70,7 @@ export function Dropzone({
       await handleUpload(files);
     }
   };
-  // Add File type error handling and return appropriate errors to be shown by the toaster
+  
   const handleUpload = async (files: FileList) => {
     setIsUploading(true);
     try {
@@ -88,21 +88,22 @@ export function Dropzone({
         const { type, message } = JSON.parse(event.replace('data: ', ''));
         if (allowedStates.some((state) => message.startsWith(state))) {
           setProgress((prev) => prev + progressInterval);
+        } else if (type === 'error') {
+          setIsUploadCompleted(true);
+          fetchFiles(userEmail);
+          toast({
+            title: 'Error',
+            description: `Failed to upload file(s): ${message}`,
+            variant: 'destructive',
+          });
         } else if (type === 'final-notification') {
           setProgress(100);
           setIsUploadCompleted(true);
           fetchFiles(userEmail);
           toast({
             title: 'Success',
-            description: 'File uploaded successfully.',
+            description: 'File(s) uploaded successfully.',
             variant: 'default',
-          });
-        } else if (type === 'error') {
-          setError(message);
-          toast({
-            title: 'Error',
-            description: 'Failed to upload file.',
-            variant: 'destructive',
           });
         }
 

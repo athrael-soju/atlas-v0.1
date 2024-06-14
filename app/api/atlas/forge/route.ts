@@ -40,7 +40,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
-
+        let success = 0,
+          failed = 0;
         try {
           const results = await Promise.all(
             files.map((file) => {
@@ -49,12 +50,8 @@ export async function POST(req: NextRequest): Promise<Response> {
               } else if (file.type === 'text/csv') {
                 return processDocumentViaOpenAi(file, userEmail, send);
               } else {
-                sendUpdate(
-                  'notification',
-                  controller,
-                  `Unsupported file type: ${file.type}`
-                );
-                return Promise.resolve({
+                failed++;
+                return Promise.reject({
                   success: false,
                   fileName: file.name,
                   error: `Unsupported file type: ${file.type}`,
@@ -62,14 +59,20 @@ export async function POST(req: NextRequest): Promise<Response> {
               }
             })
           );
-
-          const success = results.filter((result) => result.success).length;
-          const failed = results.filter((result) => !result.success).length;
-
-          send('final-notification', `Success: ${success}. Failed: ${failed}`);
+          success = results.filter((result) => result.success).length;
+          failed = results.filter((result) => !result.success).length;
         } catch (error: any) {
-          send('error', error.message);
+          send(
+            'error',
+            `Success: ${success}. Failed: ${failed}. Error: ${error.error}`
+          );
         } finally {
+          if (failed === 0) {
+            send(
+              'final-notification',
+              `Success: ${success}. Failed: ${failed}`
+            );
+          }
           controller.close();
         }
       },

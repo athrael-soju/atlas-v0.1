@@ -7,15 +7,10 @@ import { ScribeParams, ForgeParams, MessageRole } from '../types';
 
 interface UseMessagingProps {
   userEmail: string;
-  uploadedFiles: string[];
   spinner: JSX.Element;
 }
 
-export const useMessaging = ({
-  userEmail,
-  uploadedFiles,
-  spinner,
-}: UseMessagingProps) => {
+export const useMessaging = ({ userEmail, spinner }: UseMessagingProps) => {
   const [messages, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions<typeof AI>();
   const [inputValue, setInputValue] = useState<string>('');
@@ -91,31 +86,27 @@ export const useMessaging = ({
         let firstRun = true;
         let prevType: MessageRole.Text | MessageRole.Code | MessageRole.Image;
         let currentMessage: string = '';
-        await sage(
-          'consult',
-          { userEmail, message, file_ids: uploadedFiles },
-          (event: string) => {
-            const { type, message } = JSON.parse(event.replace('data: ', ''));
-            if (type.includes('created') && firstRun === false) {
-              addNewMessage(prevType, currentMessage);
-              if (type === 'text_created') {
-                prevType = MessageRole.Text;
-              } else if (type === 'tool_created') {
-                prevType = MessageRole.Code;
-              }
-              currentMessage = '';
-            } else if (
-              type === MessageRole.Text ||
-              type === MessageRole.Code ||
-              type === MessageRole.Image
-            ) {
-              currentMessage += message;
-              prevType = type;
-              firstRun = false;
-              updateLastMessage(type, currentMessage);
+        await sage('consult', { userEmail, message }, (event: string) => {
+          const { type, message } = JSON.parse(event.replace('data: ', ''));
+          if (type.includes('created') && firstRun === false) {
+            addNewMessage(prevType, currentMessage);
+            if (type === 'text_created') {
+              prevType = MessageRole.Text;
+            } else if (type === 'tool_created') {
+              prevType = MessageRole.Code;
             }
+            currentMessage = '';
+          } else if (
+            type === MessageRole.Text ||
+            type === MessageRole.Code ||
+            type === MessageRole.Image
+          ) {
+            currentMessage += message;
+            prevType = type;
+            firstRun = false;
+            updateLastMessage(type, currentMessage);
           }
-        );
+        });
       } else {
         const responseMessage = await submitUserMessage(message, context);
         setMessages((currentMessages) => [...currentMessages, responseMessage]);

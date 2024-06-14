@@ -1,18 +1,19 @@
-import { handleFileDeletion, handleFileUpload } from '../storage/handler';
+import { handleFileUpload } from '../storage/handler';
 import { measurePerformance } from '../../utils/metrics';
+import { openai } from '@/lib/client/openai';
+import { AtlasFile, Purpose } from '@/lib/types';
 
 const fsProvider = 'openai';
 
-export async function processDocumentViaOpenAi(
+export const processDocumentViaOpenAi = async (
   file: File,
   userEmail: string,
   sendUpdate: (type: string, message: string) => void
-): Promise<{ success: boolean; fileName: string; error?: string }> {
+): Promise<{ success: boolean; fileName: string; error?: string }> => {
   try {
-    // Upload File
     await measurePerformance(
       () => handleFileUpload(file, userEmail, fsProvider),
-      `Uploading: '${file.name}'`,
+      `Uploading to Sage: '${file.name}'`,
       sendUpdate
     );
 
@@ -25,4 +26,44 @@ export async function processDocumentViaOpenAi(
       error: error.message,
     };
   }
-}
+};
+
+export const deleteFromOpenAi = async (fileId: string): Promise<unknown> => {
+  const result = await openai.files.del(fileId);
+
+  if (!result) {
+    throw new Error('Failed to purge Sage archive from OpenAI');
+  }
+
+  return result;
+};
+
+export const updateSage = async (dbInstance: any, userEmail: string) => {
+  const sageIdList = (
+    await dbInstance.getUserFilesByPurpose(userEmail, Purpose.Sage)
+  ).map((file: AtlasFile) => file.id);
+
+  if (!sageIdList) {
+    throw new Error('Failed to retrieve Sage list from database');
+  }
+
+  const sageId = (await dbInstance.getSageId(userEmail)) as string;
+
+  if (!sageId) {
+    throw new Error('Failed to get Sage ID from database');
+  }
+
+  const updatedSage = await openai.beta.assistants.update(sageId, {
+    tool_resources: {
+      code_interpreter: {
+        file_ids: sageIdList,
+      },
+    },
+  });
+
+  if (!updatedSage) {
+    throw new Error('Failed to update Sage in OpenAI');
+  }
+
+  return sageIdList;
+};

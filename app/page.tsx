@@ -55,7 +55,7 @@ export default function Page() {
     setInputValue,
     submitMessage,
     handleSubmit,
-  } = useMessaging({ userEmail, uploadedFiles, spinner });
+  } = useMessaging({ userEmail, spinner });
 
   if (!session) {
     return (
