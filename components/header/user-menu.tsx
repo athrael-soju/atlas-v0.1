@@ -14,49 +14,54 @@ import {
 } from '@heroicons/react/20/solid';
 
 import {
-  ArrowPathIcon,
+  Cog6ToothIcon,
   ChartPieIcon,
-  CursorArrowRaysIcon,
+  BookOpenIcon,
   FingerPrintIcon,
-  SquaresPlusIcon,
+  DocumentChartBarIcon,
 } from '@heroicons/react/24/outline';
 
 export const products = [
   {
+    name: 'Processing',
+    description:
+      'The Forge processes both structured and unstructured data, preparing it for analysis',
+    href: '#',
+    icon: Cog6ToothIcon,
+  },
+  {
+    name: 'Knowdlegebase',
+    description:
+      'The Scribe processes data with unparalleled efficiency, accuracy, and speed',
+    href: '#',
+    icon: BookOpenIcon,
+  },
+  {
     name: 'Analytics',
-    description: 'Get a better understanding of your traffic',
+    description:
+      'The Sage provides real-time analysis and visualization of complex data at scale',
     href: '#',
     icon: ChartPieIcon,
   },
   {
-    name: 'Engagement',
-    description: 'Speak directly to your customers',
+    name: 'Data Management',
+    description:
+      'The Archivist excels in storage and managment of data for rapid retrieval',
     href: '#',
-    icon: CursorArrowRaysIcon,
+    icon: DocumentChartBarIcon,
   },
   {
-    name: 'Security',
-    description: 'Your customers’ data will be safe and secure',
+    name: 'Data Security',
+    description:
+      'Cerberus delivers data security and privacy in compliance with latest standards',
     href: '#',
     icon: FingerPrintIcon,
-  },
-  {
-    name: 'Integrations',
-    description: 'Connect with third-party tools',
-    href: '#',
-    icon: SquaresPlusIcon,
-  },
-  {
-    name: 'Automations',
-    description: 'Build strategic funnels that will convert',
-    href: '#',
-    icon: ArrowPathIcon,
   },
 ];
 
 export const callsToAction = [
   { name: 'Watch demo', href: '#', icon: PlayCircleIcon },
-  { name: 'Contact sales', href: '#', icon: PhoneIcon },
+  { name: 'Support', href: '#', icon: PhoneIcon },
 ];
 
 export function classNames(...classes: string[]) {

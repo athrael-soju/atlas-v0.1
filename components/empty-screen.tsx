@@ -8,25 +8,27 @@ export function EmptyScreen() {
           Welcome to Atlas
         </h1>
         <p className="mb-2 leading-normal text-muted-foreground">
-          Atlas is a revolutionary application designed to store millions of
-          documents and seamlessly retrieve information from them. Imagine
-          having all your data at your fingertips, securely stored and easily
-          accessible, enhancing your interactions with any large language model
-          you use.
+          Atlas is a comprehensive data management solution that offers advanced
+          capabilities in processing, analysis, storage, and security.
         </p>
         <p className="mb-2 leading-normal text-muted-foreground">
-          Atlas is built with{' '}
-          <ExternalLink href="https://nextjs.org">Next.js</ExternalLink>
-          {', '}
-          <ExternalLink href="https://sdk.vercel.ai/docs">
-            Vercel
-          </ExternalLink>{' '}
-          and uses a powerful Retrieval Augmented Generation Engine (RAG) to
-          generate fast and accurate responses to your questions.
+          It efficiently processes both structured and unstructured data,
+          preparing it for in-depth analysis. With exceptional accuracy and
+          speed, it manages data to serve as a robust knowledgebase. For
+          real-time analysis and visualization, it provides insightful and
+          scalable data interpretation. It ensures efficient storage and rapid
+          retrieval of data, optimizing overall data management. Additionally,
+          Atlas delivers strong data security and privacy, adhering to the
+          latest standards to protect sensitive information.
+        </p>
+        <p className="mb-2 leading-normal text-muted-foreground">
+          These integrated features make Atlas a versatile and powerful tool for
+          managing and leveraging data effectively across various applications
+          and industries.
         </p>
       </div>
       <p className="leading-normal text-muted-foreground text-[0.8rem] text-center max-w-96 ml-auto mr-auto">
-        Note: Data and latency are simulated for illustrative purposes.
+        Note: This is a demo application. For more information, please <ExternalLink href="https://nextjs.org">Contact sales</ExternalLink>
       </p>
     </div>
   );
