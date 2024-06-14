@@ -260,13 +260,12 @@ export async function consult(
             .on('imageFileDone', async (image: { file_id: string }) => {
               const imageUrl = `\n![${image.file_id}](/api/atlas/archivist/${image.file_id})\n`;
               sendUpdate('image', imageUrl);
-
               if (imageUrl) {
                 const atlasFile: AtlasFile = {
                   id: image.file_id,
-                  name: `Sage Image ${Date.now()}`,
-                  content: image,
-                  path: 'N/A',
+                  name: `Image: ${Date.now()}`,
+                  content: {},
+                  path: imageUrl,
                   userEmail,
                   uploadDate: Date.now(),
                   purpose: Purpose.Sage,
