@@ -5,6 +5,7 @@ import { upsertDocument } from '../indexing/pinecone';
 import { parse } from '../parsing/handler';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
 import { db } from '../db/mongodb';
+import { deleteFromVectorDb } from '@/lib/services/atlas/archivist';
 
 const fsProvider = process.env.FILESYSTEM_PROVIDER ?? 'local';
 
@@ -16,6 +17,7 @@ export async function processDocument(
 ): Promise<{ success: boolean; fileName: string; error?: string }> {
   const totalStartTime = performance.now();
   const dbInstance = await db();
+  let atlasFile: AtlasFile;
   try {
     // Upload File
     const uploadResponse: FileActionResponse = await measurePerformance(
@@ -23,6 +25,7 @@ export async function processDocument(
       `Uploading to Scribe: '${file.name}'`,
       sendUpdate
     );
+    atlasFile = uploadResponse.file;
 
     // Parse File
     const parseResponse = await measurePerformance(
@@ -32,7 +35,7 @@ export async function processDocument(
           forgeParams.minChunkSize,
           forgeParams.maxChunkSize,
           forgeParams.overlap,
-          uploadResponse.file as AtlasFile
+          atlasFile
         ),
       `Parsing: '${file.name}'`,
       sendUpdate
@@ -40,7 +43,7 @@ export async function processDocument(
 
     // Embed Document
     const embedResponse = await measurePerformance(
-      () => embedDocument(uploadResponse.file, parseResponse, userEmail),
+      () => embedDocument(atlasFile, parseResponse, userEmail),
       `Embedding: '${file.name}'`,
       sendUpdate
     );
@@ -59,14 +62,14 @@ export async function processDocument(
 
     // Update DB
     await measurePerformance(
-      () => dbInstance.addFile(userEmail, uploadResponse.file as AtlasFile),
+      () => dbInstance.addFile(userEmail, atlasFile),
       `Updating DB: '${file.name}'`,
       sendUpdate
     );
 
     // Clean Up
     await measurePerformance(
-      () => handleFileDeletion(uploadResponse.file as AtlasFile, userEmail),
+      () => handleFileDeletion(atlasFile, userEmail),
       `Cleaning up: '${file.name}'`,
       sendUpdate
     );
@@ -74,6 +77,12 @@ export async function processDocument(
     return { success: true, fileName: file.name };
   } catch (error: any) {
     sendUpdate('error', `Error processing '${file.name}': ${error.message}`);
+
+    // Rollback
+    await deleteFromVectorDb(atlasFile!, userEmail);
+    await dbInstance.deleteFile(userEmail, atlasFile!.id);
+    await handleFileDeletion(atlasFile!, userEmail);
+
     return { success: false, fileName: file.name, error: error.message };
   } finally {
     const totalEndTime = performance.now();

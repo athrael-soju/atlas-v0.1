@@ -235,7 +235,7 @@ export async function consult(
               }
             })
             .on('toolCallCreated', () => {
-              sendUpdate('code_created', 'text_created');
+              sendUpdate('code_created', 'code_created');
             })
             .on(
               'toolCallDelta',

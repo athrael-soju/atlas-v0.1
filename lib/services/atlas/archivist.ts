@@ -98,7 +98,7 @@ export async function purgeArchive(
   }
 }
 
-async function deleteFromVectorDb(
+export async function deleteFromVectorDb(
   file: AtlasFile,
   userEmail: string
 ): Promise<unknown> {

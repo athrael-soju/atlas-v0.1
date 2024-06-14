@@ -7,6 +7,8 @@ export async function uploadDocumentToOpenAi(
   file: File,
   userEmail: string
 ): Promise<AtlasFile> {
+  const dbInstance = await db();
+  let fileId;
   try {
     const response = await openai.files.create({
       file: file,
@@ -16,9 +18,9 @@ export async function uploadDocumentToOpenAi(
     if (!response) {
       throw new Error('Failed to upload document to OpenAI');
     }
-
+    fileId = response.id;
     const fileData: AtlasFile = {
-      id: response.id,
+      id: fileId,
       userEmail: userEmail,
       content: file,
       name: file.name,
@@ -27,7 +29,6 @@ export async function uploadDocumentToOpenAi(
       purpose: Purpose.Sage,
     };
 
-    const dbInstance = await db();
     const addedFIle = await dbInstance.addFile(userEmail, fileData);
 
     if (!addedFIle) {
@@ -42,6 +43,10 @@ export async function uploadDocumentToOpenAi(
 
     return fileData;
   } catch (error: any) {
-    throw new Error(error.message);
+    // Rollback changes
+    await openai.files.del(fileId!);
+    await dbInstance.deleteFile(userEmail, fileId!);
+
+    throw new Error(`${error.message}. Rolling back changes...`);
   }
 }
