@@ -1,9 +1,13 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
-import { IconChevronRight } from '@/components/ui/icons';
+import {
+  IconChevronRight,
+  IconChevronUp,
+  IconChevronDown,
+} from '@/components/ui/icons';
 import { ChatList } from '@/components/chat-list';
 import { EmptyScreen } from '@/components/empty-screen';
 import { ExampleMessages } from '@/components/example-messages';
@@ -30,8 +34,9 @@ export const maxDuration = 60;
 
 export default function Page() {
   const { data: session } = useSession();
-  const { formRef, onKeyDown } = useEnterSubmit();
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [isUploadManagerVisible, setIsUploadManagerVisible] = useState(false);
+  const { formRef, onKeyDown } = useEnterSubmit(setIsUploadManagerVisible);
 
   useKeyboardShortcut(inputRef);
 
@@ -94,19 +99,36 @@ export default function Page() {
           <div className="mb-4 grid gap-2 sm:gap-4 px-4 sm:px-0">
             <form ref={formRef} onSubmit={handleSubmit}>
               <div
-                className="relative p-2 rounded-lg w-full max-w-4xl mb-2"
+                className="relative p-1 rounded-lg w-full max-w-4xl mb-1"
                 onClick={(e) => e.stopPropagation()}
               >
-                <FileUploadManager
-                  onChange={handleFileChange}
-                  userEmail={userEmail}
-                  forgeParams={forgeParams}
-                  uploadedFiles={uploadedFiles}
-                  isUploadCompleted={isUploadCompleted}
-                  setIsUploadCompleted={setIsUploadCompleted}
-                  fetchFiles={handleFetchFiles}
-                  setIsUploading={setIsLoading}
-                />
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    className="text-xl"
+                    onClick={() =>
+                      setIsUploadManagerVisible(!isUploadManagerVisible)
+                    }
+                  >
+                    {isUploadManagerVisible ? (
+                      <IconChevronUp />
+                    ) : (
+                      <IconChevronDown />
+                    )}
+                  </button>
+                </div>
+                {isUploadManagerVisible && (
+                  <FileUploadManager
+                    onChange={handleFileChange}
+                    userEmail={userEmail}
+                    forgeParams={forgeParams}
+                    uploadedFiles={uploadedFiles}
+                    isUploadCompleted={isUploadCompleted}
+                    setIsUploadCompleted={setIsUploadCompleted}
+                    fetchFiles={handleFetchFiles}
+                    setIsUploading={setIsLoading}
+                  />
+                )}
               </div>
               <MessageForm
                 inputValue={inputValue}

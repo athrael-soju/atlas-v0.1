@@ -1,14 +1,17 @@
-import { useRef, type RefObject } from 'react';
+import { Dispatch, SetStateAction, useRef, type RefObject } from 'react';
 
-export function useEnterSubmit(): {
+export function useEnterSubmit(
+  setIsUploadManagerVisible: Dispatch<SetStateAction<boolean>>
+): {
   formRef: RefObject<HTMLFormElement>;
   onKeyDown: (event: React.KeyboardEvent<HTMLTextAreaElement>) => void;
 } {
   const formRef = useRef<HTMLFormElement>(null);
 
   const handleKeyDown = (
-    event: React.KeyboardEvent<HTMLTextAreaElement>,
+    event: React.KeyboardEvent<HTMLTextAreaElement>
   ): void => {
+    setIsUploadManagerVisible(false);
     if (
       event.key === 'Enter' &&
       !event.shiftKey &&
