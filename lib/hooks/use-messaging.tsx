@@ -73,8 +73,8 @@ export const useMessaging = ({ userEmail, spinner }: UseMessagingProps) => {
     if (process.env.NEXT_PUBLIC_SCRIBE_ENABLED === 'true') {
       await scribe(message, scribeParams, (event) => {
         const { type, message } = JSON.parse(event.replace('data: ', ''));
-        if (type === 'final-notification') {
-          context += message + '\n';
+        if (type === 'final-notification' && message !== '[]') {
+          context = message;
         }
       });
     }
