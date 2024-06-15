@@ -179,7 +179,7 @@ export async function consult(
 ): Promise<any> {
   const totalStartTime = performance.now();
   try {
-    const { userEmail, message } = sageParams;
+    const { userEmail, message, context } = sageParams;
 
     if (!userEmail || !message) {
       throw new Error('User email and message are required');
@@ -205,13 +205,25 @@ export async function consult(
       sendUpdate
     );
 
+    if (context) {
+      await measurePerformance(
+        () =>
+          openai.beta.threads.messages.create(myThread.id, {
+            role: 'user',
+            content: context,
+          }),
+        'Creating user context message',
+        sendUpdate
+      );
+    }
+
     await measurePerformance(
       () =>
         openai.beta.threads.messages.create(myThread.id, {
           role: 'user',
           content: message,
         }),
-      'Creating message',
+      'Creating user prompt message',
       sendUpdate
     );
 
@@ -301,7 +313,9 @@ const handleReadableStream = async (
         let index = 0;
         for (let annotation of annotations) {
           text.value = text.value.replace(annotation.text, '[' + index + ']');
-          const { file_citation } = annotation;
+          const { file_citation } = annotation as {
+            file_citation?: { file_id: string };
+          };
           if (file_citation) {
             const citedFile = await openai.files.retrieve(
               file_citation.file_id
@@ -317,7 +331,7 @@ const handleReadableStream = async (
     });
     stream.on('event', (event: AssistantStreamEvent) => {
       if (process.env.SAGE_EVENT_DEBUG === 'true') {
-        console.info('Event:', event);
+        console.info('Event:', event.data);
       }
       if (event.event === 'thread.run.requires_action') {
         sendUpdate('notification', 'requires_action');

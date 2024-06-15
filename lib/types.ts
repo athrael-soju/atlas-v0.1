@@ -45,6 +45,7 @@ export interface ForgeParams {
 export interface SageParams {
   userEmail: string;
   message?: string;
+  context?: string;
   name?: string;
   instructions?: string;
   model?: string;
@@ -122,6 +123,7 @@ export enum MessageRole {
   Image = 'image',
   Spinner = 'spinner',
   Assistant = 'assistant',
+  System = 'system',
 }
 
 export type MessageProps = {
