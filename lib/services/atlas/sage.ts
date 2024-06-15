@@ -3,6 +3,7 @@ import { AtlasFile, Purpose, SageParams } from '@/lib/types';
 import { db } from '@/lib/services/db/mongodb';
 import { AssistantStream } from 'openai/lib/AssistantStream';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
+import { AssistantStreamEvent } from 'openai/resources/beta/assistants';
 
 export async function summon(
   sageParams: SageParams,
@@ -221,82 +222,8 @@ export async function consult(
         })
         .toReadableStream()
     );
-
     await measurePerformance(
-      () =>
-        new Promise((resolve, reject) => {
-          stream
-            .on('textCreated', () => {
-              sendUpdate('text_created', 'text_created');
-            })
-            .on('textDelta', (textDelta: { value: string }) => {
-              if (textDelta.value) {
-                sendUpdate('text', textDelta.value);
-              }
-            })
-            .on('toolCallCreated', () => {
-              sendUpdate('code_created', 'code_created');
-            })
-            .on(
-              'toolCallDelta',
-              (toolCallDelta: {
-                type: string;
-                code_interpreter: { input: string; outputs: any[] };
-              }) => {
-                if (toolCallDelta.type === 'code_interpreter') {
-                  if (toolCallDelta.code_interpreter?.input) {
-                    sendUpdate('code', toolCallDelta.code_interpreter.input);
-                  }
-                  if (toolCallDelta.code_interpreter?.outputs) {
-                    toolCallDelta.code_interpreter.outputs.forEach((output) => {
-                      if (output.type === 'logs') {
-                        sendUpdate('log', output.logs as string);
-                      }
-                    });
-                  }
-                }
-              }
-            )
-            .on('imageFileDone', async (image: { file_id: string }) => {
-              const imageUrl = `\n![${image.file_id}](/api/atlas/archivist/${image.file_id})\n`;
-              sendUpdate('image', imageUrl);
-              if (imageUrl) {
-                const atlasFile: AtlasFile = {
-                  id: image.file_id,
-                  name: `Image: ${Date.now()}`,
-                  content: {},
-                  path: imageUrl,
-                  userEmail,
-                  uploadDate: Date.now(),
-                  purpose: Purpose.Sage,
-                };
-
-                const addFile = await dbInstance.addFile(userEmail, atlasFile);
-                if (!addFile) {
-                  throw new Error('Error adding image to database');
-                }
-                sendUpdate('notification', 'image_added to database');
-              } else {
-                sendUpdate('error', 'Failed to generate image');
-              }
-            })
-            .on('event', (event: any) => {
-              // TODO: For debugging purposes
-              if (process.env.SAGE_EVENT_DEBUG === 'true') {
-                console.info('Event:', event);
-              }
-              if (event.event === 'thread.run.requires_action') {
-                sendUpdate('notification', 'requires_action');
-              }
-              if (event.event === 'thread.run.completed') {
-                sendUpdate('notification', 'events_completed');
-                resolve(event);
-              }
-            })
-            .on('error', (error: any) => {
-              reject(new Error(error.message));
-            });
-        }),
+      () => handleReadableStream(stream, sendUpdate, userEmail, dbInstance),
       'Consulting sage',
       sendUpdate
     );
@@ -307,3 +234,79 @@ export async function consult(
     getTotalTime(totalStartTime, totalEndTime, sendUpdate);
   }
 }
+
+const handleReadableStream = async (
+  stream: AssistantStream,
+  sendUpdate: (type: string, message: string) => void,
+  userEmail: string,
+  dbInstance: {
+    addFile: (userEmail: string, atlasFile: AtlasFile) => Promise<any>;
+  }
+) =>
+  new Promise((resolve, reject) => {
+    stream.on('textCreated', () => {
+      sendUpdate('text_created', 'text_created');
+    });
+    stream.on('textDelta', (textDelta) => {
+      if (textDelta.value) {
+        sendUpdate('text', textDelta.value);
+      }
+    });
+    stream.on('toolCallCreated', () => {
+      sendUpdate('code_created', 'code_created');
+    });
+    stream.on('toolCallDelta', (toolCallDelta) => {
+      if (toolCallDelta.type === 'code_interpreter') {
+        if (toolCallDelta.code_interpreter?.input) {
+          sendUpdate('code', toolCallDelta.code_interpreter.input);
+        }
+        if (toolCallDelta.code_interpreter?.outputs) {
+          toolCallDelta.code_interpreter.outputs.forEach((output) => {
+            if (output.type === 'logs') {
+              sendUpdate('log', output.logs as string);
+            }
+          });
+        }
+      }
+    });
+    stream.on('imageFileDone', async (image: { file_id: string }) => {
+      const imageUrl = `\n![${image.file_id}](/api/atlas/archivist/${image.file_id})\n`;
+      sendUpdate('image', imageUrl);
+      if (imageUrl) {
+        const atlasFile: AtlasFile = {
+          id: image.file_id,
+          name: `Image: ${Date.now()}`,
+          content: {},
+          path: imageUrl,
+          userEmail,
+          uploadDate: Date.now(),
+          purpose: Purpose.Sage,
+        };
+
+        const addFile = await dbInstance.addFile(userEmail, atlasFile);
+        if (!addFile) {
+          throw new Error('Error adding image to database');
+        }
+        sendUpdate('notification', 'image_added to database');
+      } else {
+        sendUpdate('error', 'Failed to generate image');
+      }
+    });
+    stream.on('event', (event: AssistantStreamEvent) => {
+      if (process.env.SAGE_EVENT_DEBUG === 'true') {
+        console.info('Event:', event);
+      }
+      if (event.event === 'thread.run.requires_action') {
+        sendUpdate('notification', 'requires_action');
+        //handleRequiresAction(event);
+      }
+      if (event.event === 'thread.run.completed') {
+        sendUpdate('notification', 'events_completed');
+        // TODO - setInputDisabled(false);
+        resolve(event);
+      }
+    });
+    stream.on('error', (error: any) => {
+      reject(error);
+    });
+  });
