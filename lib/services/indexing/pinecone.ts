@@ -16,10 +16,9 @@ export async function query(userEmail: string, embeddings: any, topK: number) {
       filename: item.metadata.filename,
       filetype: item.metadata.filetype,
       languages: item.metadata.languages,
-      pageNumber: item.metadata.page_number,
-      userEmail: item.metadata.user_email,
+      page_number: item.metadata.page_number,
+      user_email: item.metadata.user_email,
     }));
-
     return {
       message: 'Pinecone query successful',
       namespace: userEmail,

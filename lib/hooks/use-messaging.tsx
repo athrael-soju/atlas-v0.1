@@ -70,8 +70,7 @@ export const useMessaging = ({ userEmail, spinner }: UseMessagingProps) => {
       },
     ]);
     let context = '';
-
-    if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Scribe') {
+    if (process.env.NEXT_PUBLIC_SCRIBE_ENABLED === 'true') {
       await scribe(message, scribeParams, (event) => {
         const { type, message } = JSON.parse(event.replace('data: ', ''));
         if (type === 'final-notification') {
@@ -81,11 +80,12 @@ export const useMessaging = ({ userEmail, spinner }: UseMessagingProps) => {
     }
 
     try {
-      if (process.env.NEXT_PUBLIC_ENABLED_FEATURE === 'Sage') {
+      if (process.env.NEXT_PUBLIC_SAGE_ENABLED === 'true') {
         addNewMessage(MessageRole.Spinner, spinner);
         let firstRun = true;
         let prevType: MessageRole.Text | MessageRole.Code | MessageRole.Image;
         let currentMessage: string = '';
+        message = context;
         await sage('consult', { userEmail, message }, (event: string) => {
           const { type, message } = JSON.parse(event.replace('data: ', ''));
           if (type.includes('created') && firstRun === false) {

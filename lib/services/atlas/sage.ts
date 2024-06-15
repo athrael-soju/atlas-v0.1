@@ -292,6 +292,29 @@ const handleReadableStream = async (
         sendUpdate('error', 'Failed to generate image');
       }
     });
+    stream.on('messageDone', async (event) => {
+      if (event.content[0].type === 'text') {
+        const { text } = event.content[0];
+        const { annotations } = text;
+        const citations: string[] = [];
+
+        let index = 0;
+        for (let annotation of annotations) {
+          text.value = text.value.replace(annotation.text, '[' + index + ']');
+          const { file_citation } = annotation;
+          if (file_citation) {
+            const citedFile = await openai.files.retrieve(
+              file_citation.file_id
+            );
+            citations.push('[' + index + ']' + citedFile.filename);
+          }
+          index++;
+        }
+
+        console.log(text.value);
+        console.log(citations.join('\n'));
+      }
+    });
     stream.on('event', (event: AssistantStreamEvent) => {
       if (process.env.SAGE_EVENT_DEBUG === 'true') {
         console.info('Event:', event);
