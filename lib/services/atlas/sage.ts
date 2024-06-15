@@ -4,6 +4,7 @@ import { db } from '@/lib/services/db/mongodb';
 import { AssistantStream } from 'openai/lib/AssistantStream';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
 import { AssistantStreamEvent } from 'openai/resources/beta/assistants';
+import { RequiredActionFunctionToolCall } from 'openai/resources/beta/threads/runs/runs';
 
 export async function summon(
   sageParams: SageParams,
@@ -310,3 +311,50 @@ const handleReadableStream = async (
       reject(error);
     });
   });
+
+// handleRequiresAction - handle function call
+const handleRequiresAction = async (
+  event: AssistantStreamEvent.ThreadRunRequiresAction
+) => {
+  const runId = event.data.id;
+  const toolCalls =
+    event.data.required_action?.submit_tool_outputs.tool_calls ?? [];
+  // loop over tool calls and call function handler
+  const toolCallOutputs = await Promise.all(
+    toolCalls.map(async (toolCall) => {
+      const result = await functionCallHandler(toolCall);
+      return { output: result, tool_call_id: toolCall.id };
+    })
+  );
+  // Disable user input
+  // setInputDisabled(true);
+  submitActionResult(runId, toolCallOutputs);
+};
+
+const submitActionResult = async (
+  runId: string,
+  toolCallOutputs: { output: any; tool_call_id: string }[]
+) => {
+  const response = await fetch(`/api/atlas/sage/threads/${threadId}/actions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      runId: runId,
+      toolCallOutputs: toolCallOutputs,
+    }),
+  });
+  const stream = AssistantStream.fromReadableStream(response.body);
+  handleReadableStream(stream);
+};
+
+const functionCallHandler = async (call: RequiredActionFunctionToolCall) => {
+  if (call?.function?.name === 'get_weather') {
+    // const args = JSON.parse(call.function.arguments);
+    // const data = getWeather(args.location);
+    // setWeatherData(data);
+    // return JSON.stringify(data);
+  }
+  return;
+};
