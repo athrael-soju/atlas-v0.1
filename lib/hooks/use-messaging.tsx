@@ -75,7 +75,7 @@ export const useMessaging = ({
       },
     ]);
     let context = '';
-    if (process.env.INFERENCE_MODEL === 'assistant') {
+    if (process.env.NEXT_PUBLIC_INFERENCE_MODEL === 'assistant') {
       try {
         // If the purpose is Scribe, context is retrieved via RAG
         if (purpose === Purpose.Scribe) {

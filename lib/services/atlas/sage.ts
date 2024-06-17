@@ -23,9 +23,16 @@ export async function consult(
 
     const user = await measurePerformance(
       () => dbInstance.getUser(userEmail),
-      'Checking for sage',
+      `Checking for summoned ${purpose}`,
       sendUpdate
     );
+
+    if (
+      !user.assistants[purpose].assistantId ||
+      !user.assistants[purpose].threadId
+    ) {
+      throw new Error(`User has not summoned the ${purpose} yet`);
+    }
 
     const { assistantId, threadId } = user.assistants[purpose];
 
