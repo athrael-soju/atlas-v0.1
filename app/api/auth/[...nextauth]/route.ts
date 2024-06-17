@@ -22,7 +22,7 @@ import {
 } from 'unique-names-generator';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { randomUUID } from 'crypto';
-import { AtlasUser } from '@/lib/types';
+import { AtlasUser, Purpose } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
@@ -139,7 +139,22 @@ const options: NextAuthOptions = {
     }): Promise<void> {
       if (isNewUser) {
         const dbInstance = await db();
-        await dbInstance.updateUser(user.email as string, { files: [] });
+        await dbInstance.updateUser(user.email as string, {
+          assistants: {
+            sage: {
+              files: [],
+              assistantId: '',
+              threadId: '',
+              purpose: Purpose.Sage,
+            },
+            scribe: {
+              files: [],
+              assistantId: '',
+              threadId: '',
+              purpose: Purpose.Scribe,
+            },
+          },
+        });
       }
       console.info(
         `${user.name} from ${user?.provider ?? account?.provider} has just signed in!`

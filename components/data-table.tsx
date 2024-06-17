@@ -35,13 +35,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { AtlasFile, DataTableProps } from '@/lib/types';
+import { AtlasFile, DataTableProps, Purpose } from '@/lib/types';
 import { archivist } from '@/lib/client/atlas';
 import { useToast } from '@/components/ui/use-toast';
 
 const handleDeleteFile = async (
   fileId: string,
   userEmail: string,
+  purpose: Purpose,
   fetchFiles: (userEmail: string) => void,
   toast: any,
   setIsDeleting: (isDeleting: boolean) => void
@@ -62,6 +63,7 @@ const handleDeleteFile = async (
     const archivistParams = {
       fileId: fileId,
       userEmail,
+      purpose,
     };
     await archivist('purge-archive', archivistParams, onUpdate);
   } catch (error: any) {
@@ -86,6 +88,7 @@ const handleDownloadFile = async (fileId: string, toast: any) => {
 export const DataTable: React.FC<DataTableProps> = ({
   userEmail,
   files,
+  purpose,
   handleFetchFiles,
   setIsDeleting,
 }) => {
@@ -183,6 +186,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                     handleDeleteFile(
                       file.id,
                       userEmail,
+                      purpose,
                       handleFetchFiles,
                       toast,
                       setIsDeleting

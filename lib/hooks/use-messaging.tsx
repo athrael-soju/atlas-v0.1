@@ -85,7 +85,11 @@ export const useMessaging = ({ userEmail, spinner }: UseMessagingProps) => {
         let firstRun = true;
         let prevType: MessageRole.Text | MessageRole.Code | MessageRole.Image;
         let currentMessage: string = '';
-        await sage('consult', { userEmail, message, context }, (event: string) => {
+        await sage(
+          userEmail,
+          'consult',
+          { message, context },
+          (event: string) => {
             const { type, message } = JSON.parse(event.replace('data: ', ''));
             if (type.includes('created') && firstRun === false) {
               addNewMessage(prevType, currentMessage);

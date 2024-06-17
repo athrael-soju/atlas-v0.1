@@ -90,11 +90,13 @@ export const scribe = async (
 };
 
 export const sage = async (
+  userEmail: string,
   action: SageAction,
   sageParams: SageParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
+  formData.append('userEmail', userEmail);
   formData.append('action', action);
   formData.append('sageParams', JSON.stringify(sageParams));
 

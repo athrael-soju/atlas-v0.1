@@ -28,6 +28,7 @@ import {
 import { DataTable } from '@/components/data-table';
 import { FileUploadManager } from '@/components/file-upload-manager';
 import { MessageForm } from '@/components/message-form';
+import { Purpose } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -41,6 +42,7 @@ export default function Page() {
   useKeyboardShortcut(inputRef);
 
   const userEmail = session?.user?.email ?? '';
+  const purpose = process.env.NEXT_PUBLIC_ASSISTANT as Purpose;
 
   const {
     uploadedFiles,
@@ -51,7 +53,7 @@ export default function Page() {
     handleFetchFiles,
     setIsUploadCompleted,
     setIsLoading,
-  } = useFileHandling(userEmail);
+  } = useFileHandling(userEmail, purpose);
 
   const {
     messages,
@@ -160,6 +162,7 @@ export default function Page() {
               <DataTable
                 userEmail={userEmail}
                 files={fileList}
+                purpose={purpose}
                 handleFetchFiles={handleFetchFiles}
                 setIsDeleting={setIsLoading}
               />

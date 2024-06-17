@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { consult } from '@/lib/services/atlas/sage';
-import { SageAction, SageParams } from '@/lib/types';
+import { summon, dismiss } from '@/lib/services/atlas/custodian';
+import { CustodianAction, CustodianParams } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
@@ -16,11 +16,16 @@ function sendUpdate(
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
+    const action = data.get('action') as CustodianAction;
     const userEmail = data.get('userEmail') as string;
-    const action = data.get('action') as SageAction;
-    const sageParams = JSON.parse(
-      data.get('sageParams') as string
-    ) as SageParams;
+
+    if (!userEmail) {
+      throw new Error('User email is required');
+    }
+
+    const custodianParams = JSON.parse(
+      data.get('custodianParams') as string
+    ) as CustodianParams;
 
     if (!action) {
       return NextResponse.json(
@@ -36,8 +41,10 @@ export async function POST(req: NextRequest): Promise<Response> {
         try {
           switch (action) {
             case 'summon':
-            case 'consult':
-              await consult(userEmail, sageParams, send);
+              await summon(userEmail, custodianParams, send);
+              break;
+            case 'dismiss':
+              await dismiss(userEmail, send);
               break;
             default:
               sendUpdate('notification', controller, 'Invalid Action');
