@@ -61,7 +61,7 @@ export default function Page() {
     setInputValue,
     submitMessage,
     handleSubmit,
-  } = useMessaging({ userEmail, spinner });
+  } = useMessaging({ userEmail, spinner, purpose });
 
   if (!session) {
     return (

@@ -7,6 +7,7 @@ import { AssistantStreamEvent } from 'openai/resources/beta/assistants';
 
 export async function consult(
   userEmail: string,
+  purpose: Purpose,
   sageParams: SageParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
@@ -26,17 +27,17 @@ export async function consult(
       sendUpdate
     );
 
-    const { assistantId, threadId } = user.assistants.sage;
+    const { assistantId, threadId } = user.assistants[purpose];
 
     if (!assistantId || !threadId) {
-      throw new Error('User has not summoned the sage');
+      throw new Error(`User has not summoned the ${purpose} yet`);
     }
 
     const myThread: {
       id: string;
     } = await measurePerformance(
       () => openai.beta.threads.retrieve(threadId),
-      'Retrieving thread',
+      `Retrieving ${purpose} thread`,
       sendUpdate
     );
 
@@ -47,7 +48,7 @@ export async function consult(
             role: 'user',
             content: context,
           }),
-        'Creating user context message',
+        `Creating ${purpose} context message`,
         sendUpdate
       );
     }
@@ -71,7 +72,7 @@ export async function consult(
     );
     await measurePerformance(
       () => handleReadableStream(stream, sendUpdate, userEmail, dbInstance),
-      'Consulting sage',
+      `Handling ${purpose} stream`,
       sendUpdate
     );
   } catch (error: any) {

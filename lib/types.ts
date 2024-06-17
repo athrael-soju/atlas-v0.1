@@ -144,5 +144,4 @@ export type MessageProps = {
   text: string;
 };
 
-export type SageAction = 'summon' | 'reform' | 'consult' | 'dismiss';
 export type CustodianAction = 'summon' | 'reform' | 'dismiss';

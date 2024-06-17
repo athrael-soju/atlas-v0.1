@@ -2,8 +2,8 @@ import {
   ForgeParams,
   ScribeParams,
   SageParams,
-  SageAction,
   ArchivistParams,
+  Purpose,
 } from '@/lib/types';
 
 const readStream = async (
@@ -91,13 +91,13 @@ export const scribe = async (
 
 export const sage = async (
   userEmail: string,
-  action: SageAction,
+  purpose: Purpose,
   sageParams: SageParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   formData.append('userEmail', userEmail);
-  formData.append('action', action);
+  formData.append('purpose', purpose);
   formData.append('sageParams', JSON.stringify(sageParams));
 
   try {

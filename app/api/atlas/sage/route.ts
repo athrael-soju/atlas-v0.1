@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { consult } from '@/lib/services/atlas/sage';
-import { SageAction, SageParams } from '@/lib/types';
+import { Purpose, SageParams } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
@@ -17,31 +17,17 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
     const userEmail = data.get('userEmail') as string;
-    const action = data.get('action') as SageAction;
+    const purpose = data.get('purpose') as Purpose;
     const sageParams = JSON.parse(
       data.get('sageParams') as string
     ) as SageParams;
-
-    if (!action) {
-      return NextResponse.json(
-        { error: 'Action is required' },
-        { status: 400 }
-      );
-    }
 
     const stream = new ReadableStream({
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
         try {
-          switch (action) {
-            case 'summon':
-            case 'consult':
-              await consult(userEmail, sageParams, send);
-              break;
-            default:
-              sendUpdate('notification', controller, 'Invalid Action');
-          }
+          await consult(userEmail, purpose, sageParams, send);
         } catch (error: any) {
           sendUpdate('error', controller, error.message);
         } finally {
