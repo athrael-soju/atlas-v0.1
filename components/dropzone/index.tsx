@@ -24,7 +24,7 @@ export function Dropzone({
   const [progress, setProgress] = useState<number>(0);
   const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
-
+ 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
