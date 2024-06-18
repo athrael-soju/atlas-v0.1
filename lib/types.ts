@@ -107,7 +107,7 @@ export interface MessageFormProps {
 
 export interface DropzoneProps {
   onChange: (newFiles: string[]) => void;
-  fileExtension?: string;
+  fileExtension: string;
   userEmail: string;
   forgeParams: ForgeParams;
   isUploadCompleted: boolean;
