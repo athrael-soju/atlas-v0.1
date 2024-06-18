@@ -39,7 +39,7 @@ export const db = async () => {
     return user.assistants[purpose].files || [];
   };
 
-  const getArchive = async (
+  const retrieveArchive = async (
     userEmail: string,
     purpose: Purpose,
     fileId: string
@@ -66,7 +66,7 @@ export const db = async () => {
       { email: userEmail },
       {
         $push: {
-          [`assistants.${purpose}.files`]: { file },
+          [`assistants.${purpose}.files`]: file,
         },
       }
     );
@@ -95,7 +95,7 @@ export const db = async () => {
     getUser,
     updateUser,
     retrieveArchives,
-    getArchive,
+    retrieveArchive,
     dismissAssistants,
     insertArchive,
     purgeArchive,

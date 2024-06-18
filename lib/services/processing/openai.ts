@@ -39,24 +39,20 @@ export const deleteFromOpenAi = async (fileId: string): Promise<unknown> => {
 };
 
 export const updateSage = async (dbInstance: any, userEmail: string) => {
-  const sageIdList = (
-    await dbInstance.getUserFilesByPurpose(userEmail, Purpose.Sage)
-  ).map((file: AtlasFile) => file.id);
+  const user = await dbInstance.getUser(userEmail);
 
-  if (!sageIdList) {
-    throw new Error('Failed to retrieve Sage list from database');
+  const sageId = user.assistants.sage.assistantId;
+  const sageFiles = user.assistants.sage.files.map(
+    (file: AtlasFile) => file.id
+  );
+
+  if (!sageId || !sageFiles) {
+    throw new Error('Sage ID and files are required');
   }
-
-  const sageId = (await dbInstance.getSageId(userEmail)) as string;
-
-  if (!sageId) {
-    throw new Error('Failed to get Sage ID from database');
-  }
-
   const updatedSage = await openai.beta.assistants.update(sageId, {
     tool_resources: {
       code_interpreter: {
-        file_ids: sageIdList,
+        file_ids: sageFiles,
       },
     },
   });
@@ -65,5 +61,5 @@ export const updateSage = async (dbInstance: any, userEmail: string) => {
     throw new Error('Failed to update Sage in OpenAI');
   }
 
-  return sageIdList;
+  return sageFiles;
 };

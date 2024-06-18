@@ -49,7 +49,7 @@ export async function purgeArchive(
     const dbInstance = await db();
 
     const file = await measurePerformance(
-      () => dbInstance.getArchive(userEmail, purpose, fileId),
+      () => dbInstance.retrieveArchive(userEmail, purpose, fileId),
       'Retrieving archive from DB',
       sendUpdate
     );
