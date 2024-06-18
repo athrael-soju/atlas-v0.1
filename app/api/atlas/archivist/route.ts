@@ -15,7 +15,7 @@ function sendUpdate(
   const data = JSON.stringify({ type, message });
   controller.enqueue(`data: ${data}\n\n`);
 }
-// TODO: Fix file upload/deletion
+
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
