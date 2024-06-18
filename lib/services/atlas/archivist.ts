@@ -6,13 +6,13 @@ import { getIndex } from '@/lib/client/pinecone';
 import { Index } from '@pinecone-database/pinecone';
 import { updateSage, deleteFromOpenAi } from '@/lib/services/processing/openai';
 
-export async function recoverArchives(
+export async function retrieveArchives(
   archivistParams: ArchivistParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const totalStartTime = performance.now();
   try {
-    const { userEmail } = archivistParams;
+    const { userEmail, purpose } = archivistParams;
 
     if (!userEmail) {
       throw new Error('User email is required');
@@ -21,7 +21,7 @@ export async function recoverArchives(
     const dbInstance = await db();
 
     const userFiles = await measurePerformance(
-      () => dbInstance.getAllUserFiles(userEmail),
+      () => dbInstance.retrieveArchives(userEmail, purpose),
       'Checking for archives',
       sendUpdate
     );
@@ -40,7 +40,7 @@ export async function purgeArchive(
 ): Promise<any> {
   const totalStartTime = performance.now();
   try {
-    const { userEmail, fileId } = archivistParams;
+    const { userEmail, fileId, purpose } = archivistParams;
 
     if (!userEmail || !fileId) {
       throw new Error('User email and a single file ID are required');
@@ -49,7 +49,7 @@ export async function purgeArchive(
     const dbInstance = await db();
 
     const file = await measurePerformance(
-      () => dbInstance.getUserFile(userEmail, fileId),
+      () => dbInstance.retrieveArchive(userEmail, purpose, fileId),
       'Retrieving archive from DB',
       sendUpdate
     );
@@ -59,7 +59,7 @@ export async function purgeArchive(
     }
 
     const deletionResult = await measurePerformance(
-      () => dbInstance.deleteFile(userEmail, file.id as string),
+      () => dbInstance.purgeArchive(userEmail, purpose, file.id as string),
       'Purging archive from DB',
       sendUpdate
     );

@@ -68,12 +68,26 @@ export function Dropzone({
     const { files } = e.target;
     if (files) {
       await handleUpload(files);
+    } else {
+      toast({
+        title: 'Error',
+        description: 'No files selected.',
+        variant: 'destructive',
+      });
     }
   };
-  
+
   const handleUpload = async (files: FileList) => {
     setIsUploading(true);
+
     try {
+      Array.from(files).filter((file) => {
+        console.log(file.name);
+        if (!file.name.endsWith(fileExtension)) {
+          throw new Error(`${file.name} is not a valid file type.`);
+        }
+      });
+
       const allowedStates = [
         'Uploading',
         'Updating DB',
@@ -111,11 +125,11 @@ export function Dropzone({
       };
 
       await forge(files, userEmail, forgeParams, onUpdate);
-    } catch (error) {
+    } catch (error: any) {
       setError((error as Error).message);
       toast({
         title: 'Error',
-        description: 'Failed to upload file.',
+        description: `Failed to upload file(s): ${error.message}`,
         variant: 'destructive',
       });
     } finally {

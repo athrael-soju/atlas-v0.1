@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { consult } from '@/lib/services/atlas/sage';
-import { Purpose, SageParams } from '@/lib/types';
+import { summon, dismiss } from '@/lib/services/atlas/custodian';
+import { CustodianAction, CustodianParams } from '@/lib/types';
 
 export const runtime = 'nodejs';
 
@@ -16,18 +16,39 @@ function sendUpdate(
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
+    const action = data.get('action') as CustodianAction;
     const userEmail = data.get('userEmail') as string;
-    const purpose = data.get('purpose') as Purpose;
-    const sageParams = JSON.parse(
-      data.get('sageParams') as string
-    ) as SageParams;
+
+    if (!userEmail) {
+      throw new Error('User email is required');
+    }
+
+    const custodianParams = JSON.parse(
+      data.get('custodianParams') as string
+    ) as CustodianParams;
+
+    if (!action) {
+      return NextResponse.json(
+        { error: 'Action is required' },
+        { status: 400 }
+      );
+    }
 
     const stream = new ReadableStream({
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
         try {
-          await consult(userEmail, purpose, sageParams, send);
+          switch (action) {
+            case 'summon':
+              await summon(userEmail, custodianParams, send);
+              break;
+            case 'dismiss':
+              await dismiss(userEmail, send);
+              break;
+            default:
+              sendUpdate('notification', controller, 'Invalid Action');
+          }
         } catch (error: any) {
           sendUpdate('error', controller, error.message);
         } finally {

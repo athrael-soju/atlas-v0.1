@@ -29,7 +29,11 @@ export async function uploadDocumentToOpenAi(
       purpose: Purpose.Sage,
     };
 
-    const addedFIle = await dbInstance.addFile(userEmail, fileData);
+    const addedFIle = await dbInstance.insertArchive(
+      userEmail,
+      Purpose.Sage,
+      fileData
+    );
 
     if (!addedFIle) {
       throw new Error('Failed to add file to database');
@@ -45,7 +49,7 @@ export async function uploadDocumentToOpenAi(
   } catch (error: any) {
     // Rollback changes
     await openai.files.del(fileId!);
-    await dbInstance.deleteFile(userEmail, fileId!);
+    await dbInstance.purgeArchive(userEmail, Purpose.Sage, fileId!);
 
     throw new Error(`${error.message}. Rolling back changes...`);
   }

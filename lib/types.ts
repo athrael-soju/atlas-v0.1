@@ -43,18 +43,25 @@ export interface ForgeParams {
 }
 
 export interface SageParams {
-  userEmail: string;
   message?: string;
   context?: string;
-  name?: string;
-  instructions?: string;
-  model?: string;
-  file_ids?: string[];
+}
+
+export interface AssistantParams {
+  name: string;
+  instructions: string;
+  model: string;
+  file_ids: string[];
+}
+
+export interface CustodianParams {
+  assistants: { sage: AssistantParams; scribe: AssistantParams };
 }
 
 export interface ArchivistParams {
   userEmail: string;
   fileId?: string;
+  purpose: Purpose;
 }
 
 export enum Purpose {
@@ -77,13 +84,18 @@ export interface AtlasFile {
   purpose: Purpose.Scribe | Purpose.Sage;
 }
 
+export interface AtlasAssistant {
+  assistantId: string;
+  threadId: string;
+  purpose: Purpose;
+  files?: AtlasFile[];
+}
+
 export interface AtlasUser {
   id: string;
   email: string;
   image?: string;
-  sageId?: string;
-  threadId?: string;
-  files: AtlasFile[];
+  assistants: { sage: AtlasAssistant; scribe: AtlasAssistant };
 }
 
 export interface MessageFormProps {
@@ -95,7 +107,7 @@ export interface MessageFormProps {
 
 export interface DropzoneProps {
   onChange: (newFiles: string[]) => void;
-  fileExtension?: string;
+  fileExtension: string;
   userEmail: string;
   forgeParams: ForgeParams;
   isUploadCompleted: boolean;
@@ -107,6 +119,7 @@ export interface DropzoneProps {
 export interface DataTableProps {
   userEmail: string;
   files: AtlasFile[];
+  purpose: Purpose;
   handleFetchFiles: (userEmail: string) => Promise<void>;
   setIsDeleting: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -131,4 +144,4 @@ export type MessageProps = {
   text: string;
 };
 
-export type SageAction = 'summon' | 'reform' | 'consult' | 'dismiss';
+export type CustodianAction = 'summon' | 'reform' | 'dismiss';

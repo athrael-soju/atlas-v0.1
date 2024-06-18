@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { archivist } from '@/lib/client/atlas';
-import { AtlasFile } from '../types';
+import { AtlasFile, Purpose } from '../types';
+
+const purpose = process.env.NEXT_PUBLIC_ASSISTANT as Purpose;
 
 export const useFileHandling = (userEmail: string) => {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
@@ -22,7 +24,7 @@ export const useFileHandling = (userEmail: string) => {
           setIsLoading(false);
         }
       };
-      const archivistParams = { userEmail };
+      const archivistParams = { userEmail, purpose };
       await archivist('retrieve-archives', archivistParams, onUpdate);
     } catch (error: any) {
       setIsLoading(false);
@@ -35,6 +37,7 @@ export const useFileHandling = (userEmail: string) => {
     fileList,
     isUploadCompleted,
     isLoading,
+    purpose,
     handleFileChange,
     handleFetchFiles,
     setIsUploadCompleted,

@@ -47,6 +47,7 @@ export default function Page() {
     fileList,
     isUploadCompleted,
     isLoading,
+    purpose,
     handleFileChange,
     handleFetchFiles,
     setIsUploadCompleted,
@@ -60,7 +61,7 @@ export default function Page() {
     setInputValue,
     submitMessage,
     handleSubmit,
-  } = useMessaging({ userEmail, spinner });
+  } = useMessaging({ userEmail, spinner, purpose });
 
   if (!session) {
     return (
@@ -122,6 +123,7 @@ export default function Page() {
                 >
                   {isUploadManagerVisible && (
                     <FileUploadManager
+                      purpose={purpose}
                       onChange={handleFileChange}
                       userEmail={userEmail}
                       forgeParams={forgeParams}
@@ -160,6 +162,7 @@ export default function Page() {
               <DataTable
                 userEmail={userEmail}
                 files={fileList}
+                purpose={purpose}
                 handleFetchFiles={handleFetchFiles}
                 setIsDeleting={setIsLoading}
               />

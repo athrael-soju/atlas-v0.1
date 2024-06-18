@@ -1,4 +1,9 @@
-import { AtlasFile, FileActionResponse, ForgeParams } from '@/lib/types';
+import {
+  AtlasFile,
+  FileActionResponse,
+  ForgeParams,
+  Purpose,
+} from '@/lib/types';
 import { handleFileDeletion, handleFileUpload } from '../storage/handler';
 import { embedDocument } from '../embedding/openai';
 import { upsertDocument } from '../indexing/pinecone';
@@ -62,7 +67,7 @@ export async function processDocument(
 
     // Update DB
     await measurePerformance(
-      () => dbInstance.addFile(userEmail, atlasFile),
+      () => dbInstance.insertArchive(userEmail, Purpose.Scribe, atlasFile),
       `Updating DB: '${file.name}'`,
       sendUpdate
     );
@@ -80,7 +85,7 @@ export async function processDocument(
 
     // Rollback changes
     await deleteFromVectorDb(atlasFile!, userEmail);
-    await dbInstance.deleteFile(userEmail, atlasFile!.id);
+    await dbInstance.purgeArchive(userEmail, Purpose.Scribe, atlasFile!.id);
     await handleFileDeletion(atlasFile!, userEmail);
 
     return { success: false, fileName: file.name, error: error.message };

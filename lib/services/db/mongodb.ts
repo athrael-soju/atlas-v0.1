@@ -24,83 +24,65 @@ export const db = async () => {
     userEmail: string,
     updateData: Partial<AtlasUser>
   ) => {
-    await userCollection.updateOne({ email: userEmail }, { $set: updateData });
+    const userUpdated = await userCollection.updateOne(
+      { email: userEmail },
+      { $set: updateData }
+    );
+    return userUpdated.modifiedCount === 1;
   };
 
-  const getAllUserFiles = async (userEmail: string) => {
+  const retrieveArchives = async (userEmail: string, purpose: Purpose) => {
     const user = (await userCollection.findOne({
       email: userEmail,
     })) as unknown as AtlasUser;
 
-    return user.files;
+    return user.assistants[purpose].files || [];
   };
 
-  const getUserFilesByPurpose = async (userEmail: string, purpose: Purpose) => {
-    const userFiles = await getAllUserFiles(userEmail);
-    const userFilesByPurpose = userFiles.filter(
-      (file) => file.purpose === purpose
-    );
-    return userFilesByPurpose;
+  const retrieveArchive = async (
+    userEmail: string,
+    purpose: Purpose,
+    fileId: string
+  ) => {
+    const files = await retrieveArchives(userEmail, purpose);
+    const file = files.find((file) => file.id === fileId);
+    return file;
   };
 
-  const getUserFile = async (userEmail: string, fileId: string) => {
-    const userFiles = await getAllUserFiles(userEmail);
-    const userFile = userFiles.find((file) => file.id === fileId);
-    return userFile;
-  };
-
-  const getSageId = async (userEmail: string) => {
-    const user = await getUser(userEmail);
-    return user.sageId;
-  };
-
-  const summonSage = async (userEmail: string, sageId: string) => {
-    const updateResult = userCollection.updateOne(
+  const dismissAssistants = async (userEmail: string) => {
+    const updateResult = await userCollection.updateOne(
       { email: userEmail },
-      { $set: { sageId } }
+      { $unset: { assistants: '' } }
     );
-    return updateResult;
+    return updateResult.modifiedCount === 1;
   };
 
-  const addThreadId = async (userEmail: string, threadId: string) => {
-    const updateResult = userCollection.updateOne(
-      { email: userEmail },
-      { $set: { threadId } }
-    );
-    return updateResult;
-  };
-
-  const getThreadId = async (userEmail: string) => {
-    const user = await getUser(userEmail);
-    return user.threadId;
-  };
-
-  const dismissSage = async (userEmail: string) => {
-    const updateResult = userCollection.updateOne(
-      { email: userEmail },
-      { $unset: { sageId: '', threadId: '' } }
-    );
-    return updateResult;
-  };
-
-  const addFile = async (userEmail: string, file: AtlasFile) => {
+  const insertArchive = async (
+    userEmail: string,
+    purpose: Purpose,
+    file: AtlasFile
+  ) => {
     const updateResult = userCollection.updateOne(
       { email: userEmail },
       {
         $push: {
-          files: file,
+          [`assistants.${purpose}.files`]: file,
         },
       }
     );
     return updateResult;
   };
 
-  const deleteFile = async (userEmail: string, fileId: string) => {
-    const updateResult = userCollection.updateOne(
+  const purgeArchive = async (
+    userEmail: string,
+    purpose: string, // Ensure Purpose is of type string
+    fileId: string
+  ) => {
+    const updateResult = await userCollection.updateOne(
       { email: userEmail },
       {
         $pull: {
-          files: { id: fileId },
+          [`assistants.${purpose}.files`]: { id: fileId },
         },
       }
     );
@@ -112,15 +94,10 @@ export const db = async () => {
     insertUser,
     getUser,
     updateUser,
-    getAllUserFiles,
-    getUserFilesByPurpose,
-    getUserFile,
-    getSageId,
-    summonSage,
-    addThreadId,
-    getThreadId,
-    dismissSage,
-    addFile,
-    deleteFile,
+    retrieveArchives,
+    retrieveArchive,
+    dismissAssistants,
+    insertArchive,
+    purgeArchive,
   };
 };

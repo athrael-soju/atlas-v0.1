@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {} from '@/lib/services/atlas/archivist';
 import { ArchivistParams } from '@/lib/types';
 import {
-  recoverArchives,
+  retrieveArchives,
   purgeArchive,
 } from '@/lib/services/atlas/archivist';
 export const runtime = 'nodejs';
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         try {
           switch (action) {
             case 'retrieve-archives':
-              response = await recoverArchives(archivistParams, send);
+              response = await retrieveArchives(archivistParams, send);
               break;
             case 'purge-archive':
               response = await purgeArchive(archivistParams, send);
