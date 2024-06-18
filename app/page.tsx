@@ -123,6 +123,7 @@ export default function Page() {
                 >
                   {isUploadManagerVisible && (
                     <FileUploadManager
+                      purpose={purpose}
                       onChange={handleFileChange}
                       userEmail={userEmail}
                       forgeParams={forgeParams}
