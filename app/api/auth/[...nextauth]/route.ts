@@ -29,6 +29,11 @@ export const runtime = 'nodejs';
 interface CustomUser extends User {
   provider?: string;
   files?: AtlasUser[];
+  preferences?: {
+    name: string | null;
+    description: string | null;
+    selectedAssistant: 'sage' | 'scribe' | null;
+  };
 }
 
 interface CustomSession extends Session {
@@ -54,6 +59,11 @@ const createAnonymousUser = (): CustomUser => {
     email: `${unique_handle.toLowerCase()}@atlas-guest.com`,
     image: '',
     files: [],
+    preferences: {
+      name: null,
+      description: null,
+      selectedAssistant: null,
+    },
   };
 };
 
@@ -122,6 +132,12 @@ const options: NextAuthOptions = {
       if (token.provider) {
         session.token_provider = token.provider as string;
       }
+
+      const dbInstance = await db();
+      const dbUser = await dbInstance.getUser(token.email as string);
+
+      session.user = dbUser as CustomUser;
+
       return session;
     },
   },
@@ -153,6 +169,11 @@ const options: NextAuthOptions = {
               threadId: '',
               purpose: Purpose.Scribe,
             },
+          },
+          preferences: {
+            name: null,
+            description: null,
+            selectedAssistant: null,
           },
         });
       }

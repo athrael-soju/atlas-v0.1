@@ -59,9 +59,14 @@ export interface CustodianParams {
 }
 
 export interface ArchivistParams {
-  userEmail: string;
   fileId?: string;
   purpose: Purpose;
+}
+
+export interface ArchivistOnboardingParams {
+  userName: string;
+  description: string;
+  selectedAssistant: 'scribe' | 'sage';
 }
 
 export enum Purpose {
@@ -96,6 +101,11 @@ export interface AtlasUser {
   email: string;
   image?: string;
   assistants: { sage: AtlasAssistant; scribe: AtlasAssistant };
+  preferences: {
+    name: string | null;
+    description: string | null;
+    selectedAssistant: 'sage' | 'scribe' | null;
+  };
 }
 
 export interface MessageFormProps {

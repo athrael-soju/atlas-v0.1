@@ -5,17 +5,11 @@ import { useUIState, useActions } from 'ai/rsc';
 import { AI } from '@/app/action';
 import { ScribeParams, ForgeParams, MessageRole, Purpose } from '../types';
 
-interface UseMessagingProps {
-  userEmail: string;
-  spinner: JSX.Element;
-  purpose: Purpose;
-}
-
-export const useMessaging = ({
-  userEmail,
-  spinner,
-  purpose,
-}: UseMessagingProps) => {
+export const useMessaging = (
+  userEmail: string,
+  spinner: JSX.Element,
+  purpose: Purpose
+) => {
   const [messages, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions<typeof AI>();
   const [inputValue, setInputValue] = useState<string>('');

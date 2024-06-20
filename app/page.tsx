@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { CircleLoader } from 'react-spinners';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
@@ -28,6 +28,9 @@ import {
 import { DataTable } from '@/components/data-table';
 import { FileUploadManager } from '@/components/file-upload-manager';
 import { MessageForm } from '@/components/message-form';
+import { OnboardingCarousel } from '@/components/onboarding';
+import { AtlasUser, Purpose } from '@/lib/types';
+import { Header } from '@/components/header';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -37,22 +40,25 @@ export default function Page() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isUploadManagerVisible, setIsUploadManagerVisible] = useState(false);
   const { formRef, onKeyDown } = useEnterSubmit(setIsUploadManagerVisible);
-
+  const [isLoading, setIsLoading] = useState(false);
   useKeyboardShortcut(inputRef);
 
-  const userEmail = session?.user?.email ?? '';
+  const user = session?.user as AtlasUser;
+  const userEmail = user?.email ?? '';
+  let purpose = user?.preferences?.selectedAssistant as Purpose;
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
+  const [assistantSelected, setAssistantSelected] = useState<Purpose | null>(
+    null
+  );
 
   const {
     uploadedFiles,
     fileList,
     isUploadCompleted,
-    isLoading,
-    purpose,
     handleFileChange,
     handleFetchFiles,
     setIsUploadCompleted,
-    setIsLoading,
-  } = useFileHandling(userEmail);
+  } = useFileHandling(userEmail, purpose, setIsLoading);
 
   const {
     messages,
@@ -61,20 +67,50 @@ export default function Page() {
     setInputValue,
     submitMessage,
     handleSubmit,
-  } = useMessaging({ userEmail, spinner, purpose });
+  } = useMessaging(userEmail!, spinner, purpose);
+
+  const HandleLoader = () => (
+    <div>
+      {isLoading && (
+        <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
+          <CircleLoader color="var(--spinner-color)" size={150} />
+        </div>
+      )}
+    </div>
+  );
 
   if (!session) {
     return (
-      <div className="flex flex-col items-center justify-center bg-background p-16">
-        <div className="flex flex-col items-center justify-center">
-          <h1 className="text-4xl text-center font-extrabold mt-4 text-card-foreground">
-            Welcome to Atlas
-          </h1>
-          <p>Log in to proceed</p>
-          <img
-            src="/atlas.png"
-            alt="Atlas Logo"
-            className="w-full rounded-full shadow-lg"
+      <div>
+        <Header />
+        <div className="flex flex-col items-center justify-center p-24">
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="text-4xl text-center font-extrabold mt-4 text-card-foreground">
+              Welcome to Atlas
+            </h1>
+            <p>Log in to proceed</p>
+            <img
+              src="/atlas.png"
+              alt="Atlas Logo"
+              className="w-full rounded-full shadow-lg"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isOnboardingComplete) {
+    return (
+      <div>
+        <Header />
+        <HandleLoader />
+        <div className="flex items-center justify-center p-24">
+          <OnboardingCarousel
+            userEmail={userEmail}
+            setIsOnboardingComplete={setIsOnboardingComplete}
+            setAssistantSelected={setAssistantSelected}
+            setIsLoading={setIsLoading}
           />
         </div>
       </div>
@@ -83,13 +119,14 @@ export default function Page() {
 
   return (
     <div>
-      {isLoading && (
-        <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
-          <CircleLoader color="var(--spinner-color)" size={150} />
-        </div>
-      )}
+      <Header />
+      <HandleLoader />
       <div className="pb-52 pt-4 md:pt-10">
-        {messages.length ? <ChatList messages={messages} /> : <EmptyScreen />}
+        {messages.length ? (
+          <ChatList messages={messages} />
+        ) : (
+          <EmptyScreen assistantSelected={assistantSelected} />
+        )}
         <ChatScrollAnchor trackVisibility={true} />
       </div>
       <div className="fixed inset-x-0 bottom-0 w-full">

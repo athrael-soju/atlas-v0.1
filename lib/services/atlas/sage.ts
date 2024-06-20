@@ -175,9 +175,9 @@ const handleReadableStream = async (
           }
           index++;
         }
-
-        console.log(text.value);
-        console.log(citations.join('\n'));
+        // TODO: Test citations
+        // console.info(text.value);
+        // console.info(citations.join('\n'));
       }
     });
     stream.on('event', (event: AssistantStreamEvent) => {

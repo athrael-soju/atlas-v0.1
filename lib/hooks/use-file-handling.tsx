@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { archivist } from '@/lib/client/atlas';
 import { AtlasFile, Purpose } from '../types';
 
-const purpose = process.env.NEXT_PUBLIC_ASSISTANT as Purpose;
-
-export const useFileHandling = (userEmail: string) => {
+export const useFileHandling = (
+  userEmail: string,
+  purpose: Purpose,
+  setIsLoading: (value: boolean) => void
+) => {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [fileList, setFileList] = useState<AtlasFile[]>([]);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleFileChange = (newFiles: string[]) => {
     setUploadedFiles(newFiles);
   };
@@ -24,8 +24,14 @@ export const useFileHandling = (userEmail: string) => {
           setIsLoading(false);
         }
       };
-      const archivistParams = { userEmail, purpose };
-      await archivist('retrieve-archives', archivistParams, onUpdate);
+
+      const archivistParams = { purpose };
+      await archivist(
+        userEmail,
+        'retrieve-archives',
+        archivistParams,
+        onUpdate
+      );
     } catch (error: any) {
       setIsLoading(false);
       throw new Error(error.message);
@@ -36,11 +42,9 @@ export const useFileHandling = (userEmail: string) => {
     uploadedFiles,
     fileList,
     isUploadCompleted,
-    isLoading,
     purpose,
     handleFileChange,
     handleFetchFiles,
     setIsUploadCompleted,
-    setIsLoading,
   };
 };
