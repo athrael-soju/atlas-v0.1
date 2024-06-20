@@ -65,6 +65,7 @@ export async function onboardUser(
     if (!onboardingUpdated) {
       throw new Error('DB update unsuccessful');
     }
+    return selectedAssistant;
   } catch (error: any) {
     sendUpdate('error', `Onboarding user failed: ${error.message}`);
   } finally {

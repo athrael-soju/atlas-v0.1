@@ -38,25 +38,18 @@ export const maxDuration = 60;
 export default function Page() {
   const { data: session } = useSession();
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [isUploadManagerVisible, setIsUploadManagerVisible] =
-    useState<boolean>(false);
+  const [isUploadManagerVisible, setIsUploadManagerVisible] = useState(false);
   const { formRef, onKeyDown } = useEnterSubmit(setIsUploadManagerVisible);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   useKeyboardShortcut(inputRef);
 
   const user = session?.user as AtlasUser;
   const userEmail = user?.email ?? '';
-  const purpose = user?.preferences.selectedAssistant as Purpose;
-
-  const [isOnboardingComplete, setIsOnboardingComplete] =
-    useState<boolean>(false);
-
-  useEffect(() => {
-    if (user && user.preferences) {
-      setIsOnboardingComplete(!!purpose);
-    }
-  }, [user]);
+  let purpose = user?.preferences?.selectedAssistant as Purpose;
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
+  const [assistantSelected, setAssistantSelected] = useState<Purpose | null>(
+    null
+  );
 
   const {
     uploadedFiles,
@@ -76,17 +69,15 @@ export default function Page() {
     handleSubmit,
   } = useMessaging(userEmail!, spinner, purpose);
 
-  const HandleLoader = () => {
-    return (
-      <div>
-        {isLoading && (
-          <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
-            <CircleLoader color="var(--spinner-color)" size={150} />
-          </div>
-        )}
-      </div>
-    );
-  };
+  const HandleLoader = () => (
+    <div>
+      {isLoading && (
+        <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
+          <CircleLoader color="var(--spinner-color)" size={150} />
+        </div>
+      )}
+    </div>
+  );
 
   if (!session) {
     return (
@@ -94,7 +85,7 @@ export default function Page() {
         <Header />
         <div className="flex flex-col items-center justify-center p-24">
           <div className="flex flex-col items-center justify-center">
-            <h1 className="text-4xl text-center font-extrabold mt-4 text-card-foreground ">
+            <h1 className="text-4xl text-center font-extrabold mt-4 text-card-foreground">
               Welcome to Atlas
             </h1>
             <p>Log in to proceed</p>
@@ -118,6 +109,7 @@ export default function Page() {
           <OnboardingCarousel
             userEmail={userEmail}
             setIsOnboardingComplete={setIsOnboardingComplete}
+            setAssistantSelected={setAssistantSelected}
             setIsLoading={setIsLoading}
           />
         </div>
@@ -133,7 +125,7 @@ export default function Page() {
         {messages.length ? (
           <ChatList messages={messages} />
         ) : (
-          <EmptyScreen selectedAssistant={purpose} />
+          <EmptyScreen assistantSelected={assistantSelected} />
         )}
         <ChatScrollAnchor trackVisibility={true} />
       </div>

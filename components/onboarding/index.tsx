@@ -21,18 +21,20 @@ import {
 } from './carousel';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { archivist } from '@/lib/client/atlas';
-import { ArchivistOnboardingParams } from '@/lib/types';
+import { ArchivistOnboardingParams, Purpose } from '@/lib/types';
 import { toast } from '../ui/use-toast';
 
 interface OnboardingCarouselProps {
   userEmail: string;
   setIsOnboardingComplete: (finished: boolean) => void;
+  setAssistantSelected: (selected: Purpose) => void;
   setIsLoading: (loading: boolean) => void;
 }
 
 export function OnboardingCarousel({
   userEmail,
   setIsOnboardingComplete,
+  setAssistantSelected,
   setIsLoading,
 }: Readonly<OnboardingCarouselProps>) {
   const [api, setApi] = useState<CarouselApi>();
@@ -60,7 +62,10 @@ export function OnboardingCarousel({
         selectedAssistant: assistant,
       };
       const onUpdate = (event: string) => {
-        // Handle updates
+        const { type, message } = JSON.parse(event.replace('data: ', ''));
+        if (type === 'final-notification') {
+          setAssistantSelected(message);
+        }
       };
       await archivist(userEmail, action, onboardingParams, onUpdate);
       setIsLoading(false);
