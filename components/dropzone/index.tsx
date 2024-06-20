@@ -9,9 +9,9 @@ import { useToast } from '@/components/ui/use-toast';
 
 export function Dropzone({
   onChange,
-  fileExtension,
   userEmail,
   forgeParams,
+  fileExtension,
   isUploadCompleted,
   setIsUploadCompleted,
   setIsUploading,

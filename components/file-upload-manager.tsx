@@ -26,11 +26,7 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
   setIsUploading,
 }) => {
   const allowedFileTypes =
-    purpose === Purpose.Sage
-      ? 'csv'
-      : purpose === Purpose.Scribe
-        ? 'pdf'
-        : '';
+    purpose === Purpose.Sage ? 'csv' : purpose === Purpose.Scribe ? 'pdf' : '';
 
   return (
     <div>
@@ -38,11 +34,11 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
         onChange={onChange}
         userEmail={userEmail}
         forgeParams={forgeParams}
+        fileExtension={allowedFileTypes}
         isUploadCompleted={isUploadCompleted}
         setIsUploadCompleted={setIsUploadCompleted}
         setIsUploading={setIsUploading}
         fetchFiles={fetchFiles}
-        fileExtension={allowedFileTypes}
       />
       {uploadedFiles.length > 0 && (
         <ul className="list-disc pl-5">

@@ -29,7 +29,7 @@ import { DataTable } from '@/components/data-table';
 import { FileUploadManager } from '@/components/file-upload-manager';
 import { MessageForm } from '@/components/message-form';
 import { OnboardingCarousel } from '@/components/onboarding';
-import { AtlasUser } from '@/lib/types';
+import { AtlasUser, Purpose } from '@/lib/types';
 import { Header } from '@/components/header';
 
 export const dynamic = 'force-dynamic';
@@ -47,15 +47,14 @@ export default function Page() {
 
   const user = session?.user as AtlasUser;
   const userEmail = user?.email ?? '';
-  const selectedAssistant: 'sage' | 'scribe' | null =
-    user?.preferences.selectedAssistant;
+  const purpose = user?.preferences.selectedAssistant as Purpose;
 
   const [isOnboardingComplete, setIsOnboardingComplete] =
     useState<boolean>(false);
 
   useEffect(() => {
     if (user && user.preferences) {
-      setIsOnboardingComplete(!!selectedAssistant);
+      setIsOnboardingComplete(!!purpose);
     }
   }, [user]);
 
@@ -63,11 +62,10 @@ export default function Page() {
     uploadedFiles,
     fileList,
     isUploadCompleted,
-    purpose,
     handleFileChange,
     handleFetchFiles,
     setIsUploadCompleted,
-  } = useFileHandling(userEmail, setIsLoading);
+  } = useFileHandling(userEmail, purpose, setIsLoading);
 
   const {
     messages,
@@ -135,7 +133,7 @@ export default function Page() {
         {messages.length ? (
           <ChatList messages={messages} />
         ) : (
-          <EmptyScreen selectedAssistant={selectedAssistant} />
+          <EmptyScreen selectedAssistant={purpose} />
         )}
         <ChatScrollAnchor trackVisibility={true} />
       </div>
