@@ -61,6 +61,6 @@ export const upsertDocument = async (
     }
     return { success: true };
   } catch (error: any) {
-    throw new Error('Failed to upsert document', error.message);
+    throw new Error(error.message);
   }
 };

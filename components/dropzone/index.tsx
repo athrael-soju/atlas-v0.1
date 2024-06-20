@@ -102,7 +102,7 @@ export function Dropzone({
         if (allowedStates.some((state) => message.startsWith(state))) {
           setProgress((prev) => prev + progressInterval);
         } else if (type === 'error') {
-          setIsUploadCompleted(true);
+          setIsUploadCompleted(false);
           fetchFiles(userEmail);
           toast({
             title: 'Error',

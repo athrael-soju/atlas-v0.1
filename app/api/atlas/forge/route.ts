@@ -35,7 +35,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (!files.length) {
       return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
     }
-
+    // TODO: Improve fail errors and handling (failed doesn't increment)
     const stream = new ReadableStream({
       async start(controller) {
         const send = (type: string, message: string) =>

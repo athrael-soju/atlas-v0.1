@@ -1,11 +1,16 @@
 import { AtlasFile } from '@/lib/types';
 import { UnstructuredClient } from 'unstructured-client';
 import * as fs from 'fs';
+import {
+  ChunkingStrategy,
+  Strategy,
+} from 'unstructured-client/sdk/models/shared';
 
 const apiKey = process.env.UNSTRUCTURED_API;
 const serverURL = process.env.UNSTRUCTURED_SERVER_URL;
-const parsingStrategy = process.env.UNSTRUCTURED_PARSING_STRATEGY;
-const chunkingStrategy = process.env.UNSTRUCTURED_CHUNKING_STRATEGY;
+const parsingStrategy = process.env.UNSTRUCTURED_PARSING_STRATEGY as Strategy;
+const chunkingStrategy = process.env
+  .UNSTRUCTURED_CHUNKING_STRATEGY as ChunkingStrategy;
 
 if (!apiKey) {
   throw new Error('UNSTRUCTURED_API is not set');
@@ -27,18 +32,20 @@ export async function parseUnstructured(
     const fileData = fs.readFileSync(file.path);
     const fileContent = file.content as File;
     const parsedDataResponse = await unstructuredClient.general.partition({
-      files: {
-        content: fileData,
-        fileName: fileContent.name,
+      partitionParameters: {
+        files: {
+          content: fileData,
+          fileName: fileContent.name,
+        },
+        strategy: parsingStrategy,
+        chunkingStrategy: chunkingStrategy,
+        maxCharacters: chunkSize,
+        overlap: overlap,
       },
-      strategy: parsingStrategy,
-      chunkingStrategy: chunkingStrategy,
-      maxCharacters: chunkSize,
-      overlap: overlap,
     });
 
     return parsedDataResponse?.elements || [];
   } catch (error: any) {
-    throw new Error('Failed to parse unstructured data', error.message);
+    throw new Error(error.message);
   }
 }
