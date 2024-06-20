@@ -210,11 +210,11 @@ export function OnboardingCarousel({
             <Card className="h-full w-full">
               <CardContent className="flex flex-col justify-between items-center h-full w-full p-6 text-center">
                 <div className="flex flex-col items-center w-full">
-                  <h2 className="text-2xl font-semibold">Finalize</h2>
-                  <p>Review your details and finish the onboarding process.</p>
+                  <h2 className="text-2xl font-semibold">
+                    Please review our Terms of Service.
+                  </h2>
                 </div>
                 <div className="flex-1 mt-4 w-full overflow-y-auto border p-2 text-left rounded-lg max-h-80">
-                  <h3 className="text-lg font-semibold">Terms of Service</h3>
                   <p className="text-sm">
                     {/* Replace this with the actual terms of service text */}
                     Lorem ipsum dolor sit amet, consectetur adipiscing elit.
