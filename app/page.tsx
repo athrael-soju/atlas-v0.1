@@ -202,14 +202,14 @@ export default function Page() {
                 {/* Here you can find all files uploaded by your user account */}
               </SheetDescription>
             </SheetHeader>
-            {fileList.length > 0 ? (
+            {fileList?.length > 0 ? (
               <DataTable
                 userEmail={userEmail}
                 files={fileList}
                 purpose={purpose}
                 handleFetchFiles={handleFetchFiles}
                 setIsDeleting={setIsLoading}
-              />
+              /> 
             ) : (
               <div>No files uploaded yet.</div>
             )}

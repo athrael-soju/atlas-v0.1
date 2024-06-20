@@ -47,7 +47,7 @@
     --destructive-foreground: 0 0% 98%;
     --ring: 240 5% 64.9%;
     --radius: 0.5rem;
-    --spinner-color: hsl(240 10% 3.9%); /* Light beige background */
+    --spinner-color: hsl(240 10% 3.9%);
   }
 
   .dark {
@@ -70,7 +70,7 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 85.7% 97.3%;
     --ring: 240 3.7% 15.9%;
-    --spinner-color: hsl(0 0% 98%); /* Light beige background */
+    --spinner-color: hsl(0 0% 98%);
   }
 }
 
