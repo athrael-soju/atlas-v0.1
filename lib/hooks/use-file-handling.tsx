@@ -25,8 +25,13 @@ export const useFileHandling = (
           setIsLoading(false);
         }
       };
-      const archivistParams = { userEmail, purpose };
-      await archivist('retrieve-archives', archivistParams, onUpdate);
+      const archivistParams = { purpose };
+      await archivist(
+        userEmail,
+        'retrieve-archives',
+        archivistParams,
+        onUpdate
+      );
     } catch (error: any) {
       setIsLoading(false);
       throw new Error(error.message);

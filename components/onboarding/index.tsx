@@ -59,13 +59,10 @@ export function OnboardingCarousel({
         description: description,
         selectedAssistant: assistant,
       };
-      const onUpdate = (event: string) => {};
-      const userOnboarded = await archivist(
-        userEmail,
-        action,
-        onboardingParams,
-        onUpdate
-      );
+      const onUpdate = (event: string) => {
+        // Handle updates
+      };
+      await archivist(userEmail, action, onboardingParams, onUpdate);
       setIsLoading(false);
       setIsOnboardingComplete(true);
     } catch (error: any) {

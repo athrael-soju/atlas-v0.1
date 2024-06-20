@@ -35,7 +35,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { AtlasFile, DataTableProps, Purpose } from '@/lib/types';
+import {
+  ArchivistParams,
+  AtlasFile,
+  DataTableProps,
+  Purpose,
+} from '@/lib/types';
 import { archivist } from '@/lib/client/atlas';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -62,10 +67,9 @@ const handleDeleteFile = async (
     };
     const archivistParams = {
       fileId: fileId,
-      userEmail,
       purpose,
-    };
-    await archivist('purge-archive', archivistParams, onUpdate);
+    } as ArchivistParams;
+    await archivist(userEmail, 'purge-archive', archivistParams, onUpdate);
   } catch (error: any) {
     toast({
       title: 'Error',

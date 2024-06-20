@@ -47,13 +47,15 @@ export default function Page() {
 
   const user = session?.user as AtlasUser;
   const userEmail = user?.email ?? '';
+  const selectedAssistant: 'sage' | 'scribe' | null =
+    user?.preferences.selectedAssistant;
 
   const [isOnboardingComplete, setIsOnboardingComplete] =
     useState<boolean>(false);
 
   useEffect(() => {
     if (user && user.preferences) {
-      setIsOnboardingComplete(!!user.preferences.selectedAssistant);
+      setIsOnboardingComplete(!!selectedAssistant);
     }
   }, [user]);
 
@@ -130,7 +132,11 @@ export default function Page() {
       <Header />
       <HandleLoader />
       <div className="pb-52 pt-4 md:pt-10">
-        {messages.length ? <ChatList messages={messages} /> : <EmptyScreen />}
+        {messages.length ? (
+          <ChatList messages={messages} />
+        ) : (
+          <EmptyScreen selectedAssistant={selectedAssistant} />
+        )}
         <ChatScrollAnchor trackVisibility={true} />
       </div>
       <div className="fixed inset-x-0 bottom-0 w-full">

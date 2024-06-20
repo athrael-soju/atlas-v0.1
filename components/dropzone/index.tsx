@@ -82,7 +82,6 @@ export function Dropzone({
 
     try {
       Array.from(files).filter((file) => {
-        console.log(file.name);
         if (!file.name.endsWith(fileExtension)) {
           throw new Error(`${file.name} is not a valid file type.`);
         }
