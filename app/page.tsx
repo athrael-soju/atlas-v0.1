@@ -51,6 +51,13 @@ export default function Page() {
     null
   );
 
+  useEffect(() => {
+    if (user && user.preferences) {
+      setIsOnboardingComplete(!!purpose);
+      setAssistantSelected(purpose);
+    }
+  }, [user]);
+
   const {
     uploadedFiles,
     fileList,
