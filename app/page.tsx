@@ -74,7 +74,7 @@ export default function Page() {
     setInputValue,
     submitMessage,
     handleSubmit,
-  } = useMessaging({ userEmail, spinner, purpose });
+  } = useMessaging(userEmail!, spinner, purpose);
 
   const HandleLoader = () => {
     return (

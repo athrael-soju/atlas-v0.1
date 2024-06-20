@@ -116,13 +116,13 @@ export const sage = async (
 export const archivist = async (
   userEmail: string,
   action: string,
-  onboardingParams: ArchivistParams | ArchivistOnboardingParams,
+  archivistParams: ArchivistParams | ArchivistOnboardingParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   formData.append('userEmail', userEmail);
   formData.append('action', action);
-  formData.append('archivistParams', JSON.stringify(onboardingParams));
+  formData.append('archivistParams', JSON.stringify(archivistParams));
 
   try {
     const response = await fetch('/api/atlas/archivist', {
