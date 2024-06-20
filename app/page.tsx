@@ -110,6 +110,7 @@ export default function Page() {
         <HandleLoader />
         <div className="flex items-center justify-center p-24">
           <OnboardingCarousel
+            userEmail={userEmail}
             setIsOnboardingComplete={setIsOnboardingComplete}
             setIsLoading={setIsLoading}
           />

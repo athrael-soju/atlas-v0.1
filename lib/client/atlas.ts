@@ -2,8 +2,8 @@ import {
   ForgeParams,
   ScribeParams,
   SageParams,
-  ArchivistParams,
   Purpose,
+  ArchivistOnboardingParams,
 } from '@/lib/types';
 
 const readStream = async (
@@ -113,13 +113,15 @@ export const sage = async (
 };
 
 export const archivist = async (
+  userEmail: string,
   action: string,
-  archivistParams: ArchivistParams,
+  onboardingParams: ArchivistOnboardingParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
+  formData.append('userEmail', userEmail);
   formData.append('action', action);
-  formData.append('archivistParams', JSON.stringify(archivistParams));
+  formData.append('archivistParams', JSON.stringify(onboardingParams));
 
   try {
     const response = await fetch('/api/atlas/archivist', {

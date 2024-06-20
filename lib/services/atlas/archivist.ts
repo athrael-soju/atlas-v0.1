@@ -7,12 +7,13 @@ import { Index } from '@pinecone-database/pinecone';
 import { updateSage, deleteFromOpenAi } from '@/lib/services/processing/openai';
 
 export async function retrieveArchives(
+  userEmail: string,
   archivistParams: ArchivistParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const totalStartTime = performance.now();
   try {
-    const { userEmail, purpose } = archivistParams;
+    const { purpose } = archivistParams;
 
     if (!userEmail) {
       throw new Error('User email is required');
@@ -33,14 +34,16 @@ export async function retrieveArchives(
     getTotalTime(totalStartTime, totalEndTime, sendUpdate);
   }
 }
+export async function onboardUser() {}
 
 export async function purgeArchive(
+  userEmail: string,
   archivistParams: ArchivistParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const totalStartTime = performance.now();
   try {
-    const { userEmail, fileId, purpose } = archivistParams;
+    const { fileId, purpose } = archivistParams;
 
     if (!userEmail || !fileId) {
       throw new Error('User email and a single file ID are required');

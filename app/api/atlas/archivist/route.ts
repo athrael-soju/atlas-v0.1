@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {} from '@/lib/services/atlas/archivist';
 import { ArchivistParams } from '@/lib/types';
-import {
-  retrieveArchives,
-  purgeArchive,
-} from '@/lib/services/atlas/archivist';
+import { retrieveArchives, purgeArchive } from '@/lib/services/atlas/archivist';
 export const runtime = 'nodejs';
 
 function sendUpdate(
@@ -19,12 +16,11 @@ function sendUpdate(
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
+    const userEmail = data.get('userEmail') as string;
     const action = data.get('action') as string;
     const archivistParams = JSON.parse(
       data.get('archivistParams') as string
     ) as ArchivistParams;
-
-    const userEmail = archivistParams.userEmail;
 
     if (!userEmail || !action) {
       return NextResponse.json(
@@ -41,10 +37,17 @@ export async function POST(req: NextRequest): Promise<Response> {
         try {
           switch (action) {
             case 'retrieve-archives':
-              response = await retrieveArchives(archivistParams, send);
+              response = await retrieveArchives(
+                userEmail,
+                archivistParams,
+                send
+              );
               break;
             case 'purge-archive':
-              response = await purgeArchive(archivistParams, send);
+              response = await purgeArchive(userEmail, archivistParams, send);
+              break;
+            case 'onboard-user':
+              // TODO: response = await onboardUser(userEmail, archivistParams, send);
               break;
             default:
               sendUpdate('notification', controller, 'Invalid Action');

@@ -4,13 +4,11 @@ import {
   DocumentChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { QuestionMarkCircleIcon } from '@heroicons/react/20/solid';
-
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,13 +20,18 @@ import {
   type CarouselApi,
 } from './carousel';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { archivist } from '@/lib/client/atlas';
+import { ArchivistOnboardingParams } from '@/lib/types';
+import { toast } from '../ui/use-toast';
 
 interface OnboardingCarouselProps {
+  userEmail: string;
   setIsOnboardingComplete: (finished: boolean) => void;
   setIsLoading: (loading: boolean) => void;
 }
 
 export function OnboardingCarousel({
+  userEmail,
   setIsOnboardingComplete,
   setIsLoading,
 }: Readonly<OnboardingCarouselProps>) {
@@ -45,16 +48,35 @@ export function OnboardingCarousel({
     description: string,
     assistant: 'sage' | 'scribe' | null
   ) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      console.log('Onboarding Complete:', {
-        username,
-        description,
-        assistant,
-      });
+    try {
+      setIsLoading(true);
+      if (assistant === null) {
+        throw new Error('Assistant not selected');
+      }
+      const action = 'onboard-user';
+      const onboardingParams: ArchivistOnboardingParams = {
+        userName: username,
+        description: description,
+        chosenAssistant: assistant,
+      };
+      const onUpdate = (event: string) => {};
+      const userOnboarded = await archivist(
+        userEmail,
+        action,
+        onboardingParams,
+        onUpdate
+      );
       setIsLoading(false);
       setIsOnboardingComplete(true);
-    }, 5000);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to onboard: ${error.message}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {

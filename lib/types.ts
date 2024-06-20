@@ -59,9 +59,14 @@ export interface CustodianParams {
 }
 
 export interface ArchivistParams {
-  userEmail: string;
   fileId?: string;
   purpose: Purpose;
+}
+
+export interface ArchivistOnboardingParams {
+  userName: string;
+  description: string;
+  chosenAssistant: 'scribe' | 'sage';
 }
 
 export enum Purpose {
