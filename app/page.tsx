@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { CircleLoader } from 'react-spinners';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
@@ -38,18 +38,24 @@ export const maxDuration = 60;
 export default function Page() {
   const { data: session } = useSession();
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [isUploadManagerVisible, setIsUploadManagerVisible] = useState(false);
+  const [isUploadManagerVisible, setIsUploadManagerVisible] =
+    useState<boolean>(false);
   const { formRef, onKeyDown } = useEnterSubmit(setIsUploadManagerVisible);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useKeyboardShortcut(inputRef);
 
   const user = session?.user as AtlasUser;
   const userEmail = user?.email ?? '';
 
-  const [isOnboardingComplete, setIsOnboardingComplete] = useState(
-    !!user?.selectedAssistant
-  );
+  const [isOnboardingComplete, setIsOnboardingComplete] =
+    useState<boolean>(false);
+
+  useEffect(() => {
+    if (user && user.preferences) {
+      setIsOnboardingComplete(!!user.preferences.selectedAssistant);
+    }
+  }, [user]);
 
   const {
     uploadedFiles,

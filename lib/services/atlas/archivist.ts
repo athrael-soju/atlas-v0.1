@@ -1,4 +1,9 @@
-import { ArchivistParams, AtlasFile, Purpose } from '@/lib/types';
+import {
+  ArchivistOnboardingParams,
+  ArchivistParams,
+  AtlasFile,
+  Purpose,
+} from '@/lib/types';
 import { db } from '@/lib/services/db/mongodb';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
 import { FileDeleted } from 'openai/resources/files';
@@ -14,11 +19,6 @@ export async function retrieveArchives(
   const totalStartTime = performance.now();
   try {
     const { purpose } = archivistParams;
-
-    if (!userEmail) {
-      throw new Error('User email is required');
-    }
-
     const dbInstance = await db();
 
     const userFiles = await measurePerformance(
@@ -34,7 +34,44 @@ export async function retrieveArchives(
     getTotalTime(totalStartTime, totalEndTime, sendUpdate);
   }
 }
-export async function onboardUser() {}
+export async function onboardUser(
+  userEmail: string,
+  onboardingParams: ArchivistOnboardingParams,
+  sendUpdate: (type: string, message: string) => void
+) {
+  const totalStartTime = performance.now();
+  const { userName, description, selectedAssistant } = onboardingParams;
+  try {
+    if (!userName || !description || !selectedAssistant) {
+      throw new Error(
+        'User name, description and selected assistant are required'
+      );
+    }
+    const dbInstance = await db();
+
+    const onboardingUpdated = await measurePerformance(
+      () =>
+        dbInstance.updateUser(userEmail as string, {
+          preferences: {
+            name: userName,
+            description: description,
+            selectedAssistant: selectedAssistant,
+          },
+        }),
+      'Updating user onboarding in DB',
+      sendUpdate
+    );
+
+    if (!onboardingUpdated) {
+      throw new Error('DB update unsuccessful');
+    }
+  } catch (error: any) {
+    sendUpdate('error', `Onboarding user failed: ${error.message}`);
+  } finally {
+    const totalEndTime = performance.now();
+    getTotalTime(totalStartTime, totalEndTime, sendUpdate);
+  }
+}
 
 export async function purgeArchive(
   userEmail: string,
@@ -45,8 +82,8 @@ export async function purgeArchive(
   try {
     const { fileId, purpose } = archivistParams;
 
-    if (!userEmail || !fileId) {
-      throw new Error('User email and a single file ID are required');
+    if (!fileId) {
+      throw new Error('File ID is required');
     }
 
     const dbInstance = await db();
@@ -68,7 +105,7 @@ export async function purgeArchive(
     );
 
     if (deletionResult.modifiedCount !== 1) {
-      throw new Error('Failed to delete file from DB');
+      throw new Error('DB deletion unsuccessful');
     }
 
     if (file.purpose === Purpose.Sage) {
@@ -133,7 +170,7 @@ export async function deleteFromVectorDb(
       paginationToken = result.paginationToken;
     } catch (error: any) {
       throw new Error(
-        `Failed to purge archives from VectorDb: ${error.message}`
+        `Purge archive in Vector DB failed: ${error.message} for document ${file.id}`
       );
     }
   } while (paginationToken !== undefined);
@@ -159,7 +196,7 @@ async function listArchiveChunks(
     return { chunks, paginationToken: listResult.pagination?.next };
   } catch (error: any) {
     throw new Error(
-      `Failed to list archive chunks for document ${file.id}: ${error.message}`
+      `Failed to list document chunks: ${error.message} for document ${file.id}`
     );
   }
 }

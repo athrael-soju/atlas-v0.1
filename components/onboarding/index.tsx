@@ -57,7 +57,7 @@ export function OnboardingCarousel({
       const onboardingParams: ArchivistOnboardingParams = {
         userName: username,
         description: description,
-        chosenAssistant: assistant,
+        selectedAssistant: assistant,
       };
       const onUpdate = (event: string) => {};
       const userOnboarded = await archivist(

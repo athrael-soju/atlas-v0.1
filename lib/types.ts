@@ -66,7 +66,7 @@ export interface ArchivistParams {
 export interface ArchivistOnboardingParams {
   userName: string;
   description: string;
-  chosenAssistant: 'scribe' | 'sage';
+  selectedAssistant: 'scribe' | 'sage';
 }
 
 export enum Purpose {
@@ -101,7 +101,11 @@ export interface AtlasUser {
   email: string;
   image?: string;
   assistants: { sage: AtlasAssistant; scribe: AtlasAssistant };
-  selectedAssistant: Purpose | null;
+  preferences: {
+    name: string | null;
+    description: string | null;
+    selectedAssistant: 'sage' | 'scribe' | null;
+  };
 }
 
 export interface MessageFormProps {
