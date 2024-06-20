@@ -40,11 +40,13 @@ export default function Page() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isUploadManagerVisible, setIsUploadManagerVisible] = useState(false);
   const { formRef, onKeyDown } = useEnterSubmit(setIsUploadManagerVisible);
+  const [isLoading, setIsLoading] = useState(false);
 
   useKeyboardShortcut(inputRef);
 
   const user = session?.user as AtlasUser;
   const userEmail = user?.email ?? '';
+
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(
     !!user?.selectedAssistant
   );
@@ -53,13 +55,11 @@ export default function Page() {
     uploadedFiles,
     fileList,
     isUploadCompleted,
-    isLoading,
     purpose,
     handleFileChange,
     handleFetchFiles,
     setIsUploadCompleted,
-    setIsLoading,
-  } = useFileHandling(userEmail);
+  } = useFileHandling(userEmail, setIsLoading);
 
   const {
     messages,
@@ -70,19 +70,16 @@ export default function Page() {
     handleSubmit,
   } = useMessaging({ userEmail, spinner, purpose });
 
-  const handleFinishedOnboarding = (
-    username: string,
-    description: string,
-    assistant: 'sage' | 'scribe' | null
-  ) => {
-    // Save the user inputs (username, description, and selected assistant) to the user profile or state
-    console.log('Onboarding Complete:', {
-      username,
-      description,
-      assistant,
-    });
-    // Simulate saving process and mark onboarding as complete
-    setIsOnboardingComplete(true);
+  const HandleLoader = () => {
+    return (
+      <div>
+        {isLoading && (
+          <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
+            <CircleLoader color="var(--spinner-color)" size={150} />
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (!session) {
@@ -110,8 +107,12 @@ export default function Page() {
     return (
       <div>
         <Header />
+        <HandleLoader />
         <div className="flex items-center justify-center p-24">
-          <OnboardingCarousel onFinishedOnboarding={handleFinishedOnboarding} />
+          <OnboardingCarousel
+            setIsOnboardingComplete={setIsOnboardingComplete}
+            setIsLoading={setIsLoading}
+          />
         </div>
       </div>
     );
@@ -120,11 +121,7 @@ export default function Page() {
   return (
     <div>
       <Header />
-      {isLoading && (
-        <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
-          <CircleLoader color="var(--spinner-color)" size={150} />
-        </div>
-      )}
+      <HandleLoader />
       <div className="pb-52 pt-4 md:pt-10">
         {messages.length ? <ChatList messages={messages} /> : <EmptyScreen />}
         <ChatScrollAnchor trackVisibility={true} />

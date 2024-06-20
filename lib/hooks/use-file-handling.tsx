@@ -4,12 +4,13 @@ import { AtlasFile, Purpose } from '../types';
 
 const purpose = process.env.NEXT_PUBLIC_ASSISTANT as Purpose;
 
-export const useFileHandling = (userEmail: string) => {
+export const useFileHandling = (
+  userEmail: string,
+  setIsLoading: (value: boolean) => void
+) => {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [fileList, setFileList] = useState<AtlasFile[]>([]);
   const [isUploadCompleted, setIsUploadCompleted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleFileChange = (newFiles: string[]) => {
     setUploadedFiles(newFiles);
   };
@@ -36,11 +37,9 @@ export const useFileHandling = (userEmail: string) => {
     uploadedFiles,
     fileList,
     isUploadCompleted,
-    isLoading,
     purpose,
     handleFileChange,
     handleFetchFiles,
     setIsUploadCompleted,
-    setIsLoading,
   };
 };

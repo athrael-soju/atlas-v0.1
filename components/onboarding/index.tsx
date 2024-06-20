@@ -24,15 +24,13 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface OnboardingCarouselProps {
-  onFinishedOnboarding: (
-    username: string,
-    description: string,
-    assistant: 'sage' | 'scribe' | null
-  ) => void;
+  setIsOnboardingComplete: (finished: boolean) => void;
+  setIsLoading: (loading: boolean) => void;
 }
 
 export function OnboardingCarousel({
-  onFinishedOnboarding,
+  setIsOnboardingComplete,
+  setIsLoading,
 }: Readonly<OnboardingCarouselProps>) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -41,6 +39,23 @@ export function OnboardingCarousel({
   const [description, setDescription] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [assistant, setAssistant] = useState<'sage' | 'scribe' | null>(null);
+
+  const handleFinishedOnboarding = async (
+    username: string,
+    description: string,
+    assistant: 'sage' | 'scribe' | null
+  ) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      console.log('Onboarding Complete:', {
+        username,
+        description,
+        assistant,
+      });
+      setIsLoading(false);
+      setIsOnboardingComplete(true);
+    }, 5000);
+  };
 
   useEffect(() => {
     if (!api) {
@@ -248,9 +263,13 @@ export function OnboardingCarousel({
                     </label>
                   </div>
                   <Button
-                    onClick={() =>
-                      onFinishedOnboarding(username, description, assistant)
-                    }
+                    onClick={() => {
+                      handleFinishedOnboarding(
+                        username,
+                        description,
+                        assistant
+                      );
+                    }}
                     disabled={
                       !username || !description || !assistant || !acceptTerms
                     }
