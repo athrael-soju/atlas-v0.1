@@ -28,6 +28,9 @@ import {
 import { DataTable } from '@/components/data-table';
 import { FileUploadManager } from '@/components/file-upload-manager';
 import { MessageForm } from '@/components/message-form';
+import { OnboardingCarousel } from '@/components/onboarding';
+import { AtlasUser } from '@/lib/types';
+import { Header } from '@/components/header';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -40,7 +43,11 @@ export default function Page() {
 
   useKeyboardShortcut(inputRef);
 
-  const userEmail = session?.user?.email ?? '';
+  const user = session?.user as AtlasUser;
+  const userEmail = user?.email ?? '';
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(
+    !!user?.selectedAssistant
+  );
 
   const {
     uploadedFiles,
@@ -63,19 +70,48 @@ export default function Page() {
     handleSubmit,
   } = useMessaging({ userEmail, spinner, purpose });
 
+  const handleFinishedOnboarding = (
+    username: string,
+    description: string,
+    assistant: 'sage' | 'scribe' | null
+  ) => {
+    // Save the user inputs (username, description, and selected assistant) to the user profile or state
+    console.log('Onboarding Complete:', {
+      username,
+      description,
+      assistant,
+    });
+    // Simulate saving process and mark onboarding as complete
+    setIsOnboardingComplete(true);
+  };
+
   if (!session) {
     return (
-      <div className="flex flex-col items-center justify-center bg-background p-16">
-        <div className="flex flex-col items-center justify-center">
-          <h1 className="text-4xl text-center font-extrabold mt-4 text-card-foreground">
-            Welcome to Atlas
-          </h1>
-          <p>Log in to proceed</p>
-          <img
-            src="/atlas.png"
-            alt="Atlas Logo"
-            className="w-full rounded-full shadow-lg"
-          />
+      <div>
+        <Header />
+        <div className="flex flex-col items-center justify-center p-24">
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="text-4xl text-center font-extrabold mt-4 text-card-foreground ">
+              Welcome to Atlas
+            </h1>
+            <p>Log in to proceed</p>
+            <img
+              src="/atlas.png"
+              alt="Atlas Logo"
+              className="w-full rounded-full shadow-lg"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isOnboardingComplete) {
+    return (
+      <div>
+        <Header />
+        <div className="flex items-center justify-center p-24">
+          <OnboardingCarousel onFinishedOnboarding={handleFinishedOnboarding} />
         </div>
       </div>
     );
@@ -83,6 +119,7 @@ export default function Page() {
 
   return (
     <div>
+      <Header />
       {isLoading && (
         <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
           <CircleLoader color="var(--spinner-color)" size={150} />

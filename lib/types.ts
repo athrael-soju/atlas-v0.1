@@ -96,6 +96,7 @@ export interface AtlasUser {
   email: string;
   image?: string;
   assistants: { sage: AtlasAssistant; scribe: AtlasAssistant };
+  selectedAssistant: Purpose | null;
 }
 
 export interface MessageFormProps {

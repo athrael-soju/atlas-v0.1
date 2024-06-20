@@ -6,7 +6,6 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 
 import { AI } from './action';
-import { Header } from '@/components/header';
 import { Providers } from '@/components/providers';
 
 const meta = {
@@ -63,7 +62,6 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <div className="flex flex-col min-h-screen">
-              <Header />
               <main className="flex flex-col flex-1">{children}</main>
             </div>
           </Providers>

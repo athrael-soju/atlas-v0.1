@@ -154,6 +154,7 @@ const options: NextAuthOptions = {
               purpose: Purpose.Scribe,
             },
           },
+          selectedAssistant: null,
         });
       }
       console.info(
