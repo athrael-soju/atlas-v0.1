@@ -26,6 +26,18 @@ import { toAscii } from '@/lib/utils/helpers';
 
 export const runtime = 'nodejs';
 
+const requiredEnvVars = [
+  'GITHUB_ID',
+  'GITHUB_SECRET',
+  'GOOGLE_ID',
+  'GOOGLE_SECRET',
+];
+requiredEnvVars.forEach((envVar) => {
+  if (!process.env[envVar]) {
+    throw new Error(`Missing required environment variable: ${envVar}`);
+  }
+});
+
 interface CustomUser extends User {
   provider?: string;
   files?: AtlasUser[];
@@ -40,7 +52,7 @@ interface CustomSession extends Session {
   token_provider?: string;
 }
 
-const createAnonymousUser = (): CustomUser => {
+const createAnonymousUser = async (): Promise<CustomUser> => {
   const customConfig: Config = {
     dictionaries: [colors, starWars],
     separator: ' ',
@@ -51,9 +63,9 @@ const createAnonymousUser = (): CustomUser => {
   const emailHandle: string = toAscii(
     newName.replaceAll(' ', '_').toLowerCase()
   );
-
   const id: string = randomUUID();
-  return {
+
+  const user: CustomUser = {
     id: id,
     name: newName,
     email: `${emailHandle}@atlas-guest.com`,
@@ -65,6 +77,19 @@ const createAnonymousUser = (): CustomUser => {
       selectedAssistant: null,
     },
   };
+
+  try {
+    const dbInstance = await db();
+    const existingUser = await dbInstance.getUser(user.email as string);
+    if (!existingUser) {
+      await dbInstance.insertUser(user);
+    }
+  } catch (error) {
+    console.error('Error creating or fetching user:', error);
+    throw new Error('Error during user creation');
+  }
+
+  return user;
 };
 
 const providers = [
@@ -79,20 +104,8 @@ const providers = [
   CredentialsProvider({
     name: 'a Guest Account',
     credentials: {},
-    async authorize(credentials, req) {
-      const user = createAnonymousUser();
-
-      // Get the MongoDB client and database
-      const dbInstance = await db();
-
-      // Check if user already exists
-      const existingUser = await dbInstance.getUser(user.email as string);
-      if (!existingUser) {
-        // Save the new user if not exists
-        await dbInstance.insertUser(user);
-      }
-
-      return user;
+    async authorize() {
+      return await createAnonymousUser();
     },
   }),
 ];
@@ -104,48 +117,52 @@ const options: NextAuthOptions = {
     async jwt({
       token,
       account,
-      profile,
     }: {
       token: JWT;
       account: Account | null;
       profile?: Profile;
     }): Promise<JWT> {
-      if (account?.expires_at && account?.type === 'oauth') {
-        token.access_token = account.access_token;
-        token.expires_at = account.expires_at;
-        token.refresh_token = account.refresh_token;
-        token.refresh_token_expires_in = account.refresh_token_expires_in;
-        token.provider = account.provider;
+      try {
+        if (account?.expires_at && account?.type === 'oauth') {
+          token.access_token = account.access_token;
+          token.expires_at = account.expires_at;
+          token.refresh_token = account.refresh_token;
+          token.refresh_token_expires_in = account.refresh_token_expires_in;
+          token.provider = account.provider;
+        }
+        if (!token.provider) token.provider = 'Atlas';
+        return token;
+      } catch (error) {
+        console.error('Error in JWT callback:', error);
+        return token;
       }
-      if (!token.provider) token.provider = 'Atlas';
-      return token;
     },
     async session({
       session,
       token,
-      user,
     }: {
       session: CustomSession;
       token: JWT;
       user: AdapterUser;
     }): Promise<Session> {
-      if (token.provider) {
-        session.token_provider = token.provider as string;
+      try {
+        if (token.provider) {
+          session.token_provider = token.provider as string;
+        }
+        const dbInstance = await db();
+        const dbUser = await dbInstance.getUser(token.email as string);
+        session.user = dbUser as CustomUser;
+        return session;
+      } catch (error) {
+        console.error('Error in session callback:', error);
+        return session;
       }
-
-      const dbInstance = await db();
-      const dbUser = await dbInstance.getUser(token.email as string);
-
-      session.user = dbUser as CustomUser;
-
-      return session;
     },
   },
   events: {
     async signIn({
       user,
       account,
-      profile,
       isNewUser,
     }: {
       user: CustomUser;
@@ -153,42 +170,49 @@ const options: NextAuthOptions = {
       profile?: Profile;
       isNewUser?: boolean;
     }): Promise<void> {
-      if (isNewUser) {
-        const dbInstance = await db();
-        await dbInstance.updateUser(user.email as string, {
-          assistants: {
-            sage: {
-              files: [],
-              assistantId: '',
-              threadId: '',
-              purpose: Purpose.Sage,
+      try {
+        if (isNewUser) {
+          const dbInstance = await db();
+          await dbInstance.updateUser(user.email as string, {
+            assistants: {
+              sage: {
+                files: [],
+                assistantId: '',
+                threadId: '',
+                purpose: Purpose.Sage,
+              },
+              scribe: {
+                files: [],
+                assistantId: '',
+                threadId: '',
+                purpose: Purpose.Scribe,
+              },
             },
-            scribe: {
-              files: [],
-              assistantId: '',
-              threadId: '',
-              purpose: Purpose.Scribe,
+            preferences: {
+              name: null,
+              description: null,
+              selectedAssistant: null,
             },
-          },
-          preferences: {
-            name: null,
-            description: null,
-            selectedAssistant: null,
-          },
-        });
+          });
+        }
+        const provider =
+          account?.provider === 'credentials'
+            ? 'Atlas'
+            : user?.provider ?? account?.provider;
+
+        console.info(`${user.name} from ${provider} has just signed in!`);
+      } catch (error) {
+        console.error('Error in signIn event:', error);
       }
-      console.info(
-        `${user.name} from ${user?.provider ?? account?.provider} has just signed in!`
-      );
     },
-    async signOut({
-      session,
-      token,
-    }: {
-      session: Session;
-      token: JWT;
-    }): Promise<void> {
-      console.info(`${token.name} from ${token.provider} has just signed out!`);
+    async signOut({ token }: { session: Session; token: JWT }): Promise<void> {
+      try {
+        console.info(
+          `${token.name} from ${token.provider} has just signed out!`
+        );
+      } catch (error) {
+        console.error('Error in signOut event:', error);
+      }
     },
   },
   session: {
