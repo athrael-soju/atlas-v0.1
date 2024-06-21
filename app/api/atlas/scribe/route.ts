@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ScribeParams } from '@/lib/types';
-import { retrieveContext } from '@/lib/services/atlas/scribe';
+import { ConsultationParams, Purpose, ScribeParams } from '@/lib/types';
+import { consult, retrieveContext } from '@/lib/services/atlas/assistants';
+import { getTotalTime } from '@/lib/utils/metrics';
 
 export const runtime = 'nodejs';
 
@@ -16,14 +17,14 @@ function sendUpdate(
 export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
-    const content = data.get('content') as string;
+    const userEmail = data.get('userEmail') as string;
     const scribeParams = JSON.parse(
       data.get('scribeParams') as string
     ) as ScribeParams;
 
-    if (!scribeParams.userEmail || !content) {
+    if (!userEmail || !scribeParams.message) {
       return NextResponse.json(
-        { error: 'User email and content are required' },
+        { error: 'User email and message are required' },
         { status: 400 }
       );
     }
@@ -32,8 +33,24 @@ export async function POST(req: NextRequest): Promise<Response> {
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
+        const totalStartTime = performance.now();
         try {
-          const response = await retrieveContext(content, scribeParams, send);
+          const retrieveResponse = await retrieveContext(
+            userEmail,
+            scribeParams,
+            send
+          );
+
+          const consultationParams: ConsultationParams = {
+            message: scribeParams.message,
+            context: retrieveResponse.context,
+          };
+          const response = await consult(
+            userEmail,
+            Purpose.Scribe,
+            consultationParams,
+            send
+          );
           sendUpdate(
             'final-notification',
             controller,
@@ -42,6 +59,8 @@ export async function POST(req: NextRequest): Promise<Response> {
         } catch (error: any) {
           sendUpdate('error', controller, error.message);
         } finally {
+          const totalEndTime = performance.now();
+          getTotalTime(totalStartTime, totalEndTime, send);
           controller.close();
         }
       },

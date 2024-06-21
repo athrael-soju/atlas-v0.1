@@ -71,13 +71,15 @@ export const forge = async (
 };
 
 export const scribe = async (
-  content: string,
-  scribeParams: ScribeParams,
+  userEmail: string,
+  message: string,
+  topK: number,
+  topN: number,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
-  formData.append('content', content);
-  formData.append('scribeParams', JSON.stringify(scribeParams));
+  formData.append('userEmail', userEmail);
+  formData.append('scribeParams', JSON.stringify({ message, topK, topN }));
   try {
     const response = await fetch(`/api/atlas/scribe`, {
       method: 'POST',
@@ -92,14 +94,12 @@ export const scribe = async (
 
 export const sage = async (
   userEmail: string,
-  purpose: Purpose,
-  sageParams: SageParams,
+  message: string,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   formData.append('userEmail', userEmail);
-  formData.append('purpose', purpose);
-  formData.append('sageParams', JSON.stringify(sageParams));
+  formData.append('sageParams', JSON.stringify({ message }));
 
   try {
     const response = await fetch('/api/atlas/sage', {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { consult } from '@/lib/services/atlas/sage';
-import { Purpose, SageParams } from '@/lib/types';
+import { consult } from '@/lib/services/atlas/assistants';
+import { ConsultationParams, Purpose, SageParams } from '@/lib/types';
+import { getTotalTime } from '@/lib/utils/metrics';
 
 export const runtime = 'nodejs';
 
@@ -17,20 +18,22 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     const data = await req.formData();
     const userEmail = data.get('userEmail') as string;
-    const purpose = data.get('purpose') as Purpose;
     const sageParams = JSON.parse(
       data.get('sageParams') as string
     ) as SageParams;
-
     const stream = new ReadableStream({
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
+        const totalStartTime = performance.now();
         try {
-          await consult(userEmail, purpose, sageParams, send);
+          const consultationParams: ConsultationParams = sageParams;
+          await consult(userEmail, Purpose.Sage, consultationParams, send);
         } catch (error: any) {
           sendUpdate('error', controller, error.message);
         } finally {
+          const totalEndTime = performance.now();
+          getTotalTime(totalStartTime, totalEndTime, send);
           controller.close();
         }
       },

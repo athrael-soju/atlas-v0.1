@@ -1,26 +1,65 @@
 import { openai } from '@/lib/client/openai';
-import { AtlasFile, Purpose, SageParams } from '@/lib/types';
+import {
+  AtlasFile,
+  ConsultationParams,
+  Purpose,
+  ScribeParams,
+} from '@/lib/types';
 import { db } from '@/lib/services/db/mongodb';
 import { AssistantStream } from 'openai/lib/AssistantStream';
 import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
 import { AssistantStreamEvent } from 'openai/resources/beta/assistants';
+import { embedMessage } from '../embedding/openai';
+import { query } from '../indexing/pinecone';
+import { rerank } from '../reranking/cohere';
+
+export async function retrieveContext(
+  userEmail: string,
+  scribeParams: ScribeParams,
+  sendUpdate: (type: string, message: string) => void
+): Promise<{ success: boolean; userEmail: string; context: any }> {
+  const { message, topK, topN } = scribeParams;
+
+  try {
+    const embeddingResults = await measurePerformance(
+      () => embedMessage(userEmail, message),
+      'Embedding',
+      sendUpdate
+    );
+
+    const queryResults = await measurePerformance(
+      () => query(userEmail, embeddingResults, topK),
+      'Querying',
+      sendUpdate
+    );
+
+    const rerankingResults = await measurePerformance(
+      () => rerank(message, queryResults.context, topN),
+      'Reranking',
+      sendUpdate
+    );
+    return { success: true, userEmail, context: rerankingResults.values };
+  } catch (error: any) {
+    sendUpdate('error', error.message);
+    return { success: false, userEmail, context: error.message };
+  }
+}
 
 export async function consult(
   userEmail: string,
   purpose: Purpose,
-  sageParams: SageParams,
+  params: ConsultationParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
-  const totalStartTime = performance.now();
   try {
-    const { message, context } = sageParams;
+    const { message, context } = params;
 
     if (!userEmail || !message) {
       throw new Error('User email and message are required');
     }
 
     const dbInstance = await db();
-
+    
     const user = await measurePerformance(
       () => dbInstance.getUser(userEmail),
       `Checking for summoned ${purpose}`,
@@ -36,10 +75,6 @@ export async function consult(
 
     const { assistantId, threadId } = user.assistants[purpose];
 
-    if (!assistantId || !threadId) {
-      throw new Error(`User has not summoned the ${purpose} yet`);
-    }
-
     const myThread: {
       id: string;
     } = await measurePerformance(
@@ -48,16 +83,18 @@ export async function consult(
       sendUpdate
     );
 
-    if (context) {
-      await measurePerformance(
-        () =>
-          openai.beta.threads.messages.create(myThread.id, {
-            role: 'user',
-            content: context,
-          }),
-        `Creating ${purpose} context message`,
-        sendUpdate
-      );
+    if (purpose === Purpose.Scribe) {
+      if (context!?.length > 0) {
+        await measurePerformance(
+          () =>
+            openai.beta.threads.messages.create(myThread.id, {
+              role: 'user',
+              content: context!,
+            }),
+          `Creating ${purpose} context message`,
+          sendUpdate
+        );
+      }
     }
 
     await measurePerformance(
@@ -66,7 +103,7 @@ export async function consult(
           role: 'user',
           content: message,
         }),
-      'Creating user prompt message',
+      'Adding user message to thread',
       sendUpdate
     );
 
@@ -84,9 +121,6 @@ export async function consult(
     );
   } catch (error: any) {
     sendUpdate('error', error.message);
-  } finally {
-    const totalEndTime = performance.now();
-    getTotalTime(totalStartTime, totalEndTime, sendUpdate);
   }
 }
 
