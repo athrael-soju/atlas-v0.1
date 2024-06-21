@@ -1,8 +1,5 @@
 import {
   ForgeParams,
-  ScribeParams,
-  SageParams,
-  Purpose,
   ArchivistOnboardingParams,
   ArchivistParams,
 } from '@/lib/types';
