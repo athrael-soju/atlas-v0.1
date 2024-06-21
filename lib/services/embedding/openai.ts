@@ -1,5 +1,6 @@
 import { AtlasFile } from '@/lib/types';
 import OpenAI, { ClientOptions } from 'openai';
+import { toAscii } from '@/lib/utils/helpers';
 
 const embeddingApiModel =
   process.env.OPENAI_API_EMBEDDING_MODEL || 'text-embedding-3-large';
@@ -49,7 +50,7 @@ export async function embedMessage(userEmail: string, content: string) {
       values: embeddingValues,
     };
   } catch (error: any) {
-    throw new Error('Failed to generate message embedding', error.message);
+    throw new Error(`Failed to generate message embeddings: ${error.message}`);
   }
 }
 
@@ -69,9 +70,8 @@ export async function embedDocument(
           input: item.text,
           encoding_format: 'float',
         });
-
         const transformedMetadata = transformObjectValues(item.metadata);
-        const newId = `${file.name}#${file.id}#${++chunkNumber}`;
+        const newId = `${toAscii(file.name)}#${file.id}#${++chunkNumber}`;
         chunkIdList.push(newId);
         const embeddingValues = response.data[0].embedding;
 
@@ -93,6 +93,6 @@ export async function embedDocument(
       embeddings: embeddings || [],
     };
   } catch (error: any) {
-    throw new Error('Failed to generate document embeddings', error.message);
+    throw new Error(`Failed to generate embeddings: ${error.message}`);
   }
 }

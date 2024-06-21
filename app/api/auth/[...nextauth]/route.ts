@@ -16,13 +16,13 @@ import { getClientPromise } from '@/lib/client/mongodb';
 import {
   uniqueNamesGenerator,
   Config,
-  adjectives,
   colors,
   starWars,
 } from 'unique-names-generator';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { randomUUID } from 'crypto';
 import { AtlasUser, Purpose } from '@/lib/types';
+import { toAscii } from '@/lib/utils/helpers';
 
 export const runtime = 'nodejs';
 
@@ -42,21 +42,21 @@ interface CustomSession extends Session {
 
 const createAnonymousUser = (): CustomUser => {
   const customConfig: Config = {
-    dictionaries: [adjectives, colors, starWars],
-    separator: '-',
-    length: 3,
+    dictionaries: [colors, starWars],
+    separator: ' ',
+    length: 2,
     style: 'capital',
   };
-  const unique_handle: string = uniqueNamesGenerator(customConfig).replaceAll(
-    ' ',
-    ''
+  const newName = uniqueNamesGenerator(customConfig);
+  const emailHandle: string = toAscii(
+    newName.replaceAll(' ', '_').toLowerCase()
   );
-  const unique_realname: string = unique_handle.split('-').slice(1).join(' ');
-  const unique_uuid: string = randomUUID();
+
+  const id: string = randomUUID();
   return {
-    id: unique_uuid,
-    name: unique_realname,
-    email: `${unique_handle.toLowerCase()}@atlas-guest.com`,
+    id: id,
+    name: newName,
+    email: `${emailHandle}@atlas-guest.com`,
     image: '',
     files: [],
     preferences: {
