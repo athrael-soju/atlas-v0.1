@@ -72,14 +72,12 @@ export const useMessaging = (
       },
     ]);
     let context = '';
+    addNewMessage(MessageRole.Spinner, spinner);
     if (process.env.NEXT_PUBLIC_INFERENCE_MODEL === 'assistant') {
       try {
-        addNewMessage(MessageRole.Spinner, spinner);
-
         let firstRun = true;
         let prevType: MessageRole.Text | MessageRole.Code | MessageRole.Image;
         let currentMessage: string = '';
-        // If the purpose is Scribe, context is retrieved via RAG
         if (purpose === Purpose.Scribe) {
           await scribe(userEmail, message, topK, topN, (event) => {
             const { type, message } = JSON.parse(event.replace('data: ', ''));
@@ -103,7 +101,6 @@ export const useMessaging = (
             }
           });
         } else if (purpose === Purpose.Sage) {
-          // Use Scribe or Sage, depending on the purpose
           firstRun = true;
           currentMessage = '';
           await sage(userEmail, message, (event: string) => {
