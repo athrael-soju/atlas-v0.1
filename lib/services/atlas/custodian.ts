@@ -6,51 +6,43 @@ import {
   Purpose,
 } from '@/lib/types';
 import { db } from '@/lib/services/db/mongodb';
-import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
+import { measurePerformance } from '@/lib/utils/metrics';
 
 export async function summon(
   userEmail: string,
   custodianParams: CustodianParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
-  const totalStartTime = performance.now();
-  try {
-    const dbInstance = await db();
+  const dbInstance = await db();
 
-    const user = await measurePerformance(
-      () => dbInstance.getUser(userEmail),
-      'Checking for assistants',
-      sendUpdate
-    );
+  const user = await measurePerformance(
+    () => dbInstance.getUser(userEmail),
+    'Checking for assistants',
+    sendUpdate
+  );
 
-    const { sage, scribe } = user.assistants || {};
-    if (sage?.assistantId || scribe?.assistantId) {
-      throw new Error('User already has summoned required assistants');
-    }
-
-    // Summon Sage
-    await summonAssistant(
-      userEmail,
-      Purpose.Sage,
-      custodianParams.assistants.sage,
-      dbInstance,
-      sendUpdate
-    );
-
-    // Summon Scribe
-    await summonAssistant(
-      userEmail,
-      Purpose.Scribe,
-      custodianParams.assistants.scribe,
-      dbInstance,
-      sendUpdate
-    );
-  } catch (error: any) {
-    sendUpdate('error', error.message);
-  } finally {
-    const totalEndTime = performance.now();
-    getTotalTime(totalStartTime, totalEndTime, sendUpdate);
+  const { sage, scribe } = user.assistants || {};
+  if (sage?.assistantId || scribe?.assistantId) {
+    throw new Error('User already has summoned required assistants');
   }
+
+  // Summon Sage
+  await summonAssistant(
+    userEmail,
+    Purpose.Sage,
+    custodianParams.assistants.sage,
+    dbInstance,
+    sendUpdate
+  );
+
+  // Summon Scribe
+  await summonAssistant(
+    userEmail,
+    Purpose.Scribe,
+    custodianParams.assistants.scribe,
+    dbInstance,
+    sendUpdate
+  );
 }
 
 async function summonAssistant(
@@ -134,45 +126,37 @@ export async function dismiss(
   userEmail: string,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
-  const totalStartTime = performance.now();
-  try {
-    const dbInstance = await db();
+  const dbInstance = await db();
 
-    const user = await measurePerformance(
-      () => dbInstance.getUser(userEmail),
-      'Checking for assistants',
-      sendUpdate
-    );
+  const user = await measurePerformance(
+    () => dbInstance.getUser(userEmail),
+    'Checking for assistants',
+    sendUpdate
+  );
 
-    const { assistants } = user;
-    if (!assistants.sage.assistantId || !assistants.scribe.assistantId) {
-      throw new Error('User has not summoned assistants');
-    }
+  const { assistants } = user;
+  if (!assistants.sage.assistantId || !assistants.scribe.assistantId) {
+    throw new Error('User has not summoned assistants');
+  }
 
-    const { sageDeleted, scribeDeleted } = await measurePerformance(
-      () => dismissAssistants(assistants),
-      'Dismissing assistants from OpenAI',
-      sendUpdate
-    );
+  const { sageDeleted, scribeDeleted } = await measurePerformance(
+    () => dismissAssistants(assistants),
+    'Dismissing assistants from OpenAI',
+    sendUpdate
+  );
 
-    if (!sageDeleted || !scribeDeleted) {
-      throw new Error('Failed to dismiss assistants from OpenAI');
-    }
+  if (!sageDeleted || !scribeDeleted) {
+    throw new Error('Failed to dismiss assistants from OpenAI');
+  }
 
-    const assistantsDeleted = await measurePerformance(
-      () => dbInstance.dismissAssistants(userEmail),
-      'Updating DB to dismiss assistants',
-      sendUpdate
-    );
+  const assistantsDeleted = await measurePerformance(
+    () => dbInstance.dismissAssistants(userEmail),
+    'Updating DB to dismiss assistants',
+    sendUpdate
+  );
 
-    if (!assistantsDeleted) {
-      throw new Error('Failed to dismiss assistants from DB');
-    }
-  } catch (error: any) {
-    sendUpdate('error', error.message);
-  } finally {
-    const totalEndTime = performance.now();
-    getTotalTime(totalStartTime, totalEndTime, sendUpdate);
+  if (!assistantsDeleted) {
+    throw new Error('Failed to dismiss assistants from DB');
   }
 }
 

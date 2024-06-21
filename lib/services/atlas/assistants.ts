@@ -7,7 +7,7 @@ import {
 } from '@/lib/types';
 import { db } from '@/lib/services/db/mongodb';
 import { AssistantStream } from 'openai/lib/AssistantStream';
-import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
+import { measurePerformance } from '@/lib/utils/metrics';
 import { AssistantStreamEvent } from 'openai/resources/beta/assistants';
 import { embedMessage } from '../embedding/openai';
 import { query } from '../indexing/pinecone';
@@ -59,7 +59,7 @@ export async function consult(
     }
 
     const dbInstance = await db();
-    
+
     const user = await measurePerformance(
       () => dbInstance.getUser(userEmail),
       `Checking for summoned ${purpose}`,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ForgeParams } from '@/lib/types';
 import { processDocument } from '@/lib/services/atlas/forge';
 import { processDocumentViaOpenAi } from '@/lib/services/processing/openai';
+import { getTotalTime } from '@/lib/utils/metrics';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           sendUpdate(type, controller, message);
         let success = 0,
           failed = 0;
+        const totalStartTime = performance.now();
         try {
           const results = await Promise.all(
             files.map((file) => {
@@ -73,8 +75,10 @@ export async function POST(req: NextRequest): Promise<Response> {
               `Success: ${success}. Failed: ${failed}`
             );
           }
-          controller.close();
+          const totalEndTime = performance.now();
+          getTotalTime(totalStartTime, totalEndTime, send);
         }
+        controller.close();
       },
     });
 

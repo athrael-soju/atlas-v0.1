@@ -6,6 +6,7 @@ import {
   purgeArchive,
   onboardUser,
 } from '@/lib/services/atlas/archivist';
+import { getTotalTime } from '@/lib/utils/metrics';
 export const runtime = 'nodejs';
 
 function sendUpdate(
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
         let response;
+        const totalStartTime = performance.now();
         try {
           switch (action) {
             case 'retrieve-archives':
@@ -68,6 +70,8 @@ export async function POST(req: NextRequest): Promise<Response> {
         } catch (error: any) {
           sendUpdate('error', controller, error.message);
         } finally {
+          const totalEndTime = performance.now();
+          getTotalTime(totalStartTime, totalEndTime, send);
           controller.close();
         }
       },

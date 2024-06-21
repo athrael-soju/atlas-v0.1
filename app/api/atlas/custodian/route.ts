@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { summon, dismiss } from '@/lib/services/atlas/custodian';
 import { CustodianAction, CustodianParams } from '@/lib/types';
+import { getTotalTime } from '@/lib/utils/metrics';
 
 export const runtime = 'nodejs';
 
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       async start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
+        const totalStartTime = performance.now();
         try {
           switch (action) {
             case 'summon':
@@ -52,6 +54,8 @@ export async function POST(req: NextRequest): Promise<Response> {
         } catch (error: any) {
           sendUpdate('error', controller, error.message);
         } finally {
+          const totalEndTime = performance.now();
+          getTotalTime(totalStartTime, totalEndTime, send);
           controller.close();
         }
       },

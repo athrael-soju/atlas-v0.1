@@ -8,7 +8,7 @@ import { handleFileDeletion, handleFileUpload } from '../storage/handler';
 import { embedDocument } from '../embedding/openai';
 import { upsertDocument } from '../indexing/pinecone';
 import { parse } from '../parsing/handler';
-import { getTotalTime, measurePerformance } from '@/lib/utils/metrics';
+import { measurePerformance } from '@/lib/utils/metrics';
 import { db } from '../db/mongodb';
 import { deleteFromVectorDb } from '@/lib/services/atlas/archivist';
 
@@ -20,7 +20,6 @@ export async function processDocument(
   forgeParams: ForgeParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<{ success: boolean; fileName: string; error?: string }> {
-  const totalStartTime = performance.now();
   const dbInstance = await db();
   let atlasFile: AtlasFile;
   try {
@@ -89,8 +88,5 @@ export async function processDocument(
     await handleFileDeletion(atlasFile!, userEmail);
 
     return { success: false, fileName: file.name, error: error.message };
-  } finally {
-    const totalEndTime = performance.now();
-    getTotalTime(totalStartTime, totalEndTime, sendUpdate);
   }
 }
