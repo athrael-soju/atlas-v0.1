@@ -8,10 +8,6 @@ import { AssistantMessage } from '@/components/message';
 import { runOpenAICompletion } from '@/lib/utils';
 import { prompts } from '@/lib/prompts';
 import { tools } from '@/lib/stocks/tools';
-import {
-  checkIfCalled,
-  confirmPurchase,
-} from '@/components/examples/llm-stocks/functions';
 import { MessageRole } from '@/lib/types';
 
 const openai = new OpenAI({
@@ -100,8 +96,35 @@ const initialUIState: {
 export const AI = createAI({
   actions: {
     submitUserMessage,
-    confirmPurchase,
   },
   initialUIState,
   initialAIState,
 });
+
+// Tool function definitions go here
+export async function checkIfCalled(completion: any, reply: any, aiState: any) {
+  // completion.onFunctionCall(
+  //   'list_stocks',
+  //   async ({ stocks }: ListStocksInfo) => {
+  //     reply.update(
+  //       <AssistantCard>
+  //         <StocksSkeleton />
+  //       </AssistantCard>
+  //     );
+  //     await sleep(1000);
+  //     reply.done(
+  //       <AssistantCard>
+  //         <Stocks stocks={stocks} />
+  //       </AssistantCard>
+  //     );
+  //     aiState.done([
+  //       ...aiState.get(),
+  //       {
+  //         role: 'function',
+  //         name: 'list_stocks',
+  //         content: JSON.stringify(stocks),
+  //       },
+  //     ]);
+  //   }
+  // );
+}
