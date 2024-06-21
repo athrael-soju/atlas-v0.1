@@ -8,11 +8,11 @@ import { DropzoneProps } from '@/lib/types';
 import { useToast } from '@/components/ui/use-toast';
 
 export function Dropzone({
-  onChange,
   userEmail,
   forgeParams,
   fileExtension,
   isUploadCompleted,
+  onChange,
   setIsUploadCompleted,
   setIsUploading,
   fetchFiles,

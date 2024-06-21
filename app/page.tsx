@@ -52,7 +52,7 @@ export default function Page() {
   );
 
   useEffect(() => {
-    if (user && user.preferences) {
+    if (user && user.preferences && purpose) {
       setIsOnboardingComplete(!!purpose);
       setAssistantSelected(purpose);
     }
@@ -167,12 +167,12 @@ export default function Page() {
                 >
                   {isUploadManagerVisible && (
                     <FileUploadManager
-                      purpose={purpose}
-                      onChange={handleFileChange}
                       userEmail={userEmail}
+                      assistantSelected={assistantSelected}
                       forgeParams={forgeParams}
                       uploadedFiles={uploadedFiles}
                       isUploadCompleted={isUploadCompleted}
+                      onChange={handleFileChange}
                       setIsUploadCompleted={setIsUploadCompleted}
                       fetchFiles={handleFetchFiles}
                       setIsUploading={setIsLoading}
@@ -209,7 +209,7 @@ export default function Page() {
                 purpose={purpose}
                 handleFetchFiles={handleFetchFiles}
                 setIsDeleting={setIsLoading}
-              /> 
+              />
             ) : (
               <div>No files uploaded yet.</div>
             )}
