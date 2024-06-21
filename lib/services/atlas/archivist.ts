@@ -10,6 +10,7 @@ import { FileDeleted } from 'openai/resources/files';
 import { getIndex } from '@/lib/client/pinecone';
 import { Index } from '@pinecone-database/pinecone';
 import { updateSage, deleteFromOpenAi } from '@/lib/services/processing/openai';
+import { toAscii } from '@/lib/utils/helpers';
 
 export async function retrieveArchives(
   userEmail: string,
@@ -63,8 +64,6 @@ export async function purgeArchive(
   archivistParams: ArchivistParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
-  const totalStartTime = performance.now();
-
   const { fileId, purpose } = archivistParams;
 
   if (!fileId) {
@@ -110,7 +109,7 @@ export async function purgeArchive(
   } else if (file.purpose === Purpose.Scribe) {
     const fileDeleted = await measurePerformance(
       () => deleteFromVectorDb(file, userEmail),
-      'Purging archives from VectorDb',
+      'Purging archive from VectorDb',
       sendUpdate
     );
     return fileDeleted;
@@ -141,7 +140,6 @@ export async function deleteFromVectorDb(
       }
 
       const chunkIds = result.chunks.map((chunk) => chunk.id);
-
       await PurgeArchiveChunks(chunkIds, namespace);
       deleteCount += chunkIds.length;
 
@@ -163,7 +161,7 @@ async function listArchiveChunks(
   paginationToken?: string
 ): Promise<{ chunks: { id: string }[]; paginationToken?: string }> {
   const listResult = await namespace.listPaginated({
-    prefix: `${file.name}#${file.id}`,
+    prefix: `${toAscii(file.name)}#${file.id}`,
     limit: limit,
     paginationToken: paginationToken,
   });

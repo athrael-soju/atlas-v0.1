@@ -14,55 +14,58 @@ function sendUpdate(
   controller.enqueue(`data: ${data}\n\n`);
 }
 
+async function handleConsultation(
+  userEmail: string,
+  scribeParams: ScribeParams,
+  send: (type: string, message: string) => void
+) {
+  const retrieveResponse = await retrieveContext(userEmail, scribeParams, send);
+  const consultationParams: ConsultationParams = {
+    message: scribeParams.message,
+    context: retrieveResponse.context,
+  };
+  const response = await consult(
+    userEmail,
+    Purpose.Scribe,
+    consultationParams,
+    send
+  );
+  send('final-notification', JSON.stringify(response.content));
+}
+
+async function processRequest(
+  req: NextRequest,
+  send: (type: string, message: string) => void
+) {
+  const data = await req.formData();
+  const userEmail = data.get('userEmail') as string;
+  const scribeParams = JSON.parse(
+    data.get('scribeParams') as string
+  ) as ScribeParams;
+
+  if (!userEmail || !scribeParams.message) {
+    throw new Error('User email and message are required');
+  }
+
+  await handleConsultation(userEmail, scribeParams, send);
+}
+
 export async function POST(req: NextRequest): Promise<Response> {
   try {
-    const data = await req.formData();
-    const userEmail = data.get('userEmail') as string;
-    const scribeParams = JSON.parse(
-      data.get('scribeParams') as string
-    ) as ScribeParams;
-
-    if (!userEmail || !scribeParams.message) {
-      return NextResponse.json(
-        { error: 'User email and message are required' },
-        { status: 400 }
-      );
-    }
-
     const stream = new ReadableStream({
-      async start(controller) {
+      start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
         const totalStartTime = performance.now();
-        try {
-          const retrieveResponse = await retrieveContext(
-            userEmail,
-            scribeParams,
-            send
-          );
-
-          const consultationParams: ConsultationParams = {
-            message: scribeParams.message,
-            context: retrieveResponse.context,
-          };
-          const response = await consult(
-            userEmail,
-            Purpose.Scribe,
-            consultationParams,
-            send
-          );
-          sendUpdate(
-            'final-notification',
-            controller,
-            JSON.stringify(response.content)
-          );
-        } catch (error: any) {
-          sendUpdate('error', controller, error.message);
-        } finally {
-          const totalEndTime = performance.now();
-          getTotalTime(totalStartTime, totalEndTime, send);
-          controller.close();
-        }
+        processRequest(req, send)
+          .catch((error) => {
+            sendUpdate('error', controller, error.message);
+          })
+          .finally(() => {
+            const totalEndTime = performance.now();
+            getTotalTime(totalStartTime, totalEndTime, send);
+            controller.close();
+          });
       },
     });
 

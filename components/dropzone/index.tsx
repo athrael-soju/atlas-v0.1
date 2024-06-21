@@ -119,7 +119,6 @@ export function Dropzone({
             variant: 'default',
           });
         }
-
         handleFileInfo(message);
       };
 

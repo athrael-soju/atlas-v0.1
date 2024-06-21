@@ -45,7 +45,7 @@ export const getTotalTime = (
   sendUpdate: (type: string, message: string) => void
 ): void => {
   const totalTime = ((totalEndTime - totalStartTime) / 1000).toFixed(2);
-  sendUpdate('notification', `Total process completed in ${totalTime} seconds`);
+  sendUpdate('metric', `Total process completed in ${totalTime} seconds`);
 
   process.stdout.write(
     chalk.magenta('Total process completed in ') +

@@ -14,28 +14,52 @@ function sendUpdate(
   controller.enqueue(`data: ${data}\n\n`);
 }
 
+async function handleConsultation(
+  userEmail: string,
+  sageParams: SageParams,
+  send: (type: string, message: string) => void
+) {
+  const consultationParams: ConsultationParams = sageParams;
+  const response = await consult(
+    userEmail,
+    Purpose.Sage,
+    consultationParams,
+    send
+  );
+  send('final-notification', JSON.stringify(response.content));
+}
+
+async function processRequest(
+  req: NextRequest,
+  send: (type: string, message: string) => void
+) {
+  const data = await req.formData();
+  const userEmail = data.get('userEmail') as string;
+  const sageParams = JSON.parse(data.get('sageParams') as string) as SageParams;
+
+  if (!userEmail) {
+    throw new Error('User email is required');
+  }
+
+  await handleConsultation(userEmail, sageParams, send);
+}
+
 export async function POST(req: NextRequest): Promise<Response> {
   try {
-    const data = await req.formData();
-    const userEmail = data.get('userEmail') as string;
-    const sageParams = JSON.parse(
-      data.get('sageParams') as string
-    ) as SageParams;
     const stream = new ReadableStream({
-      async start(controller) {
+      start(controller) {
+        const totalStartTime = performance.now();
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
-        const totalStartTime = performance.now();
-        try {
-          const consultationParams: ConsultationParams = sageParams;
-          await consult(userEmail, Purpose.Sage, consultationParams, send);
-        } catch (error: any) {
-          sendUpdate('error', controller, error.message);
-        } finally {
-          const totalEndTime = performance.now();
-          getTotalTime(totalStartTime, totalEndTime, send);
-          controller.close();
-        }
+        processRequest(req, send)
+          .catch((error) => {
+            sendUpdate('error', controller, error.message);
+          })
+          .finally(() => {
+            const totalEndTime = performance.now();
+            getTotalTime(totalStartTime, totalEndTime, send);
+            controller.close();
+          });
       },
     });
 
