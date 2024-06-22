@@ -229,6 +229,9 @@ const handleReadableStream = async (
       }
     });
     stream.on('error', (error: any) => {
+      if (process.env.SAGE_EVENT_ERROR === 'true') {
+        console.error('Error:', error);
+      }
       reject(error);
     });
   });
