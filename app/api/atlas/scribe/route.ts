@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ScribeParams } from '@/lib/types';
-import { retrieveContext } from '@/lib/services/atlas/scribe';
+import { ConsultationParams, Purpose, ScribeParams } from '@/lib/types';
+import { consult, retrieveContext } from '@/lib/services/atlas/assistants';
+import { getTotalTime } from '@/lib/utils/metrics';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 function sendUpdate(
   type: string,
@@ -13,37 +16,58 @@ function sendUpdate(
   controller.enqueue(`data: ${data}\n\n`);
 }
 
+async function handleConsultation(
+  userEmail: string,
+  scribeParams: ScribeParams,
+  send: (type: string, message: string) => void
+) {
+  const retrieveResponse = await retrieveContext(userEmail, scribeParams, send);
+  const consultationParams: ConsultationParams = {
+    message: scribeParams.message,
+    context: retrieveResponse.context,
+  };
+  const response = await consult(
+    userEmail,
+    Purpose.Scribe,
+    consultationParams,
+    send
+  );
+  send('final-notification', JSON.stringify(response.content));
+}
+
+async function processRequest(
+  req: NextRequest,
+  send: (type: string, message: string) => void
+) {
+  const data = await req.formData();
+  const userEmail = data.get('userEmail') as string;
+  const scribeParams = JSON.parse(
+    data.get('scribeParams') as string
+  ) as ScribeParams;
+
+  if (!userEmail || !scribeParams.message) {
+    throw new Error('User email and message are required');
+  }
+
+  await handleConsultation(userEmail, scribeParams, send);
+}
+
 export async function POST(req: NextRequest): Promise<Response> {
   try {
-    const data = await req.formData();
-    const content = data.get('content') as string;
-    const scribeParams = JSON.parse(
-      data.get('scribeParams') as string
-    ) as ScribeParams;
-
-    if (!scribeParams.userEmail || !content) {
-      return NextResponse.json(
-        { error: 'User email and content are required' },
-        { status: 400 }
-      );
-    }
-
     const stream = new ReadableStream({
-      async start(controller) {
+      start(controller) {
         const send = (type: string, message: string) =>
           sendUpdate(type, controller, message);
-        try {
-          const response = await retrieveContext(content, scribeParams, send);
-          sendUpdate(
-            'final-notification',
-            controller,
-            JSON.stringify(response.content)
-          );
-        } catch (error: any) {
-          sendUpdate('error', controller, error.message);
-        } finally {
-          controller.close();
-        }
+        const totalStartTime = performance.now();
+        processRequest(req, send)
+          .catch((error) => {
+            sendUpdate('error', controller, error.message);
+          })
+          .finally(() => {
+            const totalEndTime = performance.now();
+            getTotalTime(totalStartTime, totalEndTime, send);
+            controller.close();
+          });
       },
     });
 

@@ -65,11 +65,11 @@ export function OnboardingCarousel({
         const { type, message } = JSON.parse(event.replace('data: ', ''));
         if (type === 'final-notification') {
           setAssistantSelected(message);
+          setIsOnboardingComplete(true);
         }
       };
       await archivist(userEmail, action, onboardingParams, onUpdate);
       setIsLoading(false);
-      setIsOnboardingComplete(true);
     } catch (error: any) {
       toast({
         title: 'Error',

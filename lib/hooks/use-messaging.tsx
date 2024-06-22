@@ -3,7 +3,7 @@ import { scribe, sage } from '../client/atlas';
 import { AssistantMessage, UserMessage } from '@/components/message';
 import { useUIState, useActions } from 'ai/rsc';
 import { AI } from '@/app/action';
-import { ScribeParams, ForgeParams, MessageRole, Purpose } from '../types';
+import { ForgeParams, MessageRole, Purpose } from '../types';
 
 export const useMessaging = (
   userEmail: string,
@@ -14,11 +14,8 @@ export const useMessaging = (
   const { submitUserMessage } = useActions<typeof AI>();
   const [inputValue, setInputValue] = useState<string>('');
 
-  const scribeParams: ScribeParams = {
-    userEmail,
-    topK: parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100,
-    topN: parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10,
-  };
+  const topK = parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100;
+  const topN = parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10;
 
   const forgeParams: ForgeParams = {
     provider: (process.env.NEXT_PUBLIC_PARSING_PROVIDER as string) || 'local',
@@ -69,44 +66,59 @@ export const useMessaging = (
       },
     ]);
     let context = '';
+    addNewMessage(MessageRole.Spinner, spinner);
     if (process.env.NEXT_PUBLIC_INFERENCE_MODEL === 'assistant') {
       try {
-        // If the purpose is Scribe, context is retrieved via RAG
-        if (purpose === Purpose.Scribe) {
-          await scribe(message, scribeParams, (event) => {
-            const { type, message } = JSON.parse(event.replace('data: ', ''));
-            if (type === 'final-notification' && message !== '[]') {
-              context = message;
-            }
-          });
-        }
-        // Use Scribe or Sage, depending on the purpose
-        addNewMessage(MessageRole.Spinner, spinner);
         let firstRun = true;
         let prevType: MessageRole.Text | MessageRole.Code | MessageRole.Image;
         let currentMessage: string = '';
-        const params = { message, context };
-        await sage(userEmail, purpose, params, (event: string) => {
-          const { type, message } = JSON.parse(event.replace('data: ', ''));
-          if (type.includes('created') && firstRun === false) {
-            addNewMessage(prevType, currentMessage);
-            if (type === 'text_created') {
-              prevType = MessageRole.Text;
-            } else if (type === 'tool_created') {
-              prevType = MessageRole.Code;
+        if (purpose === Purpose.Scribe) {
+          await scribe(userEmail, message, topK, topN, (event) => {
+            const { type, message } = JSON.parse(event.replace('data: ', ''));
+            if (type.includes('created') && firstRun === false) {
+              addNewMessage(prevType, currentMessage);
+              if (type === 'text_created') {
+                prevType = MessageRole.Text;
+              } else if (type === 'tool_created') {
+                prevType = MessageRole.Code;
+              }
+              currentMessage = '';
+            } else if (
+              [MessageRole.Text, MessageRole.Code, MessageRole.Image].includes(
+                type
+              )
+            ) {
+              currentMessage += message;
+              prevType = type;
+              firstRun = false;
+              updateLastMessage(type, currentMessage);
             }
-            currentMessage = '';
-          } else if (
-            [MessageRole.Text, MessageRole.Code, MessageRole.Image].includes(
-              type
-            )
-          ) {
-            currentMessage += message;
-            prevType = type;
-            firstRun = false;
-            updateLastMessage(type, currentMessage);
-          }
-        });
+          });
+        } else if (purpose === Purpose.Sage) {
+          firstRun = true;
+          currentMessage = '';
+          await sage(userEmail, message, (event: string) => {
+            const { type, message } = JSON.parse(event.replace('data: ', ''));
+            if (type.includes('created') && firstRun === false) {
+              addNewMessage(prevType, currentMessage);
+              if (type === 'text_created') {
+                prevType = MessageRole.Text;
+              } else if (type === 'tool_created') {
+                prevType = MessageRole.Code;
+              }
+              currentMessage = '';
+            } else if (
+              [MessageRole.Text, MessageRole.Code, MessageRole.Image].includes(
+                type
+              )
+            ) {
+              currentMessage += message;
+              prevType = type;
+              firstRun = false;
+              updateLastMessage(type, currentMessage);
+            }
+          });
+        }
       } catch (error: any) {
         addNewMessage(
           MessageRole.Error,

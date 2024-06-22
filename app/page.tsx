@@ -32,9 +32,6 @@ import { OnboardingCarousel } from '@/components/onboarding';
 import { AtlasUser, Purpose } from '@/lib/types';
 import { Header } from '@/components/header';
 
-export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
-
 export default function Page() {
   const { data: session } = useSession();
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -45,18 +42,22 @@ export default function Page() {
 
   const user = session?.user as AtlasUser;
   const userEmail = user?.email ?? '';
-  let purpose = user?.preferences?.selectedAssistant as Purpose;
+
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [assistantSelected, setAssistantSelected] = useState<Purpose | null>(
     null
   );
 
+  let purpose =
+    (user?.preferences?.selectedAssistant as Purpose) ||
+    (assistantSelected as Purpose);
+
   useEffect(() => {
-    if (user && user.preferences && purpose) {
+    if (user && user.preferences) {
       setIsOnboardingComplete(!!purpose);
       setAssistantSelected(purpose);
     }
-  }, [user]);
+  }, [user, purpose]);
 
   const {
     uploadedFiles,

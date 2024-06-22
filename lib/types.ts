@@ -28,7 +28,7 @@ export interface Page {
 }
 
 export interface ScribeParams {
-  userEmail: string;
+  message: string;
   topK: number;
   topN: number;
 }
@@ -43,7 +43,11 @@ export interface ForgeParams {
 }
 
 export interface SageParams {
-  message?: string;
+  message: string;
+}
+
+export interface ConsultationParams {
+  message: string;
   context?: string;
 }
 
