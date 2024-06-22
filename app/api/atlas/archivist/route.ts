@@ -8,6 +8,8 @@ import { ArchivistOnboardingParams, ArchivistParams } from '@/lib/types';
 import { getTotalTime } from '@/lib/utils/metrics';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 function sendUpdate(
   type: string,

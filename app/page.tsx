@@ -32,9 +32,6 @@ import { OnboardingCarousel } from '@/components/onboarding';
 import { AtlasUser, Purpose } from '@/lib/types';
 import { Header } from '@/components/header';
 
-export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
-
 export default function Page() {
   const { data: session } = useSession();
   const inputRef = useRef<HTMLTextAreaElement>(null);
