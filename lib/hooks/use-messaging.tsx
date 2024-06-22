@@ -3,13 +3,7 @@ import { scribe, sage } from '../client/atlas';
 import { AssistantMessage, UserMessage } from '@/components/message';
 import { useUIState, useActions } from 'ai/rsc';
 import { AI } from '@/app/action';
-import {
-  ScribeParams,
-  ForgeParams,
-  MessageRole,
-  Purpose,
-  SageParams,
-} from '../types';
+import { ForgeParams, MessageRole, Purpose } from '../types';
 
 export const useMessaging = (
   userEmail: string,
