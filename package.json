@@ -29,6 +29,7 @@
     "@tanstack/react-table": "^8.17.3",
     "@vercel/analytics": "^1.2.2",
     "@vercel/kv": "^1.0.1",
+    "@vercel/speed-insights": "^1.0.12",
     "@xenova/transformers": "^2.17.1",
     "ai": "^3.2.3",
     "chalk": "^5.3.0",
