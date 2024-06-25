@@ -7,7 +7,7 @@ import { spinner } from '@/components/ui/spinner';
 import { AssistantMessage } from '@/components/message';
 import { runOpenAICompletion } from '@/lib/utils';
 import { prompts } from '@/lib/prompts';
-import { tools } from '@/lib/stocks/tools';
+import { tools } from '@/lib/tools';
 import { MessageRole } from '@/lib/types';
 
 const openai = new OpenAI({

@@ -66,8 +66,8 @@ export const useMessaging = (
       },
     ]);
     let context = '';
-    addNewMessage(MessageRole.Spinner, spinner);
     if (process.env.NEXT_PUBLIC_INFERENCE_MODEL === 'assistant') {
+      addNewMessage(MessageRole.Spinner, spinner);
       try {
         let firstRun = true;
         let prevType: MessageRole.Text | MessageRole.Code | MessageRole.Image;
