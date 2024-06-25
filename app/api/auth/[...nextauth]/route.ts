@@ -25,6 +25,8 @@ import { AtlasUser, Purpose } from '@/lib/types';
 import { toAscii } from '@/lib/utils/helpers';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const requiredEnvVars = [
   'GITHUB_ID',
