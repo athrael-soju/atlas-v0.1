@@ -232,6 +232,6 @@ const handleReadableStream = async (
       if (process.env.SAGE_EVENT_ERROR === 'true') {
         console.error('Error:', error);
       }
-      reject(error);
+      reject(new Error(error.message));
     });
   });
