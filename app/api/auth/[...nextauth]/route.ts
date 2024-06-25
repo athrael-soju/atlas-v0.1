@@ -160,6 +160,9 @@ const options: NextAuthOptions = {
         return session;
       }
     },
+    async redirect({ baseUrl }) {
+      return baseUrl;
+    },
   },
   events: {
     async signIn({
