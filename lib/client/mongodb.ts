@@ -1,44 +1,33 @@
-import { Db, MongoClient } from 'mongodb';
+import { MongoClient, ServerApiVersion } from 'mongodb';
 
-const uri = process.env.MONGODB_URI as string;
+if (!process.env.MONGODB_URI) {
+  throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
+}
+
+const uri = process.env.MONGODB_URI;
 const options = {
-  tls: true,
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
 };
 
-let client: MongoClient;
-let db: Db;
+let client;
+let clientPromise: Promise<MongoClient>;
 
-export const getClientPromise = async (): Promise<MongoClient> => {
-  let clientPromise: Promise<MongoClient>;
-  if (process.env.NODE_ENV === 'development') {
-    let globalWithMongo = global as typeof globalThis & {
-      _mongoClientPromise?: Promise<MongoClient>;
-    };
+if (process.env.NODE_ENV === 'development') {
+  let globalWithMongo = global as typeof globalThis & {
+    _mongoClientPromise?: Promise<MongoClient>;
+  };
 
-    if (!globalWithMongo._mongoClientPromise) {
-      client = new MongoClient(uri, options);
-      globalWithMongo._mongoClientPromise = client
-        .connect()
-        .catch((err: any) => {
-          throw err;
-        });
-    }
-    clientPromise =
-      globalWithMongo._mongoClientPromise ??
-      Promise.reject(new Error('MongoClient promise is undefined'));
-  } else {
+  if (!globalWithMongo._mongoClientPromise) {
     client = new MongoClient(uri, options);
-    clientPromise = client.connect().catch((error: any) => {
-      throw error;
-    });
+    globalWithMongo._mongoClientPromise = client.connect();
   }
-  return clientPromise;
-};
-
-export const getDb = async () => {
-  if (!db) {
-    const client = await getClientPromise();
-    db = client.db('Atlas');
-  }
-  return db;
-};
+  clientPromise = globalWithMongo._mongoClientPromise;
+} else {
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
+}
+export default clientPromise;

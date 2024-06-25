@@ -12,7 +12,7 @@ import { Adapter, AdapterUser } from 'next-auth/adapters';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import { db } from '@/lib/services/db/mongodb';
-import { getClientPromise } from '@/lib/client/mongodb';
+import clientPromise from '@/lib/client/mongodb';
 import {
   uniqueNamesGenerator,
   Config,
@@ -114,7 +114,7 @@ const providers = [
 
 const options: NextAuthOptions = {
   providers,
-  adapter: MongoDBAdapter(getClientPromise()) as Adapter,
+  adapter: MongoDBAdapter(clientPromise) as Adapter,
   callbacks: {
     async jwt({
       token,

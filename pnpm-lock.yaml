@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@auth/mongodb-adapter':
-        specifier: ^3.1.0
-        version: 3.1.0(mongodb@6.7.0)
+        specifier: ^3.4.1
+        version: 3.4.1(mongodb@6.7.0)
       '@pinecone-database/pinecone':
         specifier: ^2.2.2
         version: 2.2.2
@@ -258,8 +258,8 @@ packages:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
 
-  '@auth/core@0.31.0':
-    resolution: {integrity: sha512-UKk3psvA1cRbk4/c9CkpWB8mdWrkKvzw0DmEYRsWolUQytQ2cRqx+hYuV6ZCsngw/xbj9hpmkZmAZEyq2g4fMg==}
+  '@auth/core@0.34.1':
+    resolution: {integrity: sha512-tuYU2VIbI8rFbkSwP710LmybB2FXJsPN7j3sjRVfN9SXVQBK2ej6LdewQaofpBGp4Mk+cC2UeiGNH0or4tgaeA==}
     peerDependencies:
       '@simplewebauthn/browser': ^9.0.1
       '@simplewebauthn/server': ^9.0.2
@@ -272,8 +272,8 @@ packages:
       nodemailer:
         optional: true
 
-  '@auth/mongodb-adapter@3.1.0':
-    resolution: {integrity: sha512-KRlxlZnx2BW4biHoKtLFWmEZYPb0230XYtlAejKIPHegoHoLRFWNNxmf8C2oKqmXtHJYnRUavfrXm3PsfY6c5w==}
+  '@auth/mongodb-adapter@3.4.1':
+    resolution: {integrity: sha512-DOi/lCaecO8OZ2fMyFgK9CBWT+04tnodtoFeWjFbDX3pgEjbExoXOCHtPOnhYMphMgps1zMY1i5LFKJSPIW3wQ==}
     peerDependencies:
       mongodb: ^6
 
@@ -3797,7 +3797,7 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
 
-  '@auth/core@0.31.0':
+  '@auth/core@0.34.1':
     dependencies:
       '@panva/hkdf': 1.1.1
       '@types/cookie': 0.6.0
@@ -3807,9 +3807,9 @@ snapshots:
       preact: 10.11.3
       preact-render-to-string: 5.2.3(preact@10.11.3)
 
-  '@auth/mongodb-adapter@3.1.0(mongodb@6.7.0)':
+  '@auth/mongodb-adapter@3.4.1(mongodb@6.7.0)':
     dependencies:
-      '@auth/core': 0.31.0
+      '@auth/core': 0.34.1
       mongodb: 6.7.0
     transitivePeerDependencies:
       - '@simplewebauthn/browser'

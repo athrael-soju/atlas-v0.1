@@ -1,14 +1,20 @@
-import { getDb, getClientPromise } from '@/lib/client/mongodb';
 import { AtlasFile, AtlasUser, Purpose } from '@/lib/types';
 import { User } from 'next-auth';
+import clientPromise from '@/lib/client/mongodb';
+import { Db } from 'mongodb';
+let initDb: Db;
+
+const getDb = async () => {
+  if (!initDb) {
+    const client = await clientPromise;
+    initDb = client.db('Atlas');
+  }
+  return initDb;
+};
 
 export const db = async () => {
   const db = await getDb();
   const userCollection = db.collection<User>('users');
-
-  const getClient = async () => {
-    return await getClientPromise();
-  };
 
   const insertUser = async (user: User) => {
     const result = await userCollection.insertOne(user);
@@ -90,7 +96,6 @@ export const db = async () => {
   };
 
   return {
-    getClient,
     insertUser,
     getUser,
     updateUser,
