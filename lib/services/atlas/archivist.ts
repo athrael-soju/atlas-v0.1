@@ -18,6 +18,7 @@ export async function retrieveArchives(
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const { purpose } = archivistParams;
+  
   const dbInstance = await db();
 
   const userFiles = await measurePerformance(
