@@ -19,7 +19,7 @@ export async function retrieveArchives(
 ): Promise<any> {
   const { purpose } = archivistParams;
   const dbInstance = await db();
-
+  
   const userFiles = await measurePerformance(
     () => dbInstance.retrieveArchives(userEmail, purpose),
     'Checking for archives',

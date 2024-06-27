@@ -120,7 +120,6 @@ export const archivist = async (
   formData.append('userEmail', userEmail);
   formData.append('action', action);
   formData.append('archivistParams', JSON.stringify(archivistParams));
-
   try {
     const response = await fetch('/api/atlas/archivist', {
       method: 'POST',

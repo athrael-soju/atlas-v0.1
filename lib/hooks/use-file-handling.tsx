@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { archivist } from '@/lib/client/atlas';
 import { AtlasFile, Purpose } from '../types';
+import { toast } from '@/components/ui/use-toast';
 
 export const useFileHandling = (
   userEmail: string,
@@ -15,13 +16,19 @@ export const useFileHandling = (
   };
 
   const handleFetchFiles = async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const onUpdate = (event: string) => {
         const { type, message } = JSON.parse(event.replace('data: ', ''));
         if (type === 'final-notification') {
           setFileList(message);
           setIsLoading(false);
+        } else if (type === 'error') {
+          toast({
+            title: 'Error',
+            description: `Failed to onboard: ${message}`,
+            variant: 'destructive',
+          });
         }
       };
 
@@ -33,8 +40,9 @@ export const useFileHandling = (
         onUpdate
       );
     } catch (error: any) {
-      setIsLoading(false);
       throw new Error(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
