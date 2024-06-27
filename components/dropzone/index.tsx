@@ -101,7 +101,9 @@ export function Dropzone({
         const { type, message } = JSON.parse(event.replace('data: ', ''));
         if (allowedStates.some((state) => message.startsWith(state))) {
           setProgress((prev) => prev + progressInterval);
-        } else if (type === 'error') {
+        }
+
+        if (type === 'error') {
           setIsUploadCompleted(false);
           fetchFiles(userEmail);
           toast({
