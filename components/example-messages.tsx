@@ -27,7 +27,7 @@ export const ExampleMessages: React.FC<ExampleMessagesProps> = ({
         <div
           key={index}
           className={cn(
-            'cursor-pointer bg-secondary rounded-2xl p-4 sm:p-6 transition-colors'
+            'cursor-pointer bg-secondary rounded-2xl p-4 sm:p-6 hover:bg-gray-300 transition-colors',
           )}
           onClick={() => onClick(message.message)}
         >
