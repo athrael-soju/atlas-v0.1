@@ -66,6 +66,12 @@ export function OnboardingCarousel({
         if (type === 'final-notification') {
           setAssistantSelected(message);
           setIsOnboardingComplete(true);
+        } else if (type === 'error') {
+          toast({
+            title: 'Error',
+            description: `Failed to onboard: ${message}`,
+            variant: 'destructive',
+          });
         }
       };
       await archivist(userEmail, action, onboardingParams, onUpdate);
