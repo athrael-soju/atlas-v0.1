@@ -77,7 +77,7 @@ export function AssistantMessage({
   className?: string;
 }>) {
   return (
-    <div className={cn('group relative flex items-start md:-ml-12', className)}>
+    <div className='group relative flex items-start md:-ml-12'>
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
         <IconAI />
       </div>
