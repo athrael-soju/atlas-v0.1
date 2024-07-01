@@ -2,16 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "app/api//*.py",
-      "use": "@vercel/python",
-      "config": {
-        "excludeFiles": "/{.next,*.cache,node_modules,public,app}/**"
-      }
-    },
-    {
-      "src": "next.config.mjs",
-      "use": "@vercel/next"
+      "src": "main.py",
+      "use": "@vercel/python"
     }
   ],
-  "routes": [{ "src": "/app/api/webhook", "dest": "/app/api/webhook.py" }]
+  "routes": [
+    {
+      "src": "/app/api/hello",
+      "dest": "main.py"
+    }
+  ]
 }
