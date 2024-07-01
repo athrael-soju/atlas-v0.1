@@ -24,7 +24,6 @@
     "env": {
       "PYTHONUNBUFFERED": "1",
       "PIP_NO_CACHE_DIR": "off"
-    },
-    "buildCommand": "bash ./build.sh"
+    }
   }
 }
