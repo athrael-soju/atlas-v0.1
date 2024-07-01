@@ -3,17 +3,24 @@
   "builds": [
     {
       "src": "api/**/*.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "excludeFiles": ["**/*.test.py", "tests/", "documentation/"]
+      }
     },
     {
       "src": "app/api/**/*.ts",
-      "use": "@vercel/next"
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.py"
+      "src": "/api/(.*)\\.py$",
+      "dest": "/api/$1.py"
+    },
+    {
+      "src": "^/api/(.*)",
+      "dest": "/api/$1"
     },
     {
       "src": "/(.*)",
