@@ -8,4 +8,4 @@ node_modules
 .cache
 .turbo
 .history
-.api/__pycache__/*
+api/__pycache__/*
