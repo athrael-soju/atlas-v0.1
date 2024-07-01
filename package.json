@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"pnpm run dev:next\" \"pnpm run dev:fastapi\"",
     "dev:next": "next dev",
-    "dev:fastapi": "pip install -r requirements.txt && uvicorn app.api.fastapi.index:app --reload",
+    "dev:fastapi": "pip install -r requirements.txt && uvicorn api.index:app --reload",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
