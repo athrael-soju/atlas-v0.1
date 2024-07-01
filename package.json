@@ -6,7 +6,7 @@
     "dev": "concurrently \"pnpm run dev:next\" \"pnpm run dev:fastapi\"",
     "dev:next": "next dev",
     "dev:fastapi": "pip install -r requirements.txt && uvicorn api.index:app --reload",
-    "clean": "rm -rf .next",
+    "clean": "rm -rf .next && vc build && vc deploy --prebuilt",
     "build": "pnpm run clean && next build && pip install -r requirements.txt",
     "start": "next start",
     "lint": "next lint",
