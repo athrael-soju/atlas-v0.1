@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "concurrently \"pnpm run dev:next\" \"pnpm run dev:fastapi\"",
     "dev:next": "next dev",
-    "dev:fastapi": "pip install -r requirements.txt && uvicorn api.index:app --reload",
-    "clean": "rm -rf .next && rm -rf api/__pycache__/*",
-    "build": "pnpm run clean && next build && pip install -r requirements.txt",
+    "dev:fastapi": "uvicorn api.index:app --reload",
+    "build": "next build && pip install -r requirements.txt",
+    "clean": "rm -rf .next && rm -rf api/__pycache__",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx}\"",
