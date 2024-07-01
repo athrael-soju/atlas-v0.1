@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.py",
+      "use": "@vercel/python",
+      "config": {
+        "excludeFiles": ["**/*.test.py", "tests/", "documentation/"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "build": {
+    "env": {
+      "VERCEL_FORCE_NO_BUILD_CACHE": "1",
+      "NEXT_DEBUG_FUNCTION_SIZE": "1",
+      "VERCEL_BUILD_SYSTEM_REPORT": "1"
+    }
+  }
+}
