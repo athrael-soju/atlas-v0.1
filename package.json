@@ -6,7 +6,7 @@
     "dev": "concurrently \"pnpm run dev:next\" \"pnpm run dev:fastapi\"",
     "dev:next": "next dev",
     "dev:fastapi": "uvicorn api.index:app --reload",
-    "build": "pnpm run clean && bash ./build.sh",
+    "build": "bash ./build.sh",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx}\"",
