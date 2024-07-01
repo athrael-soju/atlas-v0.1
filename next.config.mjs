@@ -51,4 +51,12 @@ export default defineNextConfig({
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/fastapi/:path*',
+        destination: 'http://localhost:8000/:path*',
+      },
+    ];
+  },
 });
