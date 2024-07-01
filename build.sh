@@ -15,4 +15,4 @@ pip3 install -r requirements.txt
 
 # Build Next.js app
 pnpm install
-next build
+pnpm next build
