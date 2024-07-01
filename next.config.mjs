@@ -55,7 +55,7 @@ export default defineNextConfig({
     return [
       {
         source: '/api/:path*',
-        destination: `http://localhost:8000/api/fastapi/:path*`, // assuming FastAPI runs locally on port 8000
+        destination: `http://localhost:8000/api/:path*`,
       },
     ];
   },
