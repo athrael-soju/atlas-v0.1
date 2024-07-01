@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+
+# Clean up
+rm -rf .next && rm -rf api/__pycache__
+
 # Install Python
 if ! command -v python3 &> /dev/null; then
   sudo apt-get update
