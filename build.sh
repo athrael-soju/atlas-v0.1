@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Clean up
+rm -rf .next && rm -rf api/__pycache__
+
 # Install Python
 if ! command -v python3 &> /dev/null; then
   sudo apt-get update
@@ -12,4 +15,4 @@ pip3 install -r requirements.txt
 
 # Build Next.js app
 pnpm install
-pnpm next build
+next build
