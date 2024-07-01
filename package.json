@@ -7,7 +7,6 @@
     "dev:next": "next dev",
     "dev:fastapi": "uvicorn api.index:app --reload",
     "build": "bash ./build.sh",
-    "clean": "rm -rf .next && rm -rf api/__pycache__",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx}\"",
