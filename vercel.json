@@ -3,10 +3,11 @@
   "builds": [
     {
       "src": "api/**/*.py",
-      "use": "@vercel/python",
-      "config": {
-        "excludeFiles": ["**/*.test.py", "tests/", "documentation/"]
-      }
+      "use": "@vercel/python"
+    },
+    {
+      "src": "app/api/**/*.ts",
+      "use": "@vercel/next"
     }
   ],
   "routes": [
