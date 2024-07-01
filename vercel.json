@@ -25,7 +25,6 @@
       "PYTHONUNBUFFERED": "1",
       "PIP_NO_CACHE_DIR": "off"
     },
-    "pipInstallFlags": "--upgrade --no-cache-dir",
     "buildCommand": "bash ./build.sh"
   }
 }
