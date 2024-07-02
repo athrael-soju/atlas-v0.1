@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "concurrently \"next dev\" \"uvicorn app.api.fast-api.index:app --reload --port 8000\"",
-    "build": "next build",
+    "build": "next build && pip install -r requirements.txt",
     "start": "concurrently \"next start\" \"uvicorn app.api.fast-api.index:app --port 8000\"",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx}\"",
