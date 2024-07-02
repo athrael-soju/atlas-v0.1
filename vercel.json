@@ -6,7 +6,9 @@
       "use": "@vercel/python",
       "config": {
         "runtime": "python3.9",
-        "requirementsPath": "app/api/fast-api/requirements-api.txt"
+        "requirementsPath": "app/api/fast-api/requirements-api.txt",
+        "memory": 1024,
+        "maxDuration": 60
       }
     },
     {
@@ -23,11 +25,5 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ],
-  "functions": {
-    "app/api/fast-api/index.py": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  }
+  ]
 }
