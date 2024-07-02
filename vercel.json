@@ -6,7 +6,7 @@
       "use": "@vercel/python",
       "config": {
         "requirementsPath": "app/requirements-api.txt",
-        "excludeFiles": "{.next,*.cache,node_modules,public,app}/**"
+        "excludeFiles": "{.next,*.cache,node_modules,public,app/node_modules}/**"
       }
     },
     {
@@ -16,8 +16,8 @@
   ],
   "routes": [
     {
-      "src": "/api/fast-api/(.*)",
-      "dest": "api/fast-api/index.py"
+      "src": "/api/fast-api",
+      "dest": "/app/api/fast-api/index.py"
     },
     {
       "src": "/(.*)",

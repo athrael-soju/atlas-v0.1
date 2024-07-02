@@ -9,3 +9,4 @@ node_modules
 .turbo
 .history
 app/api/fast-api/__pycache__/*
+.vercel
