@@ -2,16 +2,26 @@
   "version": 2,
   "builds": [
     {
-      "src": "app/api/fast-api//*.py",
+      "src": "app/api/fast-api/index.py",
       "use": "@vercel/python",
       "config": {
-        "excludeFiles": "/{.next,*.cache,node_modules,public,app}/**"
+        "requirementsPath": "app/requirements-api.txt",
+        "excludeFiles": "{.next,*.cache,node_modules,public,app}/**"
       }
     },
     {
-      "src": "next.config.mjs",
+      "src": "package.json",
       "use": "@vercel/next"
     }
   ],
-  "routes": [{ "src": "/app/api/webhook", "dest": "/app/api/webhook.py" }]
+  "routes": [
+    {
+      "src": "/api/fast-api/(.*)",
+      "dest": "app/api/fast-api/index.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
 }
