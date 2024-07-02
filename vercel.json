@@ -13,7 +13,7 @@
   "routes": [
     {
       "src": "/api/fast-api/(.*)",
-      "dest": "index.py"
+      "dest": "app/api/fast-api/index.py"
     },
     {
       "src": "/(.*)",
