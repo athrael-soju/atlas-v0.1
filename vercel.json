@@ -17,7 +17,7 @@
   "routes": [
     {
       "src": "/api/fast-api/(.*)",
-      "dest": "/app/api/fast-api/index.py"
+      "dest": "api/fast-api/index.py"
     },
     {
       "src": "/(.*)",
