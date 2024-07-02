@@ -53,26 +53,32 @@ export default defineNextConfig({
   },
   rewrites: async () => {
     return [
+      // FastAPI routes
       {
-        source: '/api/:path*',
+        source: '/api/fast-api/:path*',
         destination:
           process.env.NODE_ENV === 'development'
-            ? 'http://127.0.0.1:8000/api/:path*'
-            : '/api/',
+            ? 'http://127.0.0.1:8000/api/fast-api/:path*'
+            : '/api/fast-api/:path*',
       },
       {
         source: '/docs',
         destination:
           process.env.NODE_ENV === 'development'
             ? 'http://127.0.0.1:8000/docs'
-            : '/api/docs',
+            : '/api/fast-api/docs',
       },
       {
         source: '/openapi.json',
         destination:
           process.env.NODE_ENV === 'development'
             ? 'http://127.0.0.1:8000/openapi.json'
-            : '/api/openapi.json',
+            : '/api/fast-api/openapi.json',
+      },
+      // Next.js API routes (optional, as Next.js handles these automatically)
+      {
+        source: '/api/:path*',
+        destination: '/api/:path*',
       },
     ];
   },
