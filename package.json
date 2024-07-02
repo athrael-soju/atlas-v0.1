@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"next dev\" \"uvicorn app.api.fast-api.index:app --reload --port 8000\"",
     "dev:next": "next dev",
-    "dev:fastapi": "pip3 install -r requirements.txt -qqq && python -m uvicorn api.fast-api.index:app --reload",
+    "dev:fastapi": "pip3 install -r requirements.txt && python -m uvicorn api.fast-api.index:app --reload",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
