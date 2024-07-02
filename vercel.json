@@ -5,7 +5,6 @@
       "src": "app/api/fast-api/index.py",
       "use": "@vercel/python",
       "config": {
-        "requirementsPath": "app/requirements-api.txt",
         "excludeFiles": "{.next,*.cache,node_modules,public,app/node_modules}/**"
       }
     },

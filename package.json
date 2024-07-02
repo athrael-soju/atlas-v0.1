@@ -4,8 +4,10 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "concurrently \"next dev\" \"uvicorn app.api.fast-api.index:app --reload --port 8000\"",
-    "build": "next build && pip install -r requirements.txt",
-    "start": "concurrently \"next start\" \"uvicorn app.api.fast-api.index:app --port 8000\"",
+    "dev:next": "next dev",
+    "dev:fastapi": "pip3 install -r requirements.txt -qqq && python -m uvicorn api.fast-api.index:app --reload",
+    "build": "next build",
+    "start": "next start",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx}\" --cache"
