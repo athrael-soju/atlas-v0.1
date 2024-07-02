@@ -3,11 +3,9 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "dev": "concurrently \"pnpm run dev:next\" \"pnpm run dev:fastapi\"",
-    "dev:next": "next dev",
-    "dev:fastapi": "pip3 install -r requirements.txt -qqq && python -m uvicorn api.index:app --reload",
+    "dev": "concurrently \"next dev\" \"uvicorn app.api.fast-api.index:app --reload --port 8000\"",
     "build": "next build",
-    "start": "next start",
+    "start": "concurrently \"next start\" \"uvicorn app.api.fast-api.index:app --port 8000\"",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx}\" --cache"
