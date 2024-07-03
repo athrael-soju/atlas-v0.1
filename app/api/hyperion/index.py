@@ -14,6 +14,4 @@ app.add_middleware(
 
 @app.get("/api/hyperion")
 async def read_root():
-    return {"message": "Hello from FastAPI!"}
-
-
+    return {"message": "Hyperion Greets you!"}
