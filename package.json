@@ -3,9 +3,9 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "dev": "concurrently \"next dev\" \"uvicorn app.api.fast-api.index:app --reload --port 8000\"",
+    "dev": "concurrently \"npm:dev:next\" \"npm:dev:fastapi\"",
     "dev:next": "next dev",
-    "dev:fastapi": "pip3 install -r requirements.txt && python -m uvicorn api.fast-api.index:app --reload",
+    "dev:fastapi": "uvicorn app.api.fast-api.index:app --reload --port 8000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
