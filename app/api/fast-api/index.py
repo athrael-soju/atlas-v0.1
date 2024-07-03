@@ -1,6 +1,5 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import os
 
 app = FastAPI()
 
@@ -14,9 +13,7 @@ app.add_middleware(
 
 
 @app.get("/api/fast-api")
-async def read_root(response: Response):
-    vercel_auth_secret = os.getenv("VERCEL_AUTH_SECRET")
-    if vercel_auth_secret:
-        response.headers["x-vercel-protection-bypass"] = vercel_auth_secret
+async def read_root():
     return {"message": "Hello from FastAPI!"}
-    
+
+
