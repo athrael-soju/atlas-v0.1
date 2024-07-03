@@ -8,5 +8,5 @@ node_modules
 .cache
 .turbo
 .history
-app/api/fast-api/__pycache__/*
+app/api/hyperion/__pycache__/*
 .vercel

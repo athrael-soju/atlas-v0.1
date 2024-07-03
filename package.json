@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"npm:dev:next\" \"npm:dev:fastapi\"",
     "dev:next": "next dev",
-    "dev:fastapi": "uvicorn app.api.fast-api.index:app --reload --port 8000",
+    "dev:fastapi": "uvicorn app.api.hyperion.index:app --reload --port 8000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

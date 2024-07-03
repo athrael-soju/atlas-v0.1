@@ -55,25 +55,25 @@ export default defineNextConfig({
     return [
       // FastAPI routes
       {
-        source: '/api/fast-api/:path*',
+        source: '/api/hyperion/:path*',
         destination:
           process.env.NODE_ENV === 'development'
-            ? 'http://127.0.0.1:8000/api/fast-api/:path*'
-            : '/api/fast-api/:path*',
+            ? 'http://127.0.0.1:8000/api/hyperion/:path*'
+            : '/api/hyperion/:path*',
       },
       {
         source: '/docs',
         destination:
           process.env.NODE_ENV === 'development'
             ? 'http://127.0.0.1:8000/docs'
-            : '/api/fast-api/docs',
+            : '/api/hyperion/docs',
       },
       {
         source: '/openapi.json',
         destination:
           process.env.NODE_ENV === 'development'
             ? 'http://127.0.0.1:8000/openapi.json'
-            : '/api/fast-api/openapi.json',
+            : '/api/hyperion/openapi.json',
       },
       // Next.js API routes (optional, as Next.js handles these automatically)
       {
