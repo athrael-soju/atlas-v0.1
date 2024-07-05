@@ -25,9 +25,6 @@ else
   echo "- Loading environment variables from Vercel"
 fi
 
-# Remove existing Vercel configuration file
-rm -f "$TARGET_CONFIG"
-
 # Choose configuration based on ENABLE_PYTHON_ROUTE
 if [[ "${ENABLE_PYTHON_ROUTE:-false}" == "true" ]]; then
   CONFIG_SOURCE="$PYTHON_CONFIG"
