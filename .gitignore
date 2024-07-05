@@ -10,3 +10,4 @@ node_modules
 .history
 app/api/hyperion/__pycache__/*
 .vercel
+./vercel.json
