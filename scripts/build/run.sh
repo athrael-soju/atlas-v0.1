@@ -5,15 +5,17 @@ cd "$(dirname "$0")"
 
 # Remove the existing Vercel configuration file
 rm -rf ../../vercel.json
+rm -rf ../../.vercel
+rm -rf ../../.next
+
 echo "--------------------------------------"
 echo "Atlas - Vercel Configuration Builder"
+echo "--------------------------------------"
 # Load environment variables from .env.local located in the project root
 if [ -f "../../.env.local" ]; then
-  echo "--------------------------------------"
   echo "- Loading environment variables from .env.local"
   source "../../.env.local"
 else
-  echo "--------------------------------------"
   echo "- Loading environment variables from Vercel"
 fi
 
@@ -34,10 +36,9 @@ if [[ "$ENABLE_PYTHON_ROUTE" == "true" ]]; then
   # If Python route is enabled, use the Python-specific configuration
   cp "$PYTHON_CONFIG" "$TARGET_CONFIG"
   echo "- Building with Python routes enabled"
-  echo "--------------------------------------"
 else
   # Otherwise, use the default configuration
   cp "$DEFAULT_CONFIG" "$TARGET_CONFIG"
   echo "- Building with Python routes disabled"
-  echo "---------------------------------------"
 fi
+echo "--------------------------------------"
