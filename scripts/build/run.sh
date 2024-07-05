@@ -25,6 +25,9 @@ else
   echo "- Loading environment variables from Vercel"
 fi
 
+# Remove existing Vercel configuration file
+rm -f "$TARGET_CONFIG"
+
 # Choose configuration based on ENABLE_PYTHON_ROUTE
 if [[ "${ENABLE_PYTHON_ROUTE:-false}" == "true" ]]; then
   CONFIG_SOURCE="$PYTHON_CONFIG"
@@ -34,14 +37,19 @@ else
   echo "- Building with Python routes disabled"
 fi
 
-# Copy the chosen configuration
-if cp "$CONFIG_SOURCE" "$TARGET_CONFIG"; then
+# Copy the chosen configuration, forcibly overwriting if it exists
+if cp -f "$CONFIG_SOURCE" "$TARGET_CONFIG"; then
   echo "- Successfully copied configuration to $TARGET_CONFIG"
+
+  echo "--------------------------------------"
+  echo "Contents of the copied configuration file:"
+  echo "--------------------------------------"
+  cat "$TARGET_CONFIG"
+  echo "--------------------------------------"
 else
   echo "Error: Failed to copy configuration to $TARGET_CONFIG" >&2
   exit 1
 fi
 
-echo "--------------------------------------"
 echo "Configuration build complete"
 echo "--------------------------------------"
