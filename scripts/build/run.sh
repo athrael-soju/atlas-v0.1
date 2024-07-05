@@ -3,8 +3,15 @@
 # Navigate to the script directory
 cd "$(dirname "$0")"
 
+# Define the path to the default Vercel configuration
+DEFAULT_CONFIG="./build-node.json"
+# Define the path to the Python-specific Vercel configuration
+PYTHON_CONFIG="./build-node-python.json"
+# Define the target Vercel configuration file name
+TARGET_CONFIG="../../vercel.json"
+
 # Remove the existing Vercel configuration file
-rm -rf ../../vercel.json
+rm -rf "$TARGET_CONFIG"
 
 echo "--------------------------------------"
 echo "Atlas - Vercel Configuration Builder"
