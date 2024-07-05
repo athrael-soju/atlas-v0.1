@@ -5,8 +5,6 @@ cd "$(dirname "$0")"
 
 # Remove the existing Vercel configuration file
 rm -rf ../../vercel.json
-rm -rf ../../.vercel
-rm -rf ../../.next
 
 echo "--------------------------------------"
 echo "Atlas - Vercel Configuration Builder"
