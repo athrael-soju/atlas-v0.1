@@ -11,18 +11,34 @@ if (!process.env.COHERE_API_KEY) {
 
 const model = process.env.COHERE_API_MODEL || 'rerank-multilingual-v3.0';
 
+function formatResult(
+  result: RerankResponseResultsItem,
+  index: number
+): string {
+  const doc = result.document as any;
+  return `
+Document ${index + 1}:
+Filename: ${doc.filename || 'N/A'}
+Filetype: ${doc.filetype || 'N/A'}
+Languages: ${doc.languages ? doc.languages.join(', ') : 'N/A'}
+Page Number: ${doc.page_number || 'N/A'}
+Relevance Score: ${result.relevanceScore.toFixed(4)}
+
+Content:
+${doc.text || 'No content available'}
+`;
+}
+
 export async function rerank(
   userMessage: string,
   queryResults: any[],
   topN: number
-): Promise<{ message: string; values: RerankResponseResultsItem[] }> {
+): Promise<string> {
   try {
     if (queryResults.length < 1) {
-      return {
-        message: 'Query results are empty. Reranking skipped',
-        values: [],
-      };
+      return 'Context: Query results are empty. No relevant documents found.';
     }
+
     const rerank = await cohere.rerank({
       model: model,
       documents: queryResults,
@@ -31,12 +47,15 @@ export async function rerank(
       topN: topN,
       returnDocuments: true,
     });
-
-    return {
-      message: 'Reranking successful',
-      values: rerank.results,
-    };
+    if (rerank.results.length > 0) {
+      const formattedResults = rerank.results.map(formatResult).join('\n---\n');
+      return `Context: The following are the top ${topN} most relevant documents based on the query "${userMessage}". Each document is separated by "---".\n\n${formattedResults}`;
+    } else {
+      return 'Context: No relevant documents found.';
+    }
   } catch (error: any) {
-    throw new Error('Failed to rerank documents', error.message);
+    throw new Error(
+      `Context: An error occurred while reranking documents: ${error.message}`
+    );
   }
 }

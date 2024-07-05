@@ -33,12 +33,13 @@ export async function retrieveContext(
       sendUpdate
     );
 
-    const rerankingResults = await measurePerformance(
+    const rerankingContext = await measurePerformance(
       () => rerank(message, queryResults.context, topN),
       'Reranking',
       sendUpdate
     );
-    return { success: true, userEmail, context: rerankingResults.values };
+
+    return { success: true, userEmail, context: rerankingContext };
   } catch (error: any) {
     sendUpdate('error', error.message);
     return { success: false, userEmail, context: error.message };
