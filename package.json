@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "dev": "sh app/scripts/servers.sh",
+    "dev": "concurrently \"npm:dev:next\" \"npm:dev:fastapi\"",
     "dev:next": "next dev",
     "dev:fastapi": "uvicorn app.api.hyperion.index:app --reload --port 8000",
     "build": "next build",
