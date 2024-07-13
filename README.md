@@ -31,7 +31,33 @@ flowchart TD
         end
     end
 ```
+## Experimental Mermaid Chart
+```
+flowchart LR
+    subgraph Data_Ingestion_and_Processing["Data Ingestion and Processing"]
+        S["Start"] --> |"Files Updated"| AK["Apache Kafka"]
+        AK -->|Data Ingestion| AS["Apache Spark"]
+        AS -->|File Processing| U["unstructured.io"]
+        U -->|Chunking| EM["Embedder"]
+        EM -->|Vectorize Data| PC["Pinecone"]
+        PC --> |Indexing| D["End"]
+    end
 
+    subgraph Monitoring_and_Alerts["Monitoring and Alerts"]
+        PM["Prometheus"]
+        GR["Grafana"]
+    end
+
+    subgraph Data_Query_and_Response["Data Query and Response"]
+        UL["Start"] -->|Prompt / Query| PS["Pinecone"]
+        PS --> |"Perform Similarity Search"| CR["Cohere"]
+        CR --> |"Re-rank TopK to TopN"| LLM["Large Language Model"]
+        LLM --> |"Perform Inference"| RT["End"]                
+    end
+
+    Data_Ingestion_and_Processing <-->|Monitoring| Monitoring_and_Alerts
+    Monitoring_and_Alerts <-->|Visualization| Data_Query_and_Response
+```
 ## Features
 
 - Store millions of documents and retrieve information seamlessly.
