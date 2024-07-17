@@ -75,7 +75,6 @@ export default defineNextConfig({
             ? 'http://127.0.0.1:8000/openapi.json'
             : '/api/hyperion/openapi.json',
       },
-      // Next.js API routes (optional, as Next.js handles these automatically)
       {
         source: '/api/:path*',
         destination: '/api/:path*',
