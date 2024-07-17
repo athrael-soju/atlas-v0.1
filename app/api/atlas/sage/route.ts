@@ -22,13 +22,13 @@ async function handleConsultation(
   send: (type: string, message: string) => void
 ) {
   const consultationParams: ConsultationParams = sageParams;
-  const response = await consult(
+  await consult(
     userEmail,
     Purpose.Sage,
     consultationParams,
     send
   );
-  send('final-notification', JSON.stringify(response.content));
+  send('final-notification', 'Consultation completed');
 }
 
 async function processRequest(
