@@ -96,12 +96,10 @@ const createAnonymousUser = async (): Promise<CustomUser> => {
 
 const providers = [
   GitHubProvider({
-    allowDangerousEmailAccountLinking: true,
     clientId: process.env.GITHUB_ID as string,
     clientSecret: process.env.GITHUB_SECRET as string,
   }),
   GoogleProvider({
-    allowDangerousEmailAccountLinking: true,
     clientId: process.env.GOOGLE_ID as string,
     clientSecret: process.env.GOOGLE_SECRET as string,
   }),
@@ -205,7 +203,7 @@ const options: NextAuthOptions = {
         const provider =
           account?.provider === 'credentials'
             ? 'Atlas'
-            : user?.provider ?? account?.provider;
+            : (user?.provider ?? account?.provider);
 
         console.info(`${user.name} from ${provider} has just signed in!`);
       } catch (error) {
