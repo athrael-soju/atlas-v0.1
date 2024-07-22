@@ -185,7 +185,7 @@ const handleReadableStream = async (
         if (!addFile) {
           throw new Error('Error adding image to database');
         }
-        sendUpdate('notification', 'image_added to database');
+        sendUpdate('image_created', 'image_created');
       } else {
         sendUpdate('error', 'Failed to generate image');
       }

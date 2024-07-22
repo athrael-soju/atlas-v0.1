@@ -6,20 +6,20 @@
 ![image](https://github.com/athrael-soju/next-ai-src/assets/25455658/3c1f3c78-f484-4bd2-8149-3f73312e0545)
 
 ## Mermaid Chart
-```
+```mermaid
 flowchart TD
-    A[Start: User Login] --> B{User Selects}
-    B --> |Data Load| C1[Document Uploaded]
-    B --> |Data Query| D1[User Prompt]
+    A[Start: Auth] --> B{User Action}
+    B --> |Document Upload| C1[Document Uploaded]
+    B --> |Text prompt| D1[User Prompt]
 
     subgraph Atlas High Level Architecture
-        subgraph Feature1 [Data Load]
+        subgraph Feature1 [ ]
             C1 --> C2[Document Storage] 
             C2 --> C3{{Document Parsing}}
             C3 --> C4{{Chunk Embedding}}
             C4 --> C5[(Chunk Indexing)]
         end
-        subgraph Feature2 [Data Query]
+        subgraph Feature2 [ ]
             D1 --> D2{{Document Embedding}}
             D2 --> D3[(Semantic Search)]
             D2 --> D4[(Keyword Search)]
@@ -31,8 +31,8 @@ flowchart TD
         end
     end
 ```
-## Experimental Mermaid Chart
-```
+## In Progress
+```mermaid
 flowchart LR
     subgraph Data_Ingestion_and_Processing["Data Ingestion and Processing"]
         S["Start"] --> |"Files Updated"| AK["Apache Kafka"]

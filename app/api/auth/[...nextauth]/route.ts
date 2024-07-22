@@ -96,10 +96,12 @@ const createAnonymousUser = async (): Promise<CustomUser> => {
 
 const providers = [
   GitHubProvider({
+    allowDangerousEmailAccountLinking: true,
     clientId: process.env.GITHUB_ID as string,
     clientSecret: process.env.GITHUB_SECRET as string,
   }),
   GoogleProvider({
+    allowDangerousEmailAccountLinking: true,
     clientId: process.env.GOOGLE_ID as string,
     clientSecret: process.env.GOOGLE_SECRET as string,
   }),

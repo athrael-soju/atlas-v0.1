@@ -105,6 +105,8 @@ export const useMessaging = (
                 prevType = MessageRole.Text;
               } else if (type === 'tool_created') {
                 prevType = MessageRole.Code;
+              } else if (type === 'image_created') {
+                prevType = MessageRole.Image;
               }
               currentMessage = '';
             } else if (
