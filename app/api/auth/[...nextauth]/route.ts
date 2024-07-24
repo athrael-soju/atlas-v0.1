@@ -96,12 +96,28 @@ const createAnonymousUser = async (): Promise<CustomUser> => {
 
 const providers = [
   GitHubProvider({
+    allowDangerousEmailAccountLinking: true,
     clientId: process.env.GITHUB_ID as string,
     clientSecret: process.env.GITHUB_SECRET as string,
+    authorization: {
+      params: {
+        prompt: 'consent',
+        access_type: 'offline',
+        response_type: 'code',
+      },
+    },
   }),
   GoogleProvider({
+    allowDangerousEmailAccountLinking: true,
     clientId: process.env.GOOGLE_ID as string,
     clientSecret: process.env.GOOGLE_SECRET as string,
+    authorization: {
+      params: {
+        prompt: 'consent',
+        access_type: 'offline',
+        response_type: 'code',
+      },
+    },
   }),
   CredentialsProvider({
     name: 'a Guest Account',
@@ -168,56 +184,17 @@ const options: NextAuthOptions = {
     async signIn({
       user,
       account,
-      isNewUser,
     }: {
       user: CustomUser;
       account: Account | null;
       profile?: Profile;
-      isNewUser?: boolean;
     }): Promise<void> {
-      try {
-        if (isNewUser) {
-          const dbInstance = await db();
-          await dbInstance.updateUser(user.email as string, {
-            assistants: {
-              sage: {
-                files: [],
-                assistantId: '',
-                threadId: '',
-                purpose: Purpose.Sage,
-              },
-              scribe: {
-                files: [],
-                assistantId: '',
-                threadId: '',
-                purpose: Purpose.Scribe,
-              },
-            },
-            preferences: {
-              name: null,
-              description: null,
-              selectedAssistant: null,
-            },
-          });
-        }
-        const provider =
-          account?.provider === 'credentials'
-            ? 'Atlas'
-            : (user?.provider ?? account?.provider);
-
-        console.info(`${user.name} from ${provider} has just signed in!`);
-      } catch (error) {
-        console.error('Error in signIn event:', error);
-      }
+      console.info(
+        `signIn of ${user.name} from ${user?.provider ?? account?.provider}`
+      );
     },
     async signOut({ token }: { session: Session; token: JWT }): Promise<void> {
-      try {
-        console.info(
-          `${token.name} from ${token.provider} has just signed out!`
-        );
-      } catch (error) {
-        console.error('Error in signOut event:', error);
-      }
+      console.info(`signOut of ${token.name} from ${token.provider}`);
     },
   },
   session: {

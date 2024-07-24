@@ -18,7 +18,7 @@ export async function retrieveArchives(
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const { purpose } = archivistParams;
-  
+
   const dbInstance = await db();
 
   const userFiles = await measurePerformance(
@@ -47,10 +47,8 @@ export async function onboardUser(
     sendUpdate
   );
 
-  if (!user.assistants) {
-    throw new Error(
-      'User assistants have not been summoned. Onboarding failed.'
-    );
+  if (!user.preferences) {
+    throw new Error('User onboarding has failed.');
   }
 
   const onboardingUpdated = await measurePerformance(
