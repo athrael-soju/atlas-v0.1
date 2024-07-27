@@ -47,10 +47,6 @@ export async function onboardUser(
     sendUpdate
   );
 
-  if (!user.preferences) {
-    throw new Error('User onboarding has failed.');
-  }
-
   const onboardingUpdated = await measurePerformance(
     () =>
       dbInstance.updateUser(user.email as string, {
