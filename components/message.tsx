@@ -70,14 +70,12 @@ export const Message = ({ role, text }: MessageProps) => {
 export function AssistantMessage({
   role,
   text,
-  className,
 }: Readonly<{
   role: MessageRole;
   text: React.ReactNode;
-  className?: string;
 }>) {
   return (
-    <div className='group relative flex items-start md:-ml-12'>
+    <div className="group relative flex items-start md:-ml-12">
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
         <IconAI />
       </div>

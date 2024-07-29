@@ -31,11 +31,7 @@ export async function submitUserMessage(content: string, context: string) {
     },
   ]);
   const reply = createStreamableUI(
-    <AssistantMessage
-      role={MessageRole.Spinner}
-      text={spinner}
-      className="items-center"
-    />
+    <AssistantMessage role={MessageRole.Spinner} text={spinner} />
   );
 
   const profile = process.env.NEXT_PUBLIC_PERSONA ?? 'atlas';

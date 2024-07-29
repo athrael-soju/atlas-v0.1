@@ -4,6 +4,8 @@ import { AssistantMessage, UserMessage } from '@/components/message';
 import { useUIState, useActions } from 'ai/rsc';
 import { AI } from '@/app/action';
 import { ForgeParams, MessageRole, Purpose } from '../types';
+import { usePlayer } from '@/lib/hooks/use-player';
+import { useMicVAD, utils } from '@ricky0123/vad-react';
 
 export const useMessaging = (
   userEmail: string,
@@ -13,6 +15,7 @@ export const useMessaging = (
   const [messages, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions<typeof AI>();
   const [inputValue, setInputValue] = useState<string>('');
+  const player = usePlayer();
 
   const topK = parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100;
   const topN = parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10;
@@ -30,6 +33,35 @@ export const useMessaging = (
       'auto',
   };
 
+  const vad = useMicVAD({
+    startOnLoad: true,
+    onSpeechEnd: (audio) => {
+      player.stop();
+      const wav = utils.encodeWAV(audio);
+      const blob = new Blob([wav], { type: 'audio/wav' });
+      submitBlob(blob);
+    },
+    workletURL: '/vad.worklet.bundle.min.js',
+    modelURL: '/silero_vad.onnx',
+    positiveSpeechThreshold: 0.6,
+    minSpeechFrames: 4,
+    ortConfig(ort) {
+      const isSafari = /^((?!chrome|android).)*safari/i.test(
+        navigator.userAgent
+      );
+
+      ort.env.wasm = {
+        wasmPaths: {
+          'ort-wasm-simd-threaded.wasm': '/ort-wasm-simd-threaded.wasm',
+          'ort-wasm-simd.wasm': '/ort-wasm-simd.wasm',
+          'ort-wasm.wasm': '/ort-wasm.wasm',
+          'ort-wasm-threaded.wasm': '/ort-wasm-threaded.wasm',
+        },
+        numThreads: isSafari ? 1 : 4,
+      };
+    },
+  });
+
   const updateLastMessage = (role: MessageRole, content: string) => {
     setMessages((currentMessages) => {
       const newMessages = [...currentMessages];
@@ -45,15 +77,68 @@ export const useMessaging = (
       ...currentMessages,
       {
         id: Date.now(),
-        display: (
-          <AssistantMessage
-            role={role}
-            text={content}
-            className="items-center"
-          />
-        ),
+        display: <AssistantMessage role={role} text={content} />,
       },
     ]);
+  };
+
+  const submitBlob = async (data: string | Blob) => {
+    const formData = new FormData();
+
+    if (typeof data === 'string') {
+      formData.append('input', data);
+    } else {
+      formData.append('input', data, 'audio.wav');
+    }
+
+    if (messages.length > 0) {
+      formData.append('message', JSON.stringify(messages));
+    }
+
+    try {
+      const response = await fetch('/api/atlas/herald', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const transcript = decodeURIComponent(
+        response.headers.get('X-Transcript') || ''
+      );
+
+      const text = decodeURIComponent(response.headers.get('X-Response') || '');
+
+      if (!response.ok || !transcript || !text || !response.body) {
+        if (response.status === 429) {
+          console.error('Too many requests. Please try again later.');
+        } else {
+          console.error((await response.text()) || 'An error occurred.');
+        }
+
+        return messages;
+      }
+      player.play(response.body, () => {
+        const isFirefox = navigator.userAgent.includes('Firefox');
+        if (isFirefox) vad.start();
+      });
+
+      setInputValue(transcript);
+      return [
+        ...messages,
+        {
+          role: 'user',
+          content: transcript,
+        },
+        {
+          role: 'assistant',
+          content: text,
+        },
+      ];
+    } catch (error: any) {
+      addNewMessage(
+        MessageRole.Error,
+        <AssistantMessage role={MessageRole.Text} text={error.message} />
+      );
+    }
   };
 
   const submitMessage = async (message: string) => {
@@ -148,6 +233,7 @@ export const useMessaging = (
   };
 
   return {
+    vad,
     messages,
     inputValue,
     forgeParams,

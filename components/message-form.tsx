@@ -28,6 +28,7 @@ export const MessageForm = ({
       </TooltipTrigger>
       <TooltipContent>New Chat</TooltipContent>
     </Tooltip>
+
     <Textarea
       ref={inputRef}
       tabIndex={0}
