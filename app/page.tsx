@@ -32,6 +32,7 @@ import { MessageForm } from '@/components/message-form';
 import { OnboardingCarousel } from '@/components/onboarding';
 import { AtlasUser, Purpose } from '@/lib/types';
 import { Header } from '@/components/header';
+import { SoundVisualizer } from '@/components/sound-visualizer';
 
 export default function Page() {
   const { data: session } = useSession();
@@ -139,21 +140,11 @@ export default function Page() {
         )}
         <ChatScrollAnchor trackVisibility={true} />
       </div>
-      <div
-        className={clsx(
-          'absolute size-36 blur-3xl rounded-full bg-gradient-to-b from-red-200 to-red-400 dark:from-red-600 dark:to-red-800 -z-50 transition ease-in-out',
-          {
-            'opacity-0': vad.loading || vad.errored,
-            'opacity-30': !vad.loading && !vad.errored && !vad.userSpeaking,
-            'opacity-100 scale-110': vad.userSpeaking,
-          }
-        )}
-        style={{
-          top: '0',
-          left: '0',
-          right: '0',
-          bottom: '0',
-          margin: 'auto',
+      <SoundVisualizer
+        events={{
+          loading: vad.loading,
+          errored: !!vad.errored,
+          userSpeaking: vad.userSpeaking,
         }}
       />
       <div className="fixed inset-x-0 bottom-0 w-full">
