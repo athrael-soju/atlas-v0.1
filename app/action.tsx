@@ -61,7 +61,9 @@ export async function submitUserMessage(content: string, context: string) {
   });
 
   completion.onTextContent((content: string, isFinal: boolean) => {
-    reply.update(<AssistantMessage role={MessageRole.Text} text={content} />);
+    reply.update(
+      <AssistantMessage role={MessageRole.Text} message={content} />
+    );
     if (isFinal) {
       reply.done();
       aiState.done([...aiState.get(), { role: 'assistant', content }]);
