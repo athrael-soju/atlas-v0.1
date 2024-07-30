@@ -136,7 +136,7 @@ export async function POST(request: Request) {
   return new Response(voice.body, {
     headers: {
       'X-Transcript': encodeURIComponent(transcript),
-      'X-Response': encodeURIComponent(response),
+      'X-Response': encodeURIComponent(response ?? ''),
     },
   });
 }
