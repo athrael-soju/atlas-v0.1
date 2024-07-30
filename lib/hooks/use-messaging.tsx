@@ -34,6 +34,7 @@ export const useMessaging = (
       'auto',
   };
 
+  // Move into a new hook named accordingly, such as use-audio-messaging.tsx
   const vad = useMicVAD({
     startOnLoad: true,
     onSpeechEnd: (audio) => {
@@ -83,6 +84,7 @@ export const useMessaging = (
     ]);
   };
 
+  // Move into lib/client/atlas.ts
   const submitBlob = async (data: string | Blob) => {
     const formData = new FormData();
     if (typeof data === 'string') {
@@ -218,6 +220,7 @@ export const useMessaging = (
       }
     } else if (process.env.NEXT_PUBLIC_INFERENCE_MODEL === 'speech') {
       // const responseMessage = await submitBlob(message);
+      // submitBlob should be called here from lib/client/atlas.ts
     } else {
       // Otherwise completions is used.
       const responseMessage = await submitUserMessage(message, context);

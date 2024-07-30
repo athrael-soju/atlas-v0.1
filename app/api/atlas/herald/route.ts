@@ -12,7 +12,13 @@ const schema = zfd.formData({
   input: zfd.file(),
   message: zfd.text().optional(),
 });
+// TODO: The herald takes as arguments an action and a heraldParams object.
+// If the action is tts, the heraldParams object will contain the user's text as a string and will return the assistant's speech as a blob and the transcript as a string.
+// If the action is stt, the heraldParams object will contain the user's speech as a blob and will return the transcript as a string.
+// If the action is bidirectional-speech, the heraldParams object will contain the user's speech as a blob and will return the assistant's speech and the transcript as a string.
+// Inference will be taken cared of by the existing assistants (Sage | Scribe) and the text will follow the standard process and storage.
 
+// Transcribe using a cheap, reliable model
 async function getTranscript(input: File) {
   try {
     const { text } = await groq.audio.transcriptions.create({
@@ -65,6 +71,7 @@ export async function POST(request: Request) {
     'text completion ' + (request.headers.get('x-vercel-id') || 'local')
   );
 
+  // Completion will be managed by the existing assistants (Sage | Scribe)
   const completion = await groq.chat.completions.create({
     model: 'llama-3.1-8b-instant',
     messages: [
@@ -89,16 +96,17 @@ export async function POST(request: Request) {
       },
     ],
   });
-
+  // Streams will likely be used to improve the Speed of audio.
   const response = completion.choices[0].message.content;
   console.timeEnd(
     'text completion ' + (request.headers.get('x-vercel-id') || 'local')
   );
-
+  // Metrics will follow the standard process.
   console.time(
     'cartesia request ' + (request.headers.get('x-vercel-id') || 'local')
   );
 
+  // Voice Synthesis will be managed by Synthesia, 11 Labs, or OpenAI.
   const voice = await fetch('https://api.cartesia.ai/tts/bytes', {
     method: 'POST',
     headers: {
