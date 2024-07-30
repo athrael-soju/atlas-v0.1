@@ -1,5 +1,5 @@
-import clsx from 'clsx';
 import React from 'react';
+import clsx from 'clsx';
 
 interface SoundVisualizerProps {
   events: {
@@ -13,7 +13,7 @@ export const SoundVisualizer: React.FC<SoundVisualizerProps> = ({ events }) => {
   return (
     <div
       className={clsx(
-        'absolute size-36 blur-3xl rounded-full bg-gradient-to-b from-red-200 to-red-400 dark:from-red-600 dark:to-red-800 -z-50 transition ease-in-out',
+        'absolute size-36 blur-3xl rounded-full -z-50 transition ease-in-out',
         {
           'opacity-0': events.loading || events.errored,
           'opacity-30':
@@ -22,6 +22,8 @@ export const SoundVisualizer: React.FC<SoundVisualizerProps> = ({ events }) => {
         }
       )}
       style={{
+        background:
+          'conic-gradient(red, orange, yellow, green, blue, indigo, violet, red)',
         top: '0',
         left: '0',
         right: '0',
