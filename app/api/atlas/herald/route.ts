@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     'cartesia request ' + (request.headers.get('x-vercel-id') || 'local')
   );
 
-  // Voice Synthesis will be managed by Synthesia, 11 Labs, or OpenAI.
+  // Voice Synthesis will be managed by Cartesia, 11 Labs, or OpenAI.
   const voice = await fetch('https://api.cartesia.ai/tts/bytes', {
     method: 'POST',
     headers: {
