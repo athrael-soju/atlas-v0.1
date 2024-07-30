@@ -6,6 +6,7 @@ import { AI } from '@/app/action';
 import { ForgeParams, MessageRole, Purpose } from '../types';
 import { usePlayer } from '@/lib/hooks/use-player';
 import { useMicVAD, utils } from '@ricky0123/vad-react';
+import { track } from '@vercel/analytics';
 
 export const useMessaging = (
   userEmail: string,
@@ -66,7 +67,7 @@ export const useMessaging = (
     setMessages((currentMessages) => {
       const newMessages = [...currentMessages];
       newMessages[newMessages.length - 1].display = (
-        <AssistantMessage role={role} text={content} />
+        <AssistantMessage role={role} message={content} />
       );
       return newMessages;
     });
@@ -77,24 +78,26 @@ export const useMessaging = (
       ...currentMessages,
       {
         id: Date.now(),
-        display: <AssistantMessage role={role} text={content} />,
+        display: <AssistantMessage role={role} message={content} />,
       },
     ]);
   };
 
   const submitBlob = async (data: string | Blob) => {
     const formData = new FormData();
-
     if (typeof data === 'string') {
       formData.append('input', data);
+      track('Text input');
     } else {
       formData.append('input', data, 'audio.wav');
+      track('Speech input');
     }
 
-    if (messages.length > 0) {
-      formData.append('message', JSON.stringify(messages));
+    for (const message of messages) {
+      formData.append('message', JSON.stringify(message));
     }
 
+    const submittedAt = Date.now();
     try {
       const response = await fetch('/api/atlas/herald', {
         method: 'POST',
@@ -113,9 +116,10 @@ export const useMessaging = (
         } else {
           console.error((await response.text()) || 'An error occurred.');
         }
-
         return messages;
       }
+      const latency = Date.now() - submittedAt;
+
       player.play(response.body, () => {
         const isFirefox = navigator.userAgent.includes('Firefox');
         if (isFirefox) vad.start();
@@ -136,7 +140,7 @@ export const useMessaging = (
     } catch (error: any) {
       addNewMessage(
         MessageRole.Error,
-        <AssistantMessage role={MessageRole.Text} text={error.message} />
+        <AssistantMessage role={MessageRole.Text} message={error.message} />
       );
     }
   };
@@ -209,7 +213,7 @@ export const useMessaging = (
       } catch (error: any) {
         addNewMessage(
           MessageRole.Error,
-          <AssistantMessage role={MessageRole.Text} text={error.message} />
+          <AssistantMessage role={MessageRole.Text} message={error.message} />
         );
       }
     } else {

@@ -35,7 +35,7 @@ export default defineNextConfig({
     config.resolve.alias = {
       ...config.resolve.alias,
       sharp$: false,
-      'onnxruntime-node$': false, // Used for transformer.js
+      'onnxruntime-node$': false,
       'mongodb-client-encryption': false, // Unused for Natural
       aws4: false, // Unused for Natural
       'webworker-threads': false, // Unused for Natural
