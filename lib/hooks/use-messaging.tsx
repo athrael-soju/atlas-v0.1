@@ -216,6 +216,9 @@ export const useMessaging = (
           <AssistantMessage role={MessageRole.Text} message={error.message} />
         );
       }
+    } else if (process.env.NEXT_PUBLIC_INFERENCE_MODEL === 'speech') {
+     
+     // const responseMessage = await submitBlob(message);
     } else {
       // Otherwise completions is used.
       const responseMessage = await submitUserMessage(message, context);
