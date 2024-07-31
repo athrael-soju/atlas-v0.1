@@ -115,7 +115,7 @@ export default function Page() {
     return (
       <div>
         <Header />
-        <HandleLoader />
+        {/* <HandleLoader /> */}
         <div className="flex items-center justify-center p-24">
           <OnboardingCarousel
             userEmail={userEmail}
@@ -131,7 +131,7 @@ export default function Page() {
   return (
     <div>
       <Header />
-      <HandleLoader />
+      {/* <HandleLoader /> */}
       <div className="pb-52 pt-4 md:pt-10">
         {messages.length ? (
           <ChatList messages={messages} />
