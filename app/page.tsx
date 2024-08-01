@@ -9,6 +9,7 @@ import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
 import { useKeyboardShortcut } from '@/lib/hooks/use-keyboard-shortcuts';
 import { useFileHandling } from '@/lib/hooks/use-file-handling';
 import { useMessaging } from '@/lib/hooks/use-messaging';
+import { useSpeech } from '@/lib/hooks/use-speech';
 import {
   IconChevronRight,
   IconChevronUp,
@@ -71,7 +72,6 @@ export default function Page() {
   } = useFileHandling(userEmail, purpose, setIsLoading);
 
   const {
-    vad,
     messages,
     inputValue,
     forgeParams,
@@ -79,6 +79,8 @@ export default function Page() {
     submitMessage,
     handleSubmit,
   } = useMessaging(userEmail!, spinner, purpose);
+
+  const { vad } = useSpeech();
 
   const HandleLoader = () => (
     <div>

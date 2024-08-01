@@ -4,9 +4,6 @@ import { AssistantMessage, UserMessage } from '@/components/message';
 import { useUIState, useActions } from 'ai/rsc';
 import { AI } from '@/app/action';
 import { ForgeParams, MessageRole, Purpose } from '../types';
-import { usePlayer } from '@/lib/hooks/use-player';
-import { useMicVAD, utils } from '@ricky0123/vad-react';
-import { track } from '@vercel/analytics';
 
 export const useMessaging = (
   userEmail: string,
@@ -16,7 +13,6 @@ export const useMessaging = (
   const [messages, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions<typeof AI>();
   const [inputValue, setInputValue] = useState<string>('');
-  const player = usePlayer();
 
   const topK = parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100;
   const topN = parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10;
@@ -33,36 +29,6 @@ export const useMessaging = (
       (process.env.NEXT_PUBLIC_UNSTRUCTURED_PARSING_STRATEGY as string) ||
       'auto',
   };
-
-  // Move into a new hook named accordingly, such as use-audio-messaging.tsx
-  const vad = useMicVAD({
-    startOnLoad: true,
-    onSpeechEnd: (audio) => {
-      player.stop();
-      const wav = utils.encodeWAV(audio);
-      const blob = new Blob([wav], { type: 'audio/wav' });
-      submitBlob(blob);
-    },
-    workletURL: '/vad.worklet.bundle.min.js',
-    modelURL: '/silero_vad.onnx',
-    positiveSpeechThreshold: 0.6,
-    minSpeechFrames: 4,
-    ortConfig(ort) {
-      const isSafari = /^((?!chrome|android).)*safari/i.test(
-        navigator.userAgent
-      );
-
-      ort.env.wasm = {
-        wasmPaths: {
-          'ort-wasm-simd-threaded.wasm': '/ort-wasm-simd-threaded.wasm',
-          'ort-wasm-simd.wasm': '/ort-wasm-simd.wasm',
-          'ort-wasm.wasm': '/ort-wasm.wasm',
-          'ort-wasm-threaded.wasm': '/ort-wasm-threaded.wasm',
-        },
-        numThreads: isSafari ? 1 : 4,
-      };
-    },
-  });
 
   const updateLastMessage = (role: MessageRole, content: string) => {
     setMessages((currentMessages) => {
@@ -82,69 +48,6 @@ export const useMessaging = (
         display: <AssistantMessage role={role} message={content} />,
       },
     ]);
-  };
-
-  // Move into lib/client/atlas.ts
-  const submitBlob = async (data: string | Blob) => {
-    const formData = new FormData();
-    if (typeof data === 'string') {
-      formData.append('input', data);
-      track('Text input');
-    } else {
-      formData.append('input', data, 'audio.wav');
-      track('Speech input');
-    }
-
-    for (const message of messages) {
-      formData.append('message', JSON.stringify(message));
-    }
-
-    const submittedAt = Date.now();
-    try {
-      const response = await fetch('/api/atlas/herald', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const transcript = decodeURIComponent(
-        response.headers.get('X-Transcript') || ''
-      );
-
-      const text = decodeURIComponent(response.headers.get('X-Response') || '');
-
-      if (!response.ok || !transcript || !text || !response.body) {
-        if (response.status === 429) {
-          console.error('Too many requests. Please try again later.');
-        } else {
-          console.error((await response.text()) || 'An error occurred.');
-        }
-        return messages;
-      }
-      const latency = Date.now() - submittedAt;
-
-      player.play(response.body, () => {
-        const isFirefox = navigator.userAgent.includes('Firefox');
-        if (isFirefox) vad.start();
-      });
-
-      setInputValue(transcript);
-      return [
-        ...messages,
-        {
-          role: 'user',
-          content: transcript,
-        },
-        {
-          role: 'assistant',
-          content: text,
-        },
-      ];
-    } catch (error: any) {
-      addNewMessage(
-        MessageRole.Error,
-        <AssistantMessage role={MessageRole.Text} message={error.message} />
-      );
-    }
   };
 
   const submitMessage = async (message: string) => {
@@ -218,9 +121,6 @@ export const useMessaging = (
           <AssistantMessage role={MessageRole.Text} message={error.message} />
         );
       }
-    } else if (process.env.NEXT_PUBLIC_INFERENCE_MODEL === 'speech') {
-      // const responseMessage = await submitBlob(message);
-      // submitBlob should be called here from lib/client/atlas.ts
     } else {
       // Otherwise completions is used.
       const responseMessage = await submitUserMessage(message, context);
@@ -242,7 +142,6 @@ export const useMessaging = (
   };
 
   return {
-    vad,
     messages,
     inputValue,
     forgeParams,
