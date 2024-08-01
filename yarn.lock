@@ -2785,10 +2785,10 @@ code-red@^1.0.3:
     estree-walker "^3.0.3"
     periscopic "^3.1.0"
 
-cohere-ai@^7.9.5:
-  version "7.11.1"
-  resolved "https://registry.yarnpkg.com/cohere-ai/-/cohere-ai-7.11.1.tgz#4bd33ab326d27b565c5abb93431f0051ecd229e2"
-  integrity sha512-Ua3BJmbQC+lQ9j6yHF/e+6Jsy47WUWczjYqwg9dKY5uBZSbSifmu79FgEcZiPo9VmfGMGWc2+U2gmxeguuO04w==
+cohere-ai@^7.11.2:
+  version "7.11.2"
+  resolved "https://registry.yarnpkg.com/cohere-ai/-/cohere-ai-7.11.2.tgz#6464afa4ed36f4eea8cd80b768a397586cec4bb9"
+  integrity sha512-IImDbZLg+kApTH9KswRAEGd0dRuZiChnsqC8gf6RepuklLuSxEkqto4uwSQQSUTj50Ns4uN7yaxzVyS6OmLpIg==
   dependencies:
     "@aws-sdk/client-sagemaker" "^3.583.0"
     "@aws-sdk/credential-providers" "^3.583.0"
@@ -2802,6 +2802,11 @@ cohere-ai@^7.9.5:
     qs "6.11.2"
     readable-stream "^4.5.2"
     url-join "4.0.1"
+
+cohere@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/cohere/-/cohere-1.1.1.tgz#c61ab08270346ffa96fd662f5f08e0d9876b2b12"
+  integrity sha512-D116FKTuauCShJjPuOAFnkyAPMhV/6f403+yPZwyyFY6gErK1AA41y9rQdBvj8eHDZ9sXVJ6TzmzObVfAFh3ig==
 
 color-convert@^2.0.1:
   version "2.0.1"

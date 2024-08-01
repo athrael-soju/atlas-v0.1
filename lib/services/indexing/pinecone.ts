@@ -15,8 +15,8 @@ export async function query(userEmail: string, embeddings: any, topK: number) {
       text: item.metadata.text,
       filename: item.metadata.filename,
       filetype: item.metadata.filetype,
-      languages: item.metadata.languages,
-      page_number: item.metadata.page_number,
+      languages: item.metadata.languages.join(', '),
+      page_number: item.metadata.page_number.toString(),
       user_email: item.metadata.user_email,
     }));
     return {

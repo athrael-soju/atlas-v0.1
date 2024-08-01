@@ -216,7 +216,7 @@ const handleReadableStream = async (
       }
     });
     stream.on('event', (event: AssistantStreamEvent) => {
-      if (process.env.SAGE_EVENT_DEBUG === 'true') {
+      if (process.env.EVENT_DEBUG === 'true') {
         console.info('Event:', event.data);
       }
       if (event.event === 'thread.run.requires_action') {
@@ -230,8 +230,9 @@ const handleReadableStream = async (
       }
     });
     stream.on('error', (error: any) => {
-      if (process.env.SAGE_EVENT_ERROR === 'true') {
+      if (process.env.EVENT_ERROR === 'true') {
         console.error('Error:', error);
+        sendUpdate('error', error);
       }
       reject(new Error(error.message));
     });
