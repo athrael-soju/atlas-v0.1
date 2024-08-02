@@ -228,6 +228,10 @@ const handleReadableStream = async (
         // TODO - setInputDisabled(false);
         resolve(event);
       }
+      if (event.event === 'thread.run.failed') {
+        sendUpdate('error', 'events_failed');
+        reject(new Error('Thread run failed'));
+      }
     });
     stream.on('error', (error: any) => {
       if (process.env.EVENT_ERROR === 'true') {
