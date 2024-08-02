@@ -4,6 +4,7 @@ import { AssistantMessage, UserMessage } from '@/components/message';
 import { useUIState, useActions } from 'ai/rsc';
 import { AI } from '@/app/action';
 import { ForgeParams, MessageRole, Purpose } from '../types';
+import { toast } from '@/components/ui/use-toast';
 
 export const useMessaging = (
   userEmail: string,
@@ -68,7 +69,7 @@ export const useMessaging = (
         let currentMessage: string = '';
         if (purpose === Purpose.Scribe) {
           await scribe(userEmail, message, topK, topN, (event) => {
-            const { type, message } = JSON.parse(event.replace('data: ', ''));
+            const { type, message } = JSON.parse(event?.replace('data: ', ''));
             if (type.includes('created') && firstRun === false) {
               addNewMessage(prevType, currentMessage);
               if (type === 'text_created') {
@@ -77,6 +78,13 @@ export const useMessaging = (
                 prevType = MessageRole.Code;
               }
               currentMessage = '';
+            } else if (type === 'error') {
+              toast({
+                title: 'Error',
+                description: `${message}`,
+                variant: 'destructive',
+              });
+              throw new Error(message);
             } else if (
               [MessageRole.Text, MessageRole.Code, MessageRole.Image].includes(
                 type
@@ -103,6 +111,13 @@ export const useMessaging = (
                 prevType = MessageRole.Image;
               }
               currentMessage = '';
+            } else if (type === 'error') {
+              toast({
+                title: 'Error',
+                description: `${message}`,
+                variant: 'destructive',
+              });
+              throw new Error(message);
             } else if (
               [MessageRole.Text, MessageRole.Code, MessageRole.Image].includes(
                 type
@@ -116,9 +131,9 @@ export const useMessaging = (
           });
         }
       } catch (error: any) {
-        addNewMessage(
+        updateLastMessage(
           MessageRole.Error,
-          <AssistantMessage role={MessageRole.Text} message={error.message} />
+          `Something went wrong while trying to respond. Sorry about that ${userEmail}! If this persists, would you please contact support?`
         );
       }
     } else {
@@ -139,6 +154,8 @@ export const useMessaging = (
     if (!value) return;
 
     await submitMessage(value);
+
+    console.log('User message:', value);
   };
 
   return {

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
+import readline from 'readline';
 
-// TODO: find the issue of the animation stopping after the first interval. It should continue until the action is completed
 export const measurePerformance = async <T>(
   action: () => Promise<T>,
   description: string,
@@ -10,31 +10,50 @@ export const measurePerformance = async <T>(
   sendUpdate('notification', description);
   process.stdout.write(chalk.blue(`${description}\r`));
 
-  const animation = ['.', '..', '...'];
+  const animation = ['', '.', '..', '...'];
   let i = 0;
   const interval = setInterval(() => {
+    readline.clearLine(process.stdout, 0);
+    readline.cursorTo(process.stdout, 0);
     process.stdout.write(
-      chalk.blue(`${description}${animation[i % animation.length]}\r`)
+      chalk.blue(`${description}${animation[i % animation.length]}`)
     );
     i++;
   }, 500);
 
   try {
     const result = await action();
+    const endTime = performance.now();
     clearInterval(interval);
 
-    const endTime = performance.now();
+    readline.clearLine(process.stdout, 0);
+    readline.cursorTo(process.stdout, 0);
     process.stdout.write(
       chalk.blue(`${description}: `) +
-        chalk.green('Completed in ') +
-        chalk.red(((endTime - startTime) / 1000).toFixed(2)) +
-        chalk.green(' seconds\n')
+        chalk.green('Completed') +
+        chalk.cyan(' in ') +
+        chalk.yellow(((endTime - startTime) / 1000).toFixed(2)) +
+        chalk.cyan(' seconds\n')
     );
     return result;
   } catch (error) {
+    const endTime = performance.now();
+    clearInterval(interval);
+
+    readline.clearLine(process.stdout, 0);
+    readline.cursorTo(process.stdout, 0);
+    process.stdout.write(
+      chalk.blue(`${description}: `) +
+        chalk.red('Failed') +
+        chalk.cyan(' after ') +
+        chalk.yellow(((endTime - startTime) / 1000).toFixed(2)) +
+        chalk.cyan(' seconds\n')
+    );
     throw error;
   } finally {
     clearInterval(interval);
+    readline.clearLine(process.stdout, 0);
+    readline.cursorTo(process.stdout, 0);
     process.stdout.write('');
   }
 };
@@ -45,11 +64,11 @@ export const getTotalTime = (
   sendUpdate: (type: string, message: string) => void
 ): void => {
   const totalTime = ((totalEndTime - totalStartTime) / 1000).toFixed(2);
-  sendUpdate('metric', `Total process completed in ${totalTime} seconds`);
+  sendUpdate('metric', `Processes completed in ${totalTime} seconds`);
 
   process.stdout.write(
-    chalk.magenta('Total process completed in ') +
-      chalk.red(totalTime) +
+    chalk.magenta('Process completed in ') +
+      chalk.yellow(totalTime) +
       chalk.magenta(' seconds\n')
   );
 };

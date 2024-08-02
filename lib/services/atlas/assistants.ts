@@ -60,7 +60,6 @@ export async function consult(
     }
 
     const dbInstance = await db();
-
     const user = await measurePerformance(
       () => dbInstance.getUser(userEmail),
       `Checking for summoned ${purpose}`,
@@ -229,15 +228,17 @@ const handleReadableStream = async (
         resolve(event);
       }
       if (event.event === 'thread.run.failed') {
-        sendUpdate('error', 'events_failed');
-        reject(new Error('Thread run failed'));
+        //sendUpdate('error', `events_failed: ${event.data.last_error?.message}`);
+        reject({
+          type: 'error',
+          message: `Stream aborted: ${event.data.last_error?.message}`,
+        });
       }
     });
     stream.on('error', (error: any) => {
       if (process.env.EVENT_ERROR === 'true') {
         console.error('Error:', error);
-        sendUpdate('error', error);
+        reject({ type: 'error', message: error.message });
       }
-      reject(new Error(error.message));
     });
   });

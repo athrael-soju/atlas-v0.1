@@ -55,9 +55,10 @@ export async function rerank(
 
     if (rerankResponse.results.length > 0) {
       // Filter results based on relevance score
-      const relevanceThreshold = parseInt(
+      const relevanceThreshold = parseFloat(
         process.env.COHERE_RELEVANCE_THRESHOLD as string
       );
+
       const filteredResults = rerankResponse.results.filter(
         (result) => result.relevanceScore >= relevanceThreshold
       );
