@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { CircleLoader } from 'react-spinners';
@@ -8,6 +9,7 @@ import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
 import { useKeyboardShortcut } from '@/lib/hooks/use-keyboard-shortcuts';
 import { useFileHandling } from '@/lib/hooks/use-file-handling';
 import { useMessaging } from '@/lib/hooks/use-messaging';
+import { useSpeech } from '@/lib/hooks/use-speech';
 import {
   IconChevronRight,
   IconChevronUp,
@@ -31,6 +33,7 @@ import { MessageForm } from '@/components/message-form';
 import { OnboardingCarousel } from '@/components/onboarding';
 import { AtlasUser, Purpose } from '@/lib/types';
 import { Header } from '@/components/header';
+import { SoundVisualizer } from '@/components/sound-visualizer';
 
 export default function Page() {
   const { data: session } = useSession();
@@ -46,6 +49,9 @@ export default function Page() {
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [assistantSelected, setAssistantSelected] = useState<Purpose | null>(
     null
+  );
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState<boolean>(
+    process.env.NEXT_PUBLIC_SPEECH_ENABLED === 'true'
   );
 
   let purpose =
@@ -77,15 +83,18 @@ export default function Page() {
     handleSubmit,
   } = useMessaging(userEmail!, spinner, purpose);
 
-  const HandleLoader = () => (
-    <div>
-      {isLoading && (
-        <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
-          <CircleLoader color="var(--spinner-color)" size={150} />
-        </div>
-      )}
-    </div>
-  );
+  const { vad } = isSpeechEnabled ? useSpeech() : { vad: null };
+
+  // TODO: Implement a better loading spinner
+  // const HandleLoader = () => (
+  //   <div>
+  //     {isLoading && (
+  //       <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
+  //         <CircleLoader color="var(--spinner-color)" size={150} />
+  //       </div>
+  //     )}
+  //   </div>
+  // );
 
   if (!session) {
     return (
@@ -112,7 +121,7 @@ export default function Page() {
     return (
       <div>
         <Header />
-        <HandleLoader />
+        {/* <HandleLoader /> */}
         <div className="flex items-center justify-center p-24">
           <OnboardingCarousel
             userEmail={userEmail}
@@ -128,7 +137,7 @@ export default function Page() {
   return (
     <div>
       <Header />
-      <HandleLoader />
+      {/* <HandleLoader /> */}
       <div className="pb-52 pt-4 md:pt-10">
         {messages.length ? (
           <ChatList messages={messages} />
@@ -137,6 +146,15 @@ export default function Page() {
         )}
         <ChatScrollAnchor trackVisibility={true} />
       </div>
+      {isSpeechEnabled && (
+        <SoundVisualizer
+          events={{
+            loading: vad?.loading ?? false,
+            errored: !!vad?.errored ?? false,
+            userSpeaking: vad?.userSpeaking ?? false,
+          }}
+        />
+      )}
       <div className="fixed inset-x-0 bottom-0 w-full">
         <div className="mx-auto sm:max-w-2xl sm:px-4">
           {!messages.length && <ExampleMessages onClick={submitMessage} />}

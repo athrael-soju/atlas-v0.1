@@ -1,9 +1,9 @@
 import { FormEvent, ReactNode, useState } from 'react';
-import { scribe, sage } from '../client/atlas';
 import { AssistantMessage, UserMessage } from '@/components/message';
 import { useUIState, useActions } from 'ai/rsc';
 import { AI } from '@/app/action';
 import { ForgeParams, MessageRole, Purpose } from '../types';
+import { handleScribe, handleSage } from '@/lib/utils/assistants';
 
 export const useMessaging = (
   userEmail: string,
@@ -34,7 +34,7 @@ export const useMessaging = (
     setMessages((currentMessages) => {
       const newMessages = [...currentMessages];
       newMessages[newMessages.length - 1].display = (
-        <AssistantMessage role={role} text={content} />
+        <AssistantMessage role={role} message={content} />
       );
       return newMessages;
     });
@@ -45,13 +45,7 @@ export const useMessaging = (
       ...currentMessages,
       {
         id: Date.now(),
-        display: (
-          <AssistantMessage
-            role={role}
-            text={content}
-            className="items-center"
-          />
-        ),
+        display: <AssistantMessage role={role} message={content} />,
       },
     ]);
   };
@@ -66,69 +60,35 @@ export const useMessaging = (
       },
     ]);
     let context = '';
+    // Use Assistants API
     if (process.env.NEXT_PUBLIC_INFERENCE_MODEL === 'assistant') {
       addNewMessage(MessageRole.Spinner, spinner);
       try {
-        let firstRun = true;
-        let prevType: MessageRole.Text | MessageRole.Code | MessageRole.Image;
-        let currentMessage: string = '';
         if (purpose === Purpose.Scribe) {
-          await scribe(userEmail, message, topK, topN, (event) => {
-            const { type, message } = JSON.parse(event.replace('data: ', ''));
-            if (type.includes('created') && firstRun === false) {
-              addNewMessage(prevType, currentMessage);
-              if (type === 'text_created') {
-                prevType = MessageRole.Text;
-              } else if (type === 'tool_created') {
-                prevType = MessageRole.Code;
-              }
-              currentMessage = '';
-            } else if (
-              [MessageRole.Text, MessageRole.Code, MessageRole.Image].includes(
-                type
-              )
-            ) {
-              currentMessage += message;
-              prevType = type;
-              firstRun = false;
-              updateLastMessage(type, currentMessage);
-            }
-          });
+          await handleScribe(
+            userEmail,
+            message,
+            topK,
+            topN,
+            updateLastMessage,
+            addNewMessage
+          );
         } else if (purpose === Purpose.Sage) {
-          firstRun = true;
-          currentMessage = '';
-          await sage(userEmail, message, (event: string) => {
-            const { type, message } = JSON.parse(event.replace('data: ', ''));
-            if (type.includes('created') && firstRun === false) {
-              addNewMessage(prevType, currentMessage);
-              if (type === 'text_created') {
-                prevType = MessageRole.Text;
-              } else if (type === 'tool_created') {
-                prevType = MessageRole.Code;
-              } else if (type === 'image_created') {
-                prevType = MessageRole.Image;
-              }
-              currentMessage = '';
-            } else if (
-              [MessageRole.Text, MessageRole.Code, MessageRole.Image].includes(
-                type
-              )
-            ) {
-              currentMessage += message;
-              prevType = type;
-              firstRun = false;
-              updateLastMessage(type, currentMessage);
-            }
-          });
+          await handleSage(
+            userEmail,
+            message,
+            updateLastMessage,
+            addNewMessage
+          );
         }
       } catch (error: any) {
-        addNewMessage(
+        updateLastMessage(
           MessageRole.Error,
-          <AssistantMessage role={MessageRole.Text} text={error.message} />
+          `Something went wrong while trying to respond. Sorry about that ${userEmail}! If this persists, would you please contact support?`
         );
       }
     } else {
-      // Otherwise completions is used.
+      // Otherwise Completions API is used.
       const responseMessage = await submitUserMessage(message, context);
       setMessages((currentMessages) => [...currentMessages, responseMessage]);
     }
@@ -145,6 +105,8 @@ export const useMessaging = (
     if (!value) return;
 
     await submitMessage(value);
+
+    console.log('User message:', value);
   };
 
   return {

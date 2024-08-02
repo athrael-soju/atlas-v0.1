@@ -155,7 +155,8 @@ export enum MessageRole {
 
 export type MessageProps = {
   role: MessageRole;
-  text: string;
+  message: string;
+  latency?: number;
 };
 
 export type CustodianAction = 'summon' | 'reform' | 'dismiss';

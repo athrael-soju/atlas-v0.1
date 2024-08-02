@@ -31,11 +31,7 @@ export async function submitUserMessage(content: string, context: string) {
     },
   ]);
   const reply = createStreamableUI(
-    <AssistantMessage
-      role={MessageRole.Spinner}
-      text={spinner}
-      className="items-center"
-    />
+    <AssistantMessage role={MessageRole.Spinner} message={spinner} />
   );
 
   const profile = process.env.NEXT_PUBLIC_PERSONA ?? 'atlas';
@@ -65,7 +61,9 @@ export async function submitUserMessage(content: string, context: string) {
   });
 
   completion.onTextContent((content: string, isFinal: boolean) => {
-    reply.update(<AssistantMessage role={MessageRole.Text} text={content} />);
+    reply.update(
+      <AssistantMessage role={MessageRole.Text} message={content} />
+    );
     if (isFinal) {
       reply.done();
       aiState.done([...aiState.get(), { role: 'assistant', content }]);

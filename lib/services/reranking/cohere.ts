@@ -15,18 +15,23 @@ function formatResult(
   result: RerankResponseResultsItem,
   index: number
 ): string {
-  const doc = result.document as any;
-  return `
+  try {
+    const doc = result.document as any;
+    return `
 Document ${index + 1}:
 Filename: ${doc.filename || 'N/A'}
 Filetype: ${doc.filetype || 'N/A'}
-Languages: ${doc.languages ? doc.languages.join(', ') : 'N/A'}
+Languages: ${doc.languages || 'N/A'}
 Page Number: ${doc.page_number || 'N/A'}
 Relevance Score: ${result.relevanceScore.toFixed(4)}
 
 Content:
 ${doc.text || 'No content available'}
 `;
+  } catch (error: any) {
+    console.error(error);
+    return `Error formatting document ${index + 1}: ${error.message}`;
+  }
 }
 
 export async function rerank(
@@ -39,7 +44,7 @@ export async function rerank(
       return 'Context: Query results are empty. No relevant documents found.';
     }
 
-    const rerank = await cohere.rerank({
+    const rerankResponse = await cohere.rerank({
       model: model,
       documents: queryResults,
       rankFields: ['text', 'filename', 'page_number', 'filetype', 'languages'],
@@ -47,9 +52,25 @@ export async function rerank(
       topN: topN,
       returnDocuments: true,
     });
-    if (rerank.results.length > 0) {
-      const formattedResults = rerank.results.map(formatResult).join('\n---\n');
-      return `Context: The following are the top ${topN} most relevant documents based on the query "${userMessage}". Each document is separated by "---".\n\n${formattedResults}`;
+
+    if (rerankResponse.results.length > 0) {
+      // Filter results based on relevance score
+      const relevanceThreshold = parseFloat(
+        process.env.COHERE_RELEVANCE_THRESHOLD as string
+      );
+
+      const filteredResults = rerankResponse.results.filter(
+        (result) => result.relevanceScore >= relevanceThreshold
+      );
+
+      if (filteredResults.length > 0) {
+        const formattedResults = filteredResults
+          .map(formatResult)
+          .join('\n---\n');
+        return `Context: The following are the top ${topN} most relevant documents based on the query "${userMessage}". Each document is separated by "---".\n\n${formattedResults}`;
+      } else {
+        return 'Context: No relevant documents found with a relevance score of 0.75 or higher.';
+      }
     } else {
       return 'Context: No relevant documents found.';
     }

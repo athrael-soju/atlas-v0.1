@@ -60,7 +60,6 @@ export async function consult(
     }
 
     const dbInstance = await db();
-
     const user = await measurePerformance(
       () => dbInstance.getUser(userEmail),
       `Checking for summoned ${purpose}`,
@@ -216,7 +215,7 @@ const handleReadableStream = async (
       }
     });
     stream.on('event', (event: AssistantStreamEvent) => {
-      if (process.env.SAGE_EVENT_DEBUG === 'true') {
+      if (process.env.EVENT_DEBUG === 'true') {
         console.info('Event:', event.data);
       }
       if (event.event === 'thread.run.requires_action') {
@@ -228,11 +227,15 @@ const handleReadableStream = async (
         // TODO - setInputDisabled(false);
         resolve(event);
       }
+      if (event.event === 'thread.run.failed') {
+        //sendUpdate('error', `events_failed: ${event.data.last_error?.message}`);
+        reject({
+          type: 'error',
+          message: `Stream aborted: ${event.data.last_error?.message}`,
+        });
+      }
     });
     stream.on('error', (error: any) => {
-      if (process.env.SAGE_EVENT_ERROR === 'true') {
-        console.error('Error:', error);
-      }
-      reject(new Error(error.message));
+      reject({ type: 'error', message: error.message });
     });
   });

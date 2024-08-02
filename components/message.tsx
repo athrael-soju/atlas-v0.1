@@ -59,30 +59,32 @@ const TextContent = ({ text }: { text: string }) => {
   );
 };
 
-export const Message = ({ role, text }: MessageProps) => {
+export const Message = ({ role, message }: MessageProps) => {
   if (role === MessageRole.Code) {
-    return <CodeContent text={text} />;
+    return <CodeContent text={message} />;
   } else {
-    return <TextContent text={text} />;
+    return <TextContent text={message} />;
   }
 };
 
 export function AssistantMessage({
   role,
-  text,
-  className,
+  message,
 }: Readonly<{
   role: MessageRole;
-  text: React.ReactNode;
-  className?: string;
+  message: React.ReactNode;
 }>) {
   return (
-    <div className='group relative flex items-start md:-ml-12'>
+    <div className="group relative flex items-start md:-ml-12">
       <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-md border shadow-sm bg-primary text-primary-foreground">
         <IconAI />
       </div>
       <div className="ml-4 space-y-2 overflow-hidden rounded-lg bg-secondary p-4 shadow-sm inline-block">
-        {typeof text === 'string' ? <Message role={role} text={text} /> : text}
+        {typeof message === 'string' ? (
+          <Message role={role} message={message} />
+        ) : (
+          message
+        )}
       </div>
     </div>
   );
