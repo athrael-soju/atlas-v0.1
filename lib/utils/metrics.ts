@@ -1,6 +1,9 @@
 import chalk from 'chalk';
 import readline from 'readline';
 
+const hideCursor = () => process.stdout.write('\x1B[?25l');
+const showCursor = () => process.stdout.write('\x1B[?25h');
+
 export const measurePerformance = async <T>(
   action: () => Promise<T>,
   description: string,
@@ -12,6 +15,7 @@ export const measurePerformance = async <T>(
 
   const animation = ['', '.', '..', '...'];
   let i = 0;
+  hideCursor();
   const interval = setInterval(() => {
     readline.clearLine(process.stdout, 0);
     readline.cursorTo(process.stdout, 0);
@@ -54,6 +58,7 @@ export const measurePerformance = async <T>(
     clearInterval(interval);
     readline.clearLine(process.stdout, 0);
     readline.cursorTo(process.stdout, 0);
+    showCursor();
     process.stdout.write('');
   }
 };
