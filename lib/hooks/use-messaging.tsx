@@ -3,8 +3,7 @@ import { AssistantMessage, UserMessage } from '@/components/message';
 import { useUIState, useActions } from 'ai/rsc';
 import { AI } from '@/app/action';
 import { ForgeParams, MessageRole, Purpose } from '../types';
-import { toast } from '@/components/ui/use-toast';
-import { handleScribe, handleSage } from '@/lib/client/assistants';
+import { handleScribe, handleSage } from '@/lib/utils/assistants';
 
 export const useMessaging = (
   userEmail: string,
