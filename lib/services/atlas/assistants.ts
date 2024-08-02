@@ -236,9 +236,6 @@ const handleReadableStream = async (
       }
     });
     stream.on('error', (error: any) => {
-      if (process.env.EVENT_ERROR === 'true') {
-        console.error('Error:', error);
-        reject({ type: 'error', message: error.message });
-      }
+      reject({ type: 'error', message: error.message });
     });
   });
