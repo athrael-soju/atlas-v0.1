@@ -136,7 +136,7 @@ const handleReadableStream = async (
     ) => Promise<any>;
   }
 ) =>
-  new Promise((resolve, reject) => {
+  new Promise<void>((resolve, reject) => {
     stream.on('textCreated', () => {
       sendUpdate('text_created', 'text_created');
     });
@@ -223,9 +223,9 @@ const handleReadableStream = async (
         //handleRequiresAction(event);
       }
       if (event.event === 'thread.run.completed') {
-        sendUpdate('notification', 'events_completed');
+        sendUpdate('final-notification', 'events_completed');
         // TODO - setInputDisabled(false);
-        resolve(event);
+        resolve();
       }
       if (event.event === 'thread.run.failed') {
         //sendUpdate('error', `events_failed: ${event.data.last_error?.message}`);

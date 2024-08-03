@@ -1,5 +1,5 @@
 import { scribe, sage } from '../client/atlas';
-import { MessageRole, Purpose } from '../types';
+import { MessageRole } from '../types';
 import { toast } from '@/components/ui/use-toast';
 
 export const handleScribe = async (

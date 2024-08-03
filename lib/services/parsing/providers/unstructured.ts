@@ -20,7 +20,7 @@ const unstructuredClient = new UnstructuredClient({
   security: {
     apiKeyAuth: apiKey,
   },
-  serverURL, // Optional if you have access to the SaaS platform
+  serverURL,
 });
 
 export async function parseUnstructured(

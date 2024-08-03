@@ -26,13 +26,7 @@ async function handleConsultation(
     message: scribeParams.message,
     context: retrieveResponse.context,
   };
-  const response = await consult(
-    userEmail,
-    Purpose.Scribe,
-    consultationParams,
-    send
-  );
-  send('final-notification', JSON.stringify(response.content));
+  await consult(userEmail, Purpose.Scribe, consultationParams, send);
 }
 
 async function processRequest(

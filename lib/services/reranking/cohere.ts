@@ -15,9 +15,8 @@ function formatResult(
   result: RerankResponseResultsItem,
   index: number
 ): string {
-  try {
-    const doc = result.document as any;
-    return `
+  const doc = result.document as any;
+  return `
 Document ${index + 1}:
 Filename: ${doc.filename || 'N/A'}
 Filetype: ${doc.filetype || 'N/A'}
@@ -28,10 +27,6 @@ Relevance Score: ${result.relevanceScore.toFixed(4)}
 Content:
 ${doc.text || 'No content available'}
 `;
-  } catch (error: any) {
-    console.error(error);
-    return `Error formatting document ${index + 1}: ${error.message}`;
-  }
 }
 
 export async function rerank(
