@@ -11,34 +11,34 @@ export const handleScribe = async (
   addNewMessage: (role: MessageRole, content: React.ReactNode) => void
 ) => {
   let firstRun = true;
-  let prevType: MessageRole.Text | MessageRole.Code | MessageRole.Image;
   let currentMessage: string = '';
 
   try {
     await scribe(userEmail, message, topK, topN, (event) => {
       const { type, message } = JSON.parse(event?.replace('data: ', ''));
-      if (type.includes('created') && firstRun === false) {
-        addNewMessage(prevType, currentMessage);
-        if (type === 'text_created') {
-          prevType = MessageRole.Text;
-        } else if (type === 'tool_created') {
-          prevType = MessageRole.Code;
-        }
-        currentMessage = '';
-      } else if (type === 'error') {
-        toast({
-          title: 'Error',
-          description: `${message}`,
-          variant: 'destructive',
-        });
-        throw new Error(message);
-      } else if (
-        [MessageRole.Text, MessageRole.Code, MessageRole.Image].includes(type)
-      ) {
-        currentMessage += message;
-        prevType = type;
-        firstRun = false;
-        updateLastMessage(type, currentMessage);
+      switch (type) {
+        case 'text_created':
+          if (firstRun) {
+            updateLastMessage(MessageRole.Text, '');
+            firstRun = false;
+          } else {
+            currentMessage = '';
+            addNewMessage(MessageRole.Text, '');
+          }
+          break;
+        case 'text':
+          currentMessage += message;
+          updateLastMessage(MessageRole.Text, currentMessage);
+          break;
+        case 'error':
+          toast({
+            title: 'Error',
+            description: `${message}`,
+            variant: 'destructive',
+          });
+          throw new Error(message);
+        default:
+          break;
       }
     });
   } catch (error) {
@@ -56,36 +56,50 @@ export const handleSage = async (
   addNewMessage: (role: MessageRole, content: React.ReactNode) => void
 ) => {
   let firstRun = true;
-  let prevType: MessageRole.Text | MessageRole.Code | MessageRole.Image;
   let currentMessage: string = '';
-
   try {
     await sage(userEmail, message, (event: string) => {
       const { type, message } = JSON.parse(event.replace('data: ', ''));
-      if (type.includes('created') && firstRun === false) {
-        addNewMessage(prevType, currentMessage);
-        if (type === 'text_created') {
-          prevType = MessageRole.Text;
-        } else if (type === 'tool_created') {
-          prevType = MessageRole.Code;
-        } else if (type === 'image_created') {
-          prevType = MessageRole.Image;
-        }
-        currentMessage = '';
-      } else if (type === 'error') {
-        toast({
-          title: 'Error',
-          description: `${message}`,
-          variant: 'destructive',
-        });
-        throw new Error(message);
-      } else if (
-        [MessageRole.Text, MessageRole.Code, MessageRole.Image].includes(type)
-      ) {
-        currentMessage += message;
-        prevType = type;
-        firstRun = false;
-        updateLastMessage(type, currentMessage);
+      switch (type) {
+        case 'text_created':
+          if (firstRun) {
+            updateLastMessage(MessageRole.Text, '');
+            firstRun = false;
+          } else {
+            currentMessage = '';
+            addNewMessage(MessageRole.Text, '');
+          }
+          break;
+        case 'text':
+          currentMessage += message;
+          updateLastMessage(MessageRole.Text, currentMessage);
+          break;
+        case 'code_created':
+          if (firstRun) {
+            updateLastMessage(MessageRole.Code, '');
+            firstRun = false;
+          } else {
+            currentMessage = '';
+            addNewMessage(MessageRole.Code, '');
+          }
+          break;
+        case 'code':
+          currentMessage += message;
+          updateLastMessage(MessageRole.Code, currentMessage);
+          break;
+        case 'image':
+          currentMessage += message;
+          updateLastMessage(MessageRole.Image, currentMessage);
+          break;
+        case 'error':
+          toast({
+            title: 'Error',
+            description: `${message}`,
+            variant: 'destructive',
+          });
+          throw new Error(message);
+        default:
+          break;
       }
     });
   } catch (error) {

@@ -190,29 +190,28 @@ const handleReadableStream = async (
       }
     });
     stream.on('messageDone', async (event) => {
-      if (event.content[0].type === 'text') {
-        const { text } = event.content[0];
-        const { annotations } = text;
-        const citations: string[] = [];
-
-        let index = 0;
-        for (let annotation of annotations) {
-          text.value = text.value.replace(annotation.text, '[' + index + ']');
-          const { file_citation } = annotation as {
-            file_citation?: { file_id: string };
-          };
-          if (file_citation) {
-            const citedFile = await openai.files.retrieve(
-              file_citation.file_id
-            );
-            citations.push('[' + index + ']' + citedFile.filename);
-          }
-          index++;
-        }
-        // TODO: Test citations
-        // console.info(text.value);
-        // console.info(citations.join('\n'));
-      }
+      // if (event.content[0].type === 'text') {
+      //   const { text } = event.content[0];
+      //   const { annotations } = text;
+      //   const citations: string[] = [];
+      //   let index = 0;
+      //   for (let annotation of annotations) {
+      //     text.value = text.value.replace(annotation.text, '[' + index + ']');
+      //     const { file_citation } = annotation as {
+      //       file_citation?: { file_id: string };
+      //     };
+      //     if (file_citation) {
+      //       const citedFile = await openai.files.retrieve(
+      //         file_citation.file_id
+      //       );
+      //       citations.push('[' + index + ']' + citedFile.filename);
+      //     }
+      //     index++;
+      //   }
+      //   // TODO: Test citations
+      //   // console.info(text.value);
+      //   // console.info(citations.join('\n'));
+      // }
     });
     stream.on('event', (event: AssistantStreamEvent) => {
       if (process.env.EVENT_DEBUG === 'true') {
@@ -224,6 +223,7 @@ const handleReadableStream = async (
       }
       if (event.event === 'thread.run.completed') {
         sendUpdate('final-notification', 'events_completed');
+        console.log('Thread completed', event.data);
         // TODO - setInputDisabled(false);
         resolve();
       }
