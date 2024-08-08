@@ -144,6 +144,17 @@ const handleReadableStream = async (
       if (textDelta.value) {
         sendUpdate('text', textDelta.value);
       }
+      if (textDelta.annotations != null) {
+        textDelta.annotations.forEach((annotation) => {
+          if (annotation.type === 'file_path' && annotation.file_path) {
+            const annotatedObject = {
+              text: annotation.text,
+              file_path: `/api/atlas/archivist/${annotation.file_path.file_id}`,
+            };
+            sendUpdate('annotate', JSON.stringify(annotatedObject));
+          }
+        });
+      }
     });
     stream.on('toolCallCreated', () => {
       sendUpdate('code_created', 'code_created');

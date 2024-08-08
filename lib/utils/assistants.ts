@@ -74,6 +74,14 @@ export const handleSage = async (
           currentMessage += message;
           updateLastMessage(MessageRole.Text, currentMessage);
           break;
+        case 'annotate':
+          const annotatedObject = JSON.parse(message);
+          const updatedMessage = currentMessage.replace(
+            annotatedObject.text,
+            annotatedObject.file_path
+          );
+          updateLastMessage(MessageRole.Text, updatedMessage);
+          break;
         case 'code_created':
           if (firstRun) {
             updateLastMessage(MessageRole.Code, '');
