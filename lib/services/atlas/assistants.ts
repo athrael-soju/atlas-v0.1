@@ -246,5 +246,6 @@ const handleReadableStream = async (
     });
     stream.on('end', () => {
       sendUpdate('final-notification', 'stream_ended');
+      resolve();
     });
   });
