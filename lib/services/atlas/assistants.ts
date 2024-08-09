@@ -242,7 +242,6 @@ const handleReadableStream = async (
     });
 
     stream.on('error', (error: OpenAIError) => {
-      //sendUpdate('error', `stream_failed: ${error.cause}`);
       reject(`stream error: ${error.cause}`);
     });
     stream.on('end', () => {
