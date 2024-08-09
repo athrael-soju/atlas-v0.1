@@ -219,16 +219,14 @@ const handleReadableStream = async (
       }
       if (event.event === 'thread.run.requires_action') {
         sendUpdate('notification', 'requires_action');
-        //handleRequiresAction(event);
       }
       if (event.event === 'thread.run.completed') {
         sendUpdate('final-notification', 'events_completed');
         console.log('Thread completed', event.data);
-        // TODO - setInputDisabled(false);
-        resolve();
       }
       if (event.event === 'thread.run.failed') {
-        //sendUpdate('error', `events_failed: ${event.data.last_error?.message}`);
+        console.error('Thread failed', event.data);
+        sendUpdate('error', `event_failed: ${event.data.last_error?.message}`);
         reject({
           type: 'error',
           message: `Stream aborted: ${event.data.last_error?.message}`,
@@ -236,6 +234,11 @@ const handleReadableStream = async (
       }
     });
     stream.on('error', (error: any) => {
+      console.error('error: ', error);
+      sendUpdate('error', `stream_failed: ${error}`);
       reject({ type: 'error', message: error.message });
+    });
+    stream.on('end', () => {
+      console.log('Stream ended');
     });
   });

@@ -6,11 +6,11 @@ import { cn } from '@/lib/utils';
 import { forge } from '@/lib/client/atlas';
 import { DropzoneProps } from '@/lib/types';
 import { useToast } from '@/components/ui/use-toast';
-
+import { allowedFileTypes } from '@/lib/utils/allowed-file-types';
 export function Dropzone({
   userEmail,
+  assistantSelected,
   forgeParams,
-  fileExtension,
   isUploadCompleted,
   onChange,
   setIsUploadCompleted,
@@ -82,8 +82,14 @@ export function Dropzone({
 
     try {
       Array.from(files).filter((file) => {
-        if (!file.name.endsWith(fileExtension)) {
-          throw new Error(`${file.name} is not a valid file type.`);
+        const fileExtension = file.name.split('.').pop()?.toLowerCase();
+        if (
+          !fileExtension ||
+          !allowedFileTypes[assistantSelected].extensions.includes(
+            fileExtension
+          )
+        ) {
+          throw new Error(`File type not allowed: ${fileExtension}`);
         }
       });
 
@@ -124,7 +130,7 @@ export function Dropzone({
         handleFileInfo(message);
       };
 
-      await forge(files, userEmail, forgeParams, onUpdate);
+      await forge(files, userEmail, assistantSelected, forgeParams, onUpdate);
     } catch (error: any) {
       setError((error as Error).message);
       toast({
@@ -161,7 +167,9 @@ export function Dropzone({
         <input
           ref={fileInputRef}
           type="file"
-          accept={fileExtension ? `.${fileExtension}` : undefined}
+          accept={allowedFileTypes[assistantSelected].extensions
+            .map((type) => `.${type}`)
+            .join(',')}
           onChange={handleFileInputChange}
           className="hidden"
           multiple

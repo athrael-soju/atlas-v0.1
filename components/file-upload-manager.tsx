@@ -4,7 +4,7 @@ import { ForgeParams, Purpose } from '@/lib/types';
 
 interface FileUploadManagerProps {
   onChange: (newFiles: string[]) => void;
-  assistantSelected: Purpose | null;
+  assistantSelected: Purpose;
   userEmail: string;
   forgeParams: ForgeParams;
   uploadedFiles: string[];
@@ -25,19 +25,12 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
   fetchFiles,
   setIsUploading,
 }) => {
-  const allowedFileTypes =
-    assistantSelected === Purpose.Sage
-      ? 'csv'
-      : assistantSelected === Purpose.Scribe
-        ? 'pdf'
-        : '';
-
   return (
     <div>
       <Dropzone
         userEmail={userEmail}
+        assistantSelected={assistantSelected}
         forgeParams={forgeParams}
-        fileExtension={allowedFileTypes}
         isUploadCompleted={isUploadCompleted}
         onChange={onChange}
         setIsUploadCompleted={setIsUploadCompleted}

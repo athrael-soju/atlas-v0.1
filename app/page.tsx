@@ -184,7 +184,7 @@ export default function Page() {
                     isUploadManagerVisible ? 'opacity-100' : 'opacity-0'
                   }`}
                 >
-                  {isUploadManagerVisible && (
+                  {isUploadManagerVisible && assistantSelected && (
                     <FileUploadManager
                       userEmail={userEmail}
                       assistantSelected={assistantSelected}

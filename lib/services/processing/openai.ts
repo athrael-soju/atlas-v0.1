@@ -1,7 +1,7 @@
 import { handleFileUpload } from '../storage/handler';
 import { measurePerformance } from '../../utils/metrics';
 import { openai } from '@/lib/client/openai';
-import { AtlasFile, Purpose } from '@/lib/types';
+import { AtlasFile } from '@/lib/types';
 
 const fsProvider = 'openai';
 

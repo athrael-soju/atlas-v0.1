@@ -121,8 +121,8 @@ export interface MessageFormProps {
 
 export interface DropzoneProps {
   onChange: (newFiles: string[]) => void;
-  fileExtension: string;
   userEmail: string;
+  assistantSelected: Purpose;
   forgeParams: ForgeParams;
   isUploadCompleted: boolean;
   setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;

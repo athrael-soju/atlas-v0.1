@@ -11,21 +11,28 @@ function chunkArray<T>(array: T[], chunkSize: number): T[][] {
 export async function query(userEmail: string, embeddings: any, topK: number) {
   try {
     const response = await queryByNamespace(userEmail, topK, embeddings.values);
-    const context = response.matches.map((item: any) => ({
-      text: item.metadata.text,
-      filename: item.metadata.filename,
-      filetype: item.metadata.filetype,
-      languages: item.metadata.languages.join(', '),
-      page_number: item.metadata.page_number.toString(),
-      user_email: item.metadata.user_email,
-    }));
+    const context = response.matches.map((item: any) => {
+      const contextItem: any = {
+        text: item.metadata.text,
+        filename: item.metadata.filename,
+        filetype: item.metadata.filetype,
+        languages: item.metadata.languages.join(', '),
+        user_email: item.metadata.user_email,
+      };
+      // If file is CSV, there is always 1 page.
+      if (item.metadata.page_number) {
+        contextItem.page_number = item.metadata.page_number.toString();
+      }
+      return contextItem;
+    });
+
     return {
       message: 'Pinecone query successful',
       namespace: userEmail,
       context,
     };
   } catch (error: any) {
-    throw new Error('Failed to query Pinecone', error.message);
+    throw new Error(`Failed to query Pinecone: ${error.message}`);
   }
 }
 
@@ -44,7 +51,7 @@ const queryByNamespace = async (
     });
     return result;
   } catch (error: any) {
-    throw new Error('Failed querying by namespace', error.message);
+    throw new Error(`Failed querying by namespace: ${error.message}`);
   }
 };
 
@@ -61,6 +68,6 @@ export const upsertDocument = async (
     }
     return { success: true };
   } catch (error: any) {
-    throw new Error(error.message);
+    throw new Error(`Failed to upsert documents: ${error.message}`);
   }
 };
