@@ -12,6 +12,7 @@ import { AssistantStreamEvent } from 'openai/resources/beta/assistants';
 import { embedMessage } from '../embedding/openai';
 import { query } from '../indexing/pinecone';
 import { rerank } from '../reranking/cohere';
+import { OpenAIError } from 'openai/error';
 
 export async function retrieveContext(
   userEmail: string,
@@ -228,25 +229,36 @@ const handleReadableStream = async (
       if (process.env.EVENT_DEBUG === 'true') {
         console.info('Event:', event.data);
       }
-      if (event.event === 'thread.run.requires_action') {
-        sendUpdate('notification', 'requires_action');
-        //handleRequiresAction(event);
-      }
-      if (event.event === 'thread.run.completed') {
-        sendUpdate('final-notification', 'events_completed');
-        console.log('Thread completed', event.data);
-        // TODO - setInputDisabled(false);
-        resolve();
-      }
-      if (event.event === 'thread.run.failed') {
-        //sendUpdate('error', `events_failed: ${event.data.last_error?.message}`);
-        reject({
-          type: 'error',
-          message: `Stream aborted: ${event.data.last_error?.message}`,
-        });
+      // Additional events may require tracking
+      switch (event.event) {
+        case 'thread.run.requires_action':
+          sendUpdate('notification', 'requires_action');
+          break;
+        case 'thread.run.completed':
+          sendUpdate(
+            'notification',
+            `events_completed. usage: ${event.data.usage} characters`
+          );
+          break;
+        case 'thread.run.incomplete':
+          sendUpdate(
+            'error',
+            `event_failed: ${event.data.incomplete_details?.reason}`
+          );
+          break;
+        case 'thread.run.failed':
+          sendUpdate(
+            'error',
+            `event_failed: ${event.data.last_error?.message}`
+          );
+          break;
       }
     });
-    stream.on('error', (error: any) => {
-      reject({ type: 'error', message: error.message });
+    stream.on('error', (error: OpenAIError) => {
+      reject({ type: 'error', message: `stream_failed: ${error.cause}` });
+    });
+    stream.on('end', () => {
+      sendUpdate('final-notification', 'stream_ended');
+      resolve();
     });
   });

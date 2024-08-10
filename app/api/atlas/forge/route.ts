@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ForgeParams } from '@/lib/types';
+import { ForgeParams, Purpose } from '@/lib/types';
 import { processDocument } from '@/lib/services/atlas/forge';
 import { processDocumentViaOpenAi } from '@/lib/services/processing/openai';
 import { getTotalTime } from '@/lib/utils/metrics';
+import { allowedFileTypes } from '@/lib/utils/allowed-file-types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,12 +21,24 @@ function sendUpdate(
 async function handleFileProcessing(
   file: File,
   userEmail: string,
+  assistantSelected: Purpose,
   forgeParams: ForgeParams,
   send: (type: string, message: string) => void
 ) {
-  if (file.type === 'application/pdf') {
+  const { extensions, mimeTypes } = allowedFileTypes[assistantSelected];
+
+  const fileExtension = file.name.split('.').pop()?.toLowerCase();
+  if (
+    !fileExtension ||
+    !extensions.includes(fileExtension) ||
+    !mimeTypes.includes(file.type)
+  ) {
+    throw new Error(`Unsupported file type: ${file.type}`);
+  }
+
+  if (assistantSelected === Purpose.Scribe) {
     return processDocument(file, userEmail, forgeParams, send);
-  } else if (file.type === 'text/csv') {
+  } else if (assistantSelected === Purpose.Sage) {
     return processDocumentViaOpenAi(file, userEmail, send);
   } else {
     throw new Error(`Unsupported file type: ${file.type}`);
@@ -42,6 +55,7 @@ async function processRequest(
   const data = await req.formData();
   const files = data.getAll('files') as File[];
   const userEmail = data.get('userEmail') as string;
+  const assistantSelected = data.get('assistantSelected') as Purpose;
 
   if (!userEmail || !files) {
     throw new Error('User email and files are required');
@@ -57,7 +71,13 @@ async function processRequest(
 
   const results = await Promise.allSettled(
     files.map((file) =>
-      handleFileProcessing(file, userEmail, forgeParams, send)
+      handleFileProcessing(
+        file,
+        userEmail,
+        assistantSelected,
+        forgeParams,
+        send
+      )
         .then(() => ({ success: true }))
         .catch((error) => {
           failed++;

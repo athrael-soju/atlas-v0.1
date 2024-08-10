@@ -1,6 +1,6 @@
 import { AtlasFile } from '@/lib/types';
 import OpenAI, { ClientOptions } from 'openai';
-import { toAscii } from '@/lib/utils/helpers';
+import { toAscii } from '@/lib/utils/formatting';
 
 const embeddingApiModel =
   process.env.OPENAI_API_EMBEDDING_MODEL || 'text-embedding-3-large';

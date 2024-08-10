@@ -22,7 +22,7 @@ import {
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { randomUUID } from 'crypto';
 import { AtlasUser, Purpose } from '@/lib/types';
-import { toAscii } from '@/lib/utils/helpers';
+import { toAscii } from '@/lib/utils/formatting';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

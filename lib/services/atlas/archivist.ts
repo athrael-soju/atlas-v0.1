@@ -10,7 +10,7 @@ import { FileDeleted } from 'openai/resources/files';
 import { getIndex } from '@/lib/client/pinecone';
 import { Index } from '@pinecone-database/pinecone';
 import { updateSage, deleteFromOpenAi } from '@/lib/services/processing/openai';
-import { toAscii } from '@/lib/utils/helpers';
+import { toAscii } from '@/lib/utils/formatting';
 
 export async function retrieveArchives(
   userEmail: string,

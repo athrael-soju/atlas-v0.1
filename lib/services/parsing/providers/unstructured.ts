@@ -31,18 +31,41 @@ export async function parseUnstructured(
   try {
     const fileData = fs.readFileSync(file.path);
     const fileContent = file.content as File;
-    const parsedDataResponse = await unstructuredClient.general.partition({
-      partitionParameters: {
-        files: {
-          content: fileData,
-          fileName: fileContent.name,
-        },
-        strategy: parsingStrategy,
-        chunkingStrategy: chunkingStrategy,
-        maxCharacters: chunkSize,
-        overlap: overlap,
+    const isCsv = fileContent.name.endsWith('.csv');
+
+    const partitionParameters: any = {
+      files: {
+        content: fileData,
+        fileName: fileContent.name,
       },
-    });
+      strategy: parsingStrategy,
+    };
+
+    if (!isCsv) {
+      partitionParameters.chunkingStrategy = chunkingStrategy;
+      partitionParameters.maxCharacters = chunkSize;
+      partitionParameters.overlap = overlap;
+      partitionParameters.splitPdfPage = true;
+      partitionParameters.splitPdfConcurrencyLevel = 10;
+    }
+
+    const parsedDataResponse = await unstructuredClient.general.partition(
+      {
+        partitionParameters,
+      },
+      {
+        retries: {
+          strategy: 'backoff',
+          backoff: {
+            initialInterval: 1,
+            maxInterval: 50,
+            exponent: 1.1,
+            maxElapsedTime: 100,
+          },
+          retryConnectionErrors: false,
+        },
+      }
+    );
 
     return parsedDataResponse?.elements || [];
   } catch (error: any) {
