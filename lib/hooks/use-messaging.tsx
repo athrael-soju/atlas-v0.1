@@ -63,29 +63,17 @@ export const useMessaging = (
     // Use Assistants API
     if (process.env.NEXT_PUBLIC_INFERENCE_MODEL === 'assistant') {
       addNewMessage(MessageRole.Spinner, spinner);
-      try {
-        if (purpose === Purpose.Scribe) {
-          await handleScribe(
-            userEmail,
-            message,
-            topK,
-            topN,
-            updateLastMessage,
-            addNewMessage
-          );
-        } else if (purpose === Purpose.Sage) {
-          await handleSage(
-            userEmail,
-            message,
-            updateLastMessage,
-            addNewMessage
-          );
-        }
-      } catch (error: any) {
-        updateLastMessage(
-          MessageRole.Error,
-          `Something went wrong while trying to respond. Sorry about that ${userEmail}! If this persists, would you please contact support?`
+      if (purpose === Purpose.Scribe) {
+        await handleScribe(
+          userEmail,
+          message,
+          topK,
+          topN,
+          updateLastMessage,
+          addNewMessage
         );
+      } else if (purpose === Purpose.Sage) {
+        await handleSage(userEmail, message, updateLastMessage, addNewMessage);
       }
     } else {
       // Otherwise Completions API is used.

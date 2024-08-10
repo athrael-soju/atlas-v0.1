@@ -56,7 +56,8 @@ export const handleSage = async (
   addNewMessage: (role: MessageRole, content: React.ReactNode) => void
 ) => {
   let firstRun = true;
-  let currentMessage: string = '';
+  let currentMessage: string = '',
+    currentRole = MessageRole.Text;
   try {
     await sage(userEmail, message, (event: string) => {
       const { type, message } = JSON.parse(event.replace('data: ', ''));
@@ -69,6 +70,7 @@ export const handleSage = async (
             currentMessage = '';
             addNewMessage(MessageRole.Text, '');
           }
+          currentRole = MessageRole.Text;
           break;
         case 'text':
           currentMessage += message;
@@ -82,6 +84,7 @@ export const handleSage = async (
             currentMessage = '';
             addNewMessage(MessageRole.Code, '');
           }
+          currentRole = MessageRole.Code;
           break;
         case 'code':
           currentMessage += message;
@@ -103,9 +106,10 @@ export const handleSage = async (
       }
     });
   } catch (error) {
-    updateLastMessage(
-      MessageRole.Error,
-      `Something went wrong while trying to respond. Sorry about that ${userEmail}! If this persists, would you please contact support?`
-    );
+    updateLastMessage(MessageRole.Text, currentMessage);
+    // addNewMessage(
+    //   MessageRole.Error,
+    //   `Something went wrong while trying to respond. Sorry about that ${userEmail}! If this persists, would you please contact support?`
+    // );
   }
 };

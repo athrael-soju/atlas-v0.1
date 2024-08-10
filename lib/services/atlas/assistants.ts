@@ -224,7 +224,10 @@ const handleReadableStream = async (
           sendUpdate('notification', 'requires_action');
           break;
         case 'thread.run.completed':
-          sendUpdate('final-notification', 'events_completed');
+          sendUpdate(
+            'notification',
+            `events_completed. usage: ${event.data.usage} characters`
+          );
           break;
         case 'thread.run.incomplete':
           sendUpdate(
@@ -240,9 +243,8 @@ const handleReadableStream = async (
           break;
       }
     });
-
     stream.on('error', (error: OpenAIError) => {
-      reject(`stream error: ${error.cause}`);
+      reject({ type: 'error', message: `stream_failed: ${error.cause}` });
     });
     stream.on('end', () => {
       sendUpdate('final-notification', 'stream_ended');
