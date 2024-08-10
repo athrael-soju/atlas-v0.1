@@ -103,7 +103,6 @@ export default function Page() {
     return (
       <div>
         <Header />
-        {/* Pass the toggle function */}
         <div className="flex flex-col items-center justify-center p-24">
           <div className="flex flex-col items-center justify-center">
             <h1 className="text-4xl text-center font-extrabold mt-4 text-card-foreground">
