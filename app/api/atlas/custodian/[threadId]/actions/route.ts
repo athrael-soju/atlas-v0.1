@@ -1,11 +1,8 @@
 import { openai } from '@/lib/client/openai';
+import { NextRequest } from 'next/server';
 
 export async function POST(
-  request: {
-    json: () =>
-      | PromiseLike<{ toolCallOutputs: any; runId: any }>
-      | { toolCallOutputs: any; runId: any };
-  },
+  request: NextRequest,
   { params: { threadId } }: any
 ) {
   const { toolCallOutputs, runId } = await request.json();
