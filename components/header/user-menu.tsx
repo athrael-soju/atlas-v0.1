@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import {
   Menu,
   MenuButton,
@@ -30,7 +31,7 @@ export const products = [
     icon: Cog6ToothIcon,
   },
   {
-    name: 'Knowdlegebase',
+    name: 'Knowledgebase',
     description:
       'The Scribe processes data with unparalleled efficiency, accuracy, and speed',
     href: '#',
@@ -46,7 +47,7 @@ export const products = [
   {
     name: 'Data Management',
     description:
-      'The Archivist excels in storage and managment of data for rapid retrieval',
+      'The Archivist excels in storage and management of data for rapid retrieval',
     href: '#',
     icon: DocumentChartBarIcon,
   },
@@ -77,6 +78,12 @@ export default function UserMenu({
   session,
   handleLogout,
 }: Readonly<UserMenuProps>) {
+  const router = useRouter();
+
+  function handleSettingsMenu(): void {
+    router.push('/settings/profile');
+  }
+
   return (
     <Menu as="div" className="relative inline-block text-left">
       <MenuButton className="inline-flex">
@@ -100,7 +107,7 @@ export default function UserMenu({
             <MenuItem>
               {({ focus }) => (
                 <button
-                  onClick={() => {}}
+                  onClick={handleSettingsMenu}
                   className={classNames(
                     focus ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
                     'block w-full text-left px-4 py-2 text-sm'
