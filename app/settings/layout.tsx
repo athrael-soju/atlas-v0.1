@@ -27,8 +27,20 @@ const sidebarNavItems = [
     href: '/settings/notifications',
   },
   {
+    title: 'Onboarding',
+    href: '/settings/onboarding',
+  },
+  {
     title: 'Display',
     href: '/settings/display',
+  },
+  {
+    title: 'Forge',
+    href: '/settings/forge',
+  },
+  {
+    title: 'Assistants',
+    href: '/settings/assistants',
   },
 ];
 
