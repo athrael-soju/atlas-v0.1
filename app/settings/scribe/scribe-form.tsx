@@ -19,7 +19,7 @@ import { Slider } from '@/components/ui/slider';
 
 const advancedDataAnalysisSchema = z.object({
   cohereTopN: z.number().min(1).max(100).step(1),
-  cohereRelevanceThreshold: z.number().min(0).max(100).step(10),
+  cohereRelevanceThreshold: z.number().min(0).max(100).step(5),
   pineconeTopK: z.number().min(100).max(1000).step(100),
 });
 
@@ -109,7 +109,7 @@ export function ScribeForm() {
                       }}
                       min={0}
                       max={100}
-                      step={10}
+                      step={5}
                       aria-label="Cohere Relevance Threshold"
                     />
                   )}
