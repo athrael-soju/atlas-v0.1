@@ -1,12 +1,21 @@
 'use client';
 
-import Link from 'next/link';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { CalendarIcon, CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
+import { format } from 'date-fns';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import {
   Form,
   FormControl,
@@ -18,63 +27,73 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
+import { useSession } from 'next-auth/react';
+import { useEffect } from 'react';
+
+const languages = [
+  { label: 'English', value: 'en' },
+  { label: 'French', value: 'fr' },
+  { label: 'German', value: 'de' },
+  { label: 'Spanish', value: 'es' },
+  { label: 'Portuguese', value: 'pt' },
+  { label: 'Russian', value: 'ru' },
+  { label: 'Japanese', value: 'ja' },
+  { label: 'Korean', value: 'ko' },
+  { label: 'Chinese', value: 'zh' },
+] as const;
 
 const profileFormSchema = z.object({
+  name: z
+    .string()
+    .min(2, { message: 'Name must be at least 2 characters.' })
+    .max(30, { message: 'Name must not be longer than 30 characters.' })
+    .optional(),
+  dob: z.date({ required_error: 'A date of birth is required.' }).optional(),
+  language: z
+    .string({ required_error: 'Please select a language.' })
+    .optional(),
   username: z
     .string()
-    .min(2, {
-      message: 'Username must be at least 2 characters.',
-    })
-    .max(30, {
-      message: 'Username must not be longer than 30 characters.',
-    }),
-  email: z
-    .string({
-      required_error: 'Please select an email to display.',
-    })
-    .email(),
-  bio: z.string().max(160).min(4),
-  urls: z
-    .array(
-      z.object({
-        value: z.string().url({ message: 'Please enter a valid URL.' }),
-      })
-    )
+    .min(2, { message: 'Username must be at least 2 characters.' })
+    .max(30, { message: 'Username must not be longer than 30 characters.' })
     .optional(),
+  email: z
+    .string({ required_error: 'Please select an email to display.' })
+    .email()
+    .optional(),
+  bio: z.string().max(160).min(0),
 });
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
-
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  bio: 'I own a computer.',
-  urls: [
-    { value: 'https://shadcn.com' },
-    { value: 'http://twitter.com/shadcn' },
-  ],
-};
+type CombinedFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
-  const form = useForm<ProfileFormValues>({
+  const { data: session } = useSession();
+  const email = session?.user?.email ?? '';
+  const defaultValues: Partial<CombinedFormValues> = {
+    bio: '',
+    language: 'en',
+    email: session?.user?.email ?? '',
+  };
+
+  const form = useForm<CombinedFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues,
     mode: 'onChange',
   });
 
-  const { fields, append } = useFieldArray({
-    name: 'urls',
-    control: form.control,
-  });
+  useEffect(() => {
+    if (session?.user?.email) {
+      form.setValue('email', session.user.email);
+    }
+  }, [session, form]);
 
-  function onSubmit(data: ProfileFormValues) {
+  function onSubmit(data: CombinedFormValues) {
     toast({
       title: 'You submitted the following values:',
       description: (
@@ -87,7 +106,27 @@ export function ProfileForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        style={{ display: 'grid', gap: '1rem' }}
+      >
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder="Your name" {...field} />
+              </FormControl>
+              <FormDescription>
+                This is the name that will be displayed on your profile and in
+                emails.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="username"
@@ -95,11 +134,11 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="shadcn" {...field} />
+                <Input placeholder="Enter your username" {...field} />
               </FormControl>
               <FormDescription>
-                This is your public display name. It can be your real name or a
-                pseudonym. You can only change this once every 30 days.
+                You can choose a unique username that will be used to link to
+                your profile
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -111,35 +150,32 @@ export function ProfileForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a verified email to display" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="m@example.com">m@example.com</SelectItem>
-                  <SelectItem value="m@google.com">m@google.com</SelectItem>
-                  <SelectItem value="m@support.com">m@support.com</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <Input
+                  placeholder={'Enter your email'}
+                  {...field}
+                  value={field.value || email}
+                  onChange={field.onChange}
+                  disabled={!!email}
+                />
+              </FormControl>
               <FormDescription>
-                You can manage verified email addresses in your{' '}
-                <Link href="/settings/profile">email settings</Link>.
+                This is the email associated with your account.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="bio"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Bio</FormLabel>
+              <FormLabel>About you</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Tell us a little bit about yourself"
+                  placeholder="Share a little bit about yourself"
                   className="resize-none"
                   {...field}
                 />
@@ -152,39 +188,120 @@ export function ProfileForm() {
             </FormItem>
           )}
         />
-        <div>
-          {fields.map((field, index) => (
-            <FormField
-              control={form.control}
-              key={field.id}
-              name={`urls.${index}.value`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={cn(index !== 0 && 'sr-only')}>
-                    URLs
-                  </FormLabel>
-                  <FormDescription className={cn(index !== 0 && 'sr-only')}>
-                    Add links to your website, blog, or social media profiles.
-                  </FormDescription>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() => append({ value: '' })}
-          >
-            Add URL
-          </Button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <FormField
+            control={form.control}
+            name="dob"
+            render={({ field }) => (
+              <FormItem
+                style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+              >
+                <FormLabel>Date of birth</FormLabel>
+                <FormControl>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={'outline'}
+                        className={cn(
+                          'w-[240px] pl-3 text-left font-normal',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date('1900-01-01')
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+                <FormDescription>
+                  Your date of birth is used to calculate your age.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="language"
+            render={({ field }) => (
+              <FormItem
+                style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+              >
+                <FormLabel>Language</FormLabel>
+                <FormControl>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          'w-[200px] justify-between',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        {field.value
+                          ? languages.find(
+                              (language) => language.value === field.value
+                            )?.label
+                          : 'Select language'}
+                        <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[200px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search language..." />
+                        <CommandList>
+                          <CommandEmpty>No language found.</CommandEmpty>
+                          <CommandGroup>
+                            {languages.map((language) => (
+                              <CommandItem
+                                value={language.label}
+                                key={language.value}
+                                onSelect={() => {
+                                  form.setValue('language', language.value);
+                                }}
+                              >
+                                <CheckIcon
+                                  className={cn(
+                                    'mr-2 h-4 w-4',
+                                    language.value === field.value
+                                      ? 'opacity-100'
+                                      : 'opacity-0'
+                                  )}
+                                />
+                                {language.label}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </FormControl>
+                <FormDescription>
+                  This is the language that will be used in the dashboard.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-        <Button type="submit">Update profile</Button>
+        <Button type="submit">Update settings</Button>
       </form>
     </Form>
   );

@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { SidebarNav } from '@/app/settings/components/sidebar-nav';
 import { IconUTurnLeft } from '@/components/ui/icons';
-
 export const metadata: Metadata = {
   title: 'Forms',
   description: 'Advanced form example using react-hook-form and Zod.',
@@ -15,32 +14,12 @@ const sidebarNavItems = [
     href: '/settings/profile',
   },
   {
-    title: 'Account',
-    href: '/settings/account',
-  },
-  {
-    title: 'Appearance',
-    href: '/settings/appearance',
-  },
-  {
-    title: 'Notifications',
-    href: '/settings/notifications',
-  },
-  {
-    title: 'Onboarding',
-    href: '/settings/onboarding',
-  },
-  {
-    title: 'Display',
-    href: '/settings/display',
-  },
-  {
-    title: 'Forge',
+    title: 'The Forge',
     href: '/settings/forge',
   },
   {
-    title: 'Assistants',
-    href: '/settings/assistants',
+    title: 'The Scribe',
+    href: '/settings/scribe',
   },
 ];
 
@@ -55,7 +34,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
           <p className="text-muted-foreground">
-            Manage your account settings and set e-mail preferences.
+            Manage your account settings and configure advanced features.
           </p>
         </div>
         <Link href="/" title="Go back to homepage">
