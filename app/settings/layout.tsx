@@ -26,7 +26,7 @@ const sidebarNavItems = [
 interface SettingsLayoutProps {
   children: React.ReactNode;
 }
-
+// TODO: Update all forms from DB & remove env vars.
 export default function SettingsLayout({ children }: SettingsLayoutProps) {
   return (
     <div className="hidden space-y-6 p-10 pb-16 md:block">
