@@ -3,6 +3,7 @@ import {
   ArchivistOnboardingParams,
   ArchivistParams,
   Purpose,
+  UserConfigParams,
 } from '@/lib/types';
 
 const readStream = async (
@@ -116,7 +117,10 @@ export const sage = async (
 export const archivist = async (
   userEmail: string,
   action: string,
-  archivistParams: ArchivistParams | ArchivistOnboardingParams,
+  archivistParams:
+    | ArchivistParams
+    | ArchivistOnboardingParams
+    | UserConfigParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();

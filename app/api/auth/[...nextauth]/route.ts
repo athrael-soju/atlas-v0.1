@@ -21,9 +21,8 @@ import {
 } from 'unique-names-generator';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { randomUUID } from 'crypto';
-import { AtlasUser, Purpose } from '@/lib/types';
+import { AtlasFile, AtlasUser, UserConfigParams } from '@/lib/types';
 import { toAscii } from '@/lib/utils/formatting';
-
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -42,12 +41,13 @@ requiredEnvVars.forEach((envVar) => {
 
 interface CustomUser extends User {
   provider?: string;
-  files?: AtlasUser[];
+  files?: AtlasFile[];
   preferences?: {
     name: string | null;
     description: string | null;
     selectedAssistant: 'sage' | 'scribe' | null;
   };
+  configuration?: UserConfigParams;
 }
 
 interface CustomSession extends Session {
@@ -77,6 +77,26 @@ const createAnonymousUser = async (): Promise<CustomUser> => {
       name: null,
       description: null,
       selectedAssistant: null,
+    },
+    configuration: {
+      profile: {
+        language: 'en',
+        email: 'athrael.soju@gmail.com',
+        bio: '',
+      },
+      scribe: {
+        cohereTopN: 10,
+        cohereRelevanceThreshold: 50,
+        pineconeTopK: 100,
+      },
+      forge: {
+        parsingProvider: 'io',
+        minChunkSize: 0,
+        maxChunkSize: 1024,
+        chunkOverlap: 0,
+        partitioningStrategy: 'fast',
+        chunkingStrategy: 'basic',
+      },
     },
   };
 
@@ -169,7 +189,7 @@ const options: NextAuthOptions = {
         }
         const dbInstance = await db();
         const dbUser = await dbInstance.getUser(token.email as string);
-        session.user = dbUser as CustomUser;
+        session.user = dbUser as unknown as CustomUser;
         return session;
       } catch (error) {
         console.error('Error in session callback:', error);
@@ -192,6 +212,39 @@ const options: NextAuthOptions = {
       console.info(
         `signIn of ${user.name} from ${user?.provider ?? account?.provider}`
       );
+      // TODO: Check if this approach is sound.
+      const defaultConfig: Partial<UserConfigParams> = {
+        profile: {
+          language: 'en',
+          email: user.email as string,
+          bio: '',
+        },
+        scribe: {
+          cohereTopN: 10,
+          cohereRelevanceThreshold: 50,
+          pineconeTopK: 100,
+        },
+        forge: {
+          parsingProvider: 'io',
+          minChunkSize: 0,
+          maxChunkSize: 1024,
+          chunkOverlap: 0,
+          partitioningStrategy: 'fast',
+          chunkingStrategy: 'basic',
+        },
+      };
+
+      const dbInstance = await db();
+      const existingUser = await dbInstance.getUser(user.email as string);
+      if (!existingUser.configuration) {
+        const updateData: Partial<AtlasUser> = {
+          configuration: {
+            ...user.configuration,
+            ...defaultConfig,
+          },
+        };
+        await dbInstance.updateUser(user.email as string, updateData);
+      }
     },
     async signOut({ token }: { session: Session; token: JWT }): Promise<void> {
       console.info(`signOut of ${token.name} from ${token.provider}`);

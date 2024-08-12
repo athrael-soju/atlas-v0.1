@@ -98,7 +98,42 @@ export interface AtlasAssistant {
   threadId: string;
   purpose: Purpose;
   files?: AtlasFile[];
+  settings: any;
 }
+
+export interface ProfileConfigParams {
+  profile: {
+    name?: string;
+    dob?: Date;
+    language?: string;
+    username?: string;
+    email?: string;
+    bio?: string;
+  };
+}
+
+export interface ScribeConfigParams {
+  scribe: {
+    cohereTopN: number;
+    cohereRelevanceThreshold: number;
+    pineconeTopK: number;
+  };
+}
+
+export interface ForgeConfigParams {
+  forge: {
+    parsingProvider: string;
+    minChunkSize: number;
+    maxChunkSize: number;
+    chunkOverlap: number;
+    partitioningStrategy: string;
+    chunkingStrategy: string;
+  };
+}
+
+export type UserConfigParams = Partial<
+  ProfileConfigParams & ScribeConfigParams & ForgeConfigParams
+>;
 
 export interface AtlasUser {
   id: string;
@@ -109,6 +144,11 @@ export interface AtlasUser {
     name: string | null;
     description: string | null;
     selectedAssistant: 'sage' | 'scribe' | null;
+  };
+  configuration: {
+    profile?: ProfileConfigParams['profile'] | null;
+    scribe?: ScribeConfigParams['scribe'] | null;
+    forge?: ForgeConfigParams['forge'] | null;
   };
 }
 

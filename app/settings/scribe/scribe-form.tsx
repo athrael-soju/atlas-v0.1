@@ -16,6 +16,9 @@ import {
 } from '@/components/ui/form';
 import { toast } from '@/components/ui/use-toast';
 import { Slider } from '@/components/ui/slider';
+import { archivist } from '@/lib/client/atlas';
+import { ScribeConfigParams } from '@/lib/types';
+import { useSession } from 'next-auth/react';
 
 const advancedDataAnalysisSchema = z.object({
   cohereTopN: z.number().min(1).max(100).step(1),
@@ -32,6 +35,7 @@ const defaultValues: Partial<AdvancedDataAnalysisValues> = {
 };
 
 export function ScribeForm() {
+  const { data: session } = useSession();
   const form = useForm<AdvancedDataAnalysisValues>({
     resolver: zodResolver(advancedDataAnalysisSchema),
     defaultValues,
@@ -43,15 +47,34 @@ export function ScribeForm() {
   );
   const [pineconeTopK, setPineconeTopK] = useState(defaultValues.pineconeTopK);
 
-  function onSubmit(data: AdvancedDataAnalysisValues) {
-    toast({
-      title: 'You submitted the following values:',
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  async function onSubmit(data: AdvancedDataAnalysisValues) {
+    const scribeConfigData: ScribeConfigParams = {
+      scribe: { ...data },
+    };
+    const email = session?.user?.email as string;
+    const action = 'update-settings';
+    const onUpdate = (event: string) => {
+      const { type, message } = JSON.parse(event.replace('data: ', ''));
+      if (type === 'final-notification') {
+        toast({
+          title: 'You submitted the following values:',
+          description: (
+            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+              <code className="text-white">
+                {JSON.stringify(data, null, 2)}
+              </code>
+            </pre>
+          ),
+        });
+      } else if (type === 'error') {
+        toast({
+          title: 'Error',
+          description: `Failed to update: ${message}`,
+          variant: 'destructive',
+        });
+      }
+    };
+    await archivist(email, action, scribeConfigData, onUpdate);
   }
 
   return (

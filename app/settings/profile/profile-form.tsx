@@ -35,6 +35,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
+import { archivist } from '@/lib/client/atlas';
+import { ProfileConfigParams } from '@/lib/types';
 
 const languages = [
   { label: 'English', value: 'en' },
@@ -93,15 +95,33 @@ export function ProfileForm() {
     }
   }, [session, form]);
 
-  function onSubmit(data: CombinedFormValues) {
-    toast({
-      title: 'You submitted the following values:',
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  async function onSubmit(data: CombinedFormValues) {
+    const profileConfigData: ProfileConfigParams = {
+      profile: { ...data },
+    };
+    const action = 'update-settings';
+    const onUpdate = (event: string) => {
+      const { type, message } = JSON.parse(event.replace('data: ', ''));
+      if (type === 'final-notification') {
+        toast({
+          title: 'You submitted the following values:',
+          description: (
+            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+              <code className="text-white">
+                {JSON.stringify(data, null, 2)}
+              </code>
+            </pre>
+          ),
+        });
+      } else if (type === 'error') {
+        toast({
+          title: 'Error',
+          description: `Failed to update: ${message}`,
+          variant: 'destructive',
+        });
+      }
+    };
+    await archivist(email, action, profileConfigData, onUpdate);
   }
 
   return (
@@ -152,10 +172,10 @@ export function ProfileForm() {
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input
-                  placeholder={'Enter your email'}
+                  placeholder="Enter your email"
                   {...field}
                   value={field.value || email}
-                  onChange={field.onChange}
+                  onChange={(e) => field.onChange(e.target.value)}
                   disabled={!!email}
                 />
               </FormControl>

@@ -5,6 +5,7 @@ import { CalendarIcon, CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { useState } from 'react';
 import { z } from 'zod';
+import { useSession } from 'next-auth/react';
 
 import { cn } from '@/lib/utils';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -32,6 +33,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { archivist } from '@/lib/client/atlas';
+import { ForgeConfigParams } from '@/lib/types';
 
 const forgeFormSchema = z
   .object({
@@ -97,6 +100,7 @@ const chunkingStrategyDescriptions = {
 };
 
 export function ForgeForm() {
+  const { data: session } = useSession();
   const form = useForm<ForgeFormValues>({
     resolver: zodResolver(forgeFormSchema),
     defaultValues,
@@ -106,15 +110,34 @@ export function ForgeForm() {
   const [maxChunkSize, setMaxChunkSize] = useState(defaultValues.maxChunkSize);
   const [chunkOverlap, setChunkOverlap] = useState(defaultValues.chunkOverlap);
 
-  function onSubmit(data: ForgeFormValues) {
-    toast({
-      title: 'You submitted the following values:',
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  async function onSubmit(data: ForgeFormValues) {
+    const forgeConfigData: ForgeConfigParams = {
+      forge: { ...data },
+    };
+    const email = session?.user?.email as string;
+    const action = 'update-settings';
+    const onUpdate = (event: string) => {
+      const { type, message } = JSON.parse(event.replace('data: ', ''));
+      if (type === 'final-notification') {
+        toast({
+          title: 'You submitted the following values:',
+          description: (
+            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+              <code className="text-white">
+                {JSON.stringify(data, null, 2)}
+              </code>
+            </pre>
+          ),
+        });
+      } else if (type === 'error') {
+        toast({
+          title: 'Error',
+          description: `Failed to update: ${message}`,
+          variant: 'destructive',
+        });
+      }
+    };
+    await archivist(email, action, forgeConfigData, onUpdate);
   }
 
   return (
