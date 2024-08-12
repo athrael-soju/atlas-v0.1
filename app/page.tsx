@@ -40,7 +40,6 @@ export default function Page() {
   const [isUploadManagerVisible, setIsUploadManagerVisible] = useState(false);
   const { formRef, onKeyDown } = useEnterSubmit(setIsUploadManagerVisible);
   const [isLoading, setIsLoading] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false); // New state for settings
 
   const user = session?.user as AtlasUser;
   const userEmail = user?.email ?? '';
@@ -83,10 +82,6 @@ export default function Page() {
   } = useMessaging(userEmail!, spinner, purpose);
 
   const { vad } = isSpeechEnabled ? useSpeech() : { vad: null };
-
-  const toggleSettings = () => {
-    setSettingsOpen(!settingsOpen);
-  };
 
   // TODO: Implement a better loading spinner
   // const HandleLoader = () => (
