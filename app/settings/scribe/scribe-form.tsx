@@ -44,11 +44,13 @@ export function ScribeForm() {
     defaultValues,
   });
 
-  const [cohereTopN, setCohereTopN] = useState(defaultValues.cohereTopN);
+  const [cohereTopN, setCohereTopN] = useState(defaultValues.cohereTopN ?? 10);
   const [cohereRelevanceThreshold, setCohereRelevanceThreshold] = useState(
-    defaultValues.cohereRelevanceThreshold
+    defaultValues.cohereRelevanceThreshold ?? 50
   );
-  const [pineconeTopK, setPineconeTopK] = useState(defaultValues.pineconeTopK);
+  const [pineconeTopK, setPineconeTopK] = useState(
+    defaultValues.pineconeTopK ?? 100
+  );
 
   // Load saved values from local storage on mount
   useEffect(() => {
@@ -57,12 +59,14 @@ export function ScribeForm() {
       if (savedValues) {
         const parsedValues = JSON.parse(savedValues);
         form.reset(parsedValues);
-        setCohereTopN(parsedValues.cohereTopN);
-        setCohereRelevanceThreshold(parsedValues.cohereRelevanceThreshold);
-        setPineconeTopK(parsedValues.pineconeTopK);
+        setCohereTopN(parsedValues.cohereTopN ?? 10);
+        setCohereRelevanceThreshold(
+          parsedValues.cohereRelevanceThreshold ?? 50
+        );
+        setPineconeTopK(parsedValues.pineconeTopK ?? 100);
       }
     }
-  }, [form]);
+  }, [form, userEmail]);
 
   // Save values to local storage on change
   useEffect(() => {
@@ -75,7 +79,7 @@ export function ScribeForm() {
       });
       return () => subscription.unsubscribe();
     }
-  }, [form.watch]);
+  }, [form.watch, userEmail]);
 
   async function onSubmit(data: AdvancedDataAnalysisValues) {
     const scribeConfigData: ScribeConfigParams = {
@@ -123,7 +127,7 @@ export function ScribeForm() {
                   name="cohereTopN"
                   render={({ field }) => (
                     <Slider
-                      value={[field.value || 10]}
+                      value={[field.value ?? 10]}
                       onValueChange={(value) => {
                         field.onChange(value[0]);
                         setCohereTopN(value[0]);
@@ -156,9 +160,8 @@ export function ScribeForm() {
                   name="cohereRelevanceThreshold"
                   render={({ field }) => (
                     <Slider
-                      value={[field.value || 0]}
+                      value={[field.value ?? 50]}
                       onValueChange={(value) => {
-                        console.log(field.value);
                         field.onChange(value[0]);
                         setCohereRelevanceThreshold(value[0]);
                       }}
@@ -190,7 +193,7 @@ export function ScribeForm() {
                   name="pineconeTopK"
                   render={({ field }) => (
                     <Slider
-                      value={[field.value || 100]}
+                      value={[field.value ?? 100]}
                       onValueChange={(value) => {
                         field.onChange(value[0]);
                         setPineconeTopK(value[0]);

@@ -92,12 +92,12 @@ export function ProfileForm() {
     mode: 'onChange',
   });
 
-  const [name, setName] = useState(defaultValues.name);
-  const [username, setUsername] = useState(defaultValues.username);
-  const [email, setEmail] = useState(defaultValues.email);
+  const [name, setName] = useState(defaultValues.name ?? '');
+  const [username, setUsername] = useState(defaultValues.username ?? '');
+  const [email, setEmail] = useState(defaultValues.email ?? '');
   const [dob, setDob] = useState<Date | undefined>(defaultValues.dob);
-  const [language, setLanguage] = useState(defaultValues.language);
-  const [bio, setBio] = useState(defaultValues.bio);
+  const [language, setLanguage] = useState(defaultValues.language ?? 'en');
+  const [bio, setBio] = useState(defaultValues.bio ?? '');
 
   // Load saved values from local storage on mount
   useEffect(() => {
@@ -111,15 +111,15 @@ export function ProfileForm() {
           ...parsedValues,
           dob: parsedValues.dob ? parseISO(parsedValues.dob) : undefined,
         });
-        setName(parsedValues.name);
-        setUsername(parsedValues.username);
+        setName(parsedValues.name ?? '');
+        setUsername(parsedValues.username ?? '');
         setDob(parsedValues.dob ? parseISO(parsedValues.dob) : undefined);
-        setLanguage(parsedValues.language);
-        setBio(parsedValues.bio);
-        setEmail(parsedValues.email);
+        setLanguage(parsedValues.language ?? 'en');
+        setBio(parsedValues.bio ?? '');
+        setEmail(parsedValues.email ?? '');
       }
     }
-  }, [form]);
+  }, [form, userEmail]);
 
   // Save values to local storage on change
   useEffect(() => {
@@ -132,7 +132,7 @@ export function ProfileForm() {
       });
       return () => subscription.unsubscribe();
     }
-  }, [form.watch]);
+  }, [form.watch, userEmail]);
 
   async function onSubmit(data: CombinedFormValues) {
     const profileConfigData: ProfileConfigParams = {

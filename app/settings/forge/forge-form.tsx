@@ -111,18 +111,25 @@ export function ForgeForm() {
     defaultValues,
   });
 
-  const [minChunkSize, setMinChunkSize] = useState(defaultValues.minChunkSize);
-  const [maxChunkSize, setMaxChunkSize] = useState(defaultValues.maxChunkSize);
-  const [chunkOverlap, setChunkOverlap] = useState(defaultValues.chunkOverlap);
+  const [minChunkSize, setMinChunkSize] = useState(
+    defaultValues.minChunkSize ?? 0
+  );
+  const [maxChunkSize, setMaxChunkSize] = useState(
+    defaultValues.maxChunkSize ?? 1024
+  );
+  const [chunkOverlap, setChunkOverlap] = useState(
+    defaultValues.chunkOverlap ?? 0
+  );
   const [parsingProvider, setParsingProvider] = useState(
-    defaultValues.parsingProvider
+    defaultValues.parsingProvider ?? 'io'
   );
   const [partitioningStrategy, setPartitioningStrategy] = useState(
-    defaultValues.partitioningStrategy
+    defaultValues.partitioningStrategy ?? 'fast'
   );
   const [chunkingStrategy, setChunkingStrategy] = useState(
-    defaultValues.chunkingStrategy
+    defaultValues.chunkingStrategy ?? 'basic'
   );
+
   // Load saved values from local storage on mount
   useEffect(() => {
     if (userEmail) {
@@ -130,15 +137,15 @@ export function ForgeForm() {
       if (savedValues) {
         const parsedValues = JSON.parse(savedValues);
         form.reset(parsedValues);
-        setMinChunkSize(parsedValues.minChunkSize);
-        setMaxChunkSize(parsedValues.maxChunkSize);
-        setChunkOverlap(parsedValues.chunkOverlap);
-        setParsingProvider(parsedValues.parsingProvider);
-        setPartitioningStrategy(parsedValues.partitioningStrategy);
-        setChunkingStrategy(parsedValues.chunkingStrategy);
+        setMinChunkSize(parsedValues.minChunkSize ?? 0);
+        setMaxChunkSize(parsedValues.maxChunkSize ?? 1024);
+        setChunkOverlap(parsedValues.chunkOverlap ?? 0);
+        setParsingProvider(parsedValues.parsingProvider ?? 'io');
+        setPartitioningStrategy(parsedValues.partitioningStrategy ?? 'fast');
+        setChunkingStrategy(parsedValues.chunkingStrategy ?? 'basic');
       }
     }
-  }, [form]);
+  }, [form, userEmail]);
 
   // Save values to local storage on change
   useEffect(() => {
@@ -151,7 +158,7 @@ export function ForgeForm() {
       });
       return () => subscription.unsubscribe();
     }
-  }, [form.watch]);
+  }, [form.watch, userEmail]);
 
   async function onSubmit(data: ForgeFormValues) {
     const forgeConfigData: ForgeConfigParams = {
@@ -232,6 +239,7 @@ export function ForgeForm() {
                                   'parsingProvider',
                                   parsingProvider.value
                                 );
+                                setParsingProvider(parsingProvider.value);
                               }}
                             >
                               <CheckIcon
@@ -303,6 +311,9 @@ export function ForgeForm() {
                                 onSelect={() => {
                                   form.setValue(
                                     'partitioningStrategy',
+                                    partitioningStrategy.value
+                                  );
+                                  setPartitioningStrategy(
                                     partitioningStrategy.value
                                   );
                                 }}
@@ -379,6 +390,7 @@ export function ForgeForm() {
                                   'chunkingStrategy',
                                   chunkingStrategy.value
                                 );
+                                setChunkingStrategy(chunkingStrategy.value);
                               }}
                             >
                               <CheckIcon
