@@ -43,7 +43,7 @@ export async function submitUserMessage(content: string, context: string) {
   const prompt = prompts[profile as keyof typeof prompts].content;
 
   const completion = runOpenAICompletion(openai, {
-    model: process.env.OPENAI_API_MODEL ?? 'gpt-3.5-turbo',
+    model: process.env.OPENAI_API_MODEL ?? 'gpt-40-mini',
     stream: true,
     messages: [
       {
