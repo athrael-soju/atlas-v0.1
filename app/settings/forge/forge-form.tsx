@@ -3,12 +3,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
 import { useForm, Controller } from 'react-hook-form';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useSession } from 'next-auth/react';
 
 import { cn } from '@/lib/utils';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -34,7 +34,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { archivist } from '@/lib/client/atlas';
-import { ForgeConfigParams } from '@/lib/types';
+import { AtlasUser, ForgeConfigParams } from '@/lib/types';
 
 const forgeFormSchema = z
   .object({
@@ -100,7 +100,16 @@ const chunkingStrategyDescriptions = {
 };
 
 export function ForgeForm() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
+  const user = session?.user as AtlasUser;
+  const userEmail = user?.email;
+  useEffect(() => {
+    const user = session?.user as AtlasUser;
+    if (user?.configuration) {
+      console.log(user.configuration);
+    }
+  }, [session]);
+
   const form = useForm<ForgeFormValues>({
     resolver: zodResolver(forgeFormSchema),
     defaultValues,
@@ -109,6 +118,30 @@ export function ForgeForm() {
   const [minChunkSize, setMinChunkSize] = useState(defaultValues.minChunkSize);
   const [maxChunkSize, setMaxChunkSize] = useState(defaultValues.maxChunkSize);
   const [chunkOverlap, setChunkOverlap] = useState(defaultValues.chunkOverlap);
+
+  // Load saved values from local storage on mount
+  useEffect(() => {
+    if (userEmail) {
+      const savedValues = localStorage.getItem(`forgeFormValues-${userEmail}`);
+      if (savedValues) {
+        const parsedValues = JSON.parse(savedValues);
+        form.reset(parsedValues);
+        setMinChunkSize(parsedValues.minChunkSize);
+        setMaxChunkSize(parsedValues.maxChunkSize);
+        setChunkOverlap(parsedValues.chunkOverlap);
+      }
+    }
+  }, [form]);
+
+  // Save values to local storage on change
+  useEffect(() => {
+    if (userEmail) {
+      const subscription = form.watch((values) => {
+        localStorage.setItem('forgeFormValues', JSON.stringify(values));
+      });
+      return () => subscription.unsubscribe();
+    }
+  }, [form.watch]);
 
   async function onSubmit(data: ForgeFormValues) {
     const forgeConfigData: ForgeConfigParams = {
@@ -129,6 +162,7 @@ export function ForgeForm() {
             </pre>
           ),
         });
+        updateSession();
       } else if (type === 'error') {
         toast({
           title: 'Error',
@@ -373,7 +407,7 @@ export function ForgeForm() {
                   name="minChunkSize"
                   render={({ field }) => (
                     <Slider
-                      value={[field.value]}
+                      value={[field.value || 0]}
                       onValueChange={(value) => {
                         field.onChange(value[0]);
                         setMinChunkSize(value[0]);
@@ -406,7 +440,7 @@ export function ForgeForm() {
                   name="maxChunkSize"
                   render={({ field }) => (
                     <Slider
-                      value={[field.value]}
+                      value={[field.value || 0]}
                       onValueChange={(value) => {
                         field.onChange(value[0]);
                         setMaxChunkSize(value[0]);
@@ -439,7 +473,7 @@ export function ForgeForm() {
                   name="chunkOverlap"
                   render={({ field }) => (
                     <Slider
-                      value={[field.value]}
+                      value={[field.value || 0]}
                       onValueChange={(value) => {
                         field.onChange(value[0]);
                         setChunkOverlap(value[0]);

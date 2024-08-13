@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarIcon, CaretSortIcon, CheckIcon } from '@radix-ui/react-icons';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { cn } from '@/lib/utils';
@@ -34,9 +34,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { useSession } from 'next-auth/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { archivist } from '@/lib/client/atlas';
-import { ProfileConfigParams } from '@/lib/types';
+import { AtlasUser, ProfileConfigParams } from '@/lib/types';
 
 const languages = [
   { label: 'English', value: 'en' },
@@ -75,12 +75,21 @@ const profileFormSchema = z.object({
 type CombinedFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
-  const { data: session } = useSession();
-  const email = session?.user?.email ?? '';
+  const { data: session, update: updateSession } = useSession();
+  const user = session?.user as AtlasUser;
+  const userEmail = user?.email;
+  useEffect(() => {
+    const user = session?.user as AtlasUser;
+    if (user?.configuration) {
+      console.log(user.configuration);
+    }
+  }, [session]);
+
   const defaultValues: Partial<CombinedFormValues> = {
     bio: '',
     language: 'en',
-    email: session?.user?.email ?? '',
+    email: userEmail || '',
+    dob: undefined,
   };
 
   const form = useForm<CombinedFormValues>({
@@ -89,11 +98,47 @@ export function ProfileForm() {
     mode: 'onChange',
   });
 
+  const [name, setName] = useState(defaultValues.name);
+  const [username, setUsername] = useState(defaultValues.username);
+  const [email, setEmail] = useState(defaultValues.email);
+  const [dob, setDob] = useState<Date | undefined>(defaultValues.dob);
+  const [language, setLanguage] = useState(defaultValues.language);
+  const [bio, setBio] = useState(defaultValues.bio);
+
+  // Load saved values from local storage on mount
   useEffect(() => {
-    if (session?.user?.email) {
-      form.setValue('email', session.user.email);
+    if (userEmail) {
+      const savedValues = localStorage.getItem(
+        `profileFormValues-${userEmail}`
+      );
+      if (savedValues) {
+        const parsedValues = JSON.parse(savedValues);
+        form.reset({
+          ...parsedValues,
+          dob: parsedValues.dob ? parseISO(parsedValues.dob) : undefined,
+        });
+        setName(parsedValues.name);
+        setUsername(parsedValues.username);
+        setDob(parsedValues.dob ? parseISO(parsedValues.dob) : undefined);
+        setLanguage(parsedValues.language);
+        setBio(parsedValues.bio);
+        setEmail(parsedValues.email);
+      }
     }
-  }, [session, form]);
+  }, [form]);
+
+  // Save values to local storage on change
+  useEffect(() => {
+    if (userEmail) {
+      const subscription = form.watch((values) => {
+        localStorage.setItem(
+          'profileFormValues',
+          JSON.stringify({ ...values, dob: values.dob?.toISOString() })
+        );
+      });
+      return () => subscription.unsubscribe();
+    }
+  }, [form.watch]);
 
   async function onSubmit(data: CombinedFormValues) {
     const profileConfigData: ProfileConfigParams = {
@@ -113,6 +158,7 @@ export function ProfileForm() {
             </pre>
           ),
         });
+        updateSession();
       } else if (type === 'error') {
         toast({
           title: 'Error',
@@ -121,7 +167,12 @@ export function ProfileForm() {
         });
       }
     };
-    await archivist(email, action, profileConfigData, onUpdate);
+    await archivist(
+      profileConfigData.profile.email as string,
+      action,
+      profileConfigData,
+      onUpdate
+    );
   }
 
   return (
@@ -137,7 +188,15 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="Your name" {...field} />
+                <Input
+                  placeholder="Your name"
+                  {...field}
+                  value={field.value || name}
+                  onChange={(e) => {
+                    field.onChange(e.target.value);
+                    setName(e.target.value);
+                  }}
+                />
               </FormControl>
               <FormDescription>
                 This is the name that will be displayed on your profile and in
@@ -154,11 +213,19 @@ export function ProfileForm() {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your username" {...field} />
+                <Input
+                  placeholder="Enter your username"
+                  {...field}
+                  value={field.value || username}
+                  onChange={(e) => {
+                    field.onChange(e.target.value);
+                    setUsername(e.target.value);
+                  }}
+                />
               </FormControl>
               <FormDescription>
                 You can choose a unique username that will be used to link to
-                your profile
+                your profile.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -174,9 +241,9 @@ export function ProfileForm() {
                 <Input
                   placeholder="Enter your email"
                   {...field}
-                  value={field.value || email}
+                  value={userEmail ?? field.value}
                   onChange={(e) => field.onChange(e.target.value)}
-                  disabled={!!email}
+                  disabled={!!userEmail}
                 />
               </FormControl>
               <FormDescription>
@@ -186,7 +253,6 @@ export function ProfileForm() {
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="bio"
@@ -198,6 +264,11 @@ export function ProfileForm() {
                   placeholder="Share a little bit about yourself"
                   className="resize-none"
                   {...field}
+                  value={field.value || bio}
+                  onChange={(e) => {
+                    field.onChange(e.target.value);
+                    setBio(e.target.value);
+                  }}
                 />
               </FormControl>
               <FormDescription>
@@ -239,7 +310,10 @@ export function ProfileForm() {
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date);
+                          setDob(date);
+                        }}
                         disabled={(date) =>
                           date > new Date() || date < new Date('1900-01-01')
                         }
@@ -294,6 +368,7 @@ export function ProfileForm() {
                                 key={language.value}
                                 onSelect={() => {
                                   form.setValue('language', language.value);
+                                  setLanguage(language.value);
                                 }}
                               >
                                 <CheckIcon

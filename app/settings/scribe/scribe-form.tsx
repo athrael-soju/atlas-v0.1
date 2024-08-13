@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +17,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { Slider } from '@/components/ui/slider';
 import { archivist } from '@/lib/client/atlas';
-import { ScribeConfigParams } from '@/lib/types';
+import { AtlasUser, ScribeConfigParams } from '@/lib/types';
 import { useSession } from 'next-auth/react';
 
 const advancedDataAnalysisSchema = z.object({
@@ -35,7 +35,16 @@ const defaultValues: Partial<AdvancedDataAnalysisValues> = {
 };
 
 export function ScribeForm() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
+  const user = session?.user as AtlasUser;
+  const userEmail = user?.email;
+
+  useEffect(() => {
+    if (user?.configuration) {
+      console.log(user.configuration);
+    }
+  }, [session]);
+
   const form = useForm<AdvancedDataAnalysisValues>({
     resolver: zodResolver(advancedDataAnalysisSchema),
     defaultValues,
@@ -46,6 +55,33 @@ export function ScribeForm() {
     defaultValues.cohereRelevanceThreshold
   );
   const [pineconeTopK, setPineconeTopK] = useState(defaultValues.pineconeTopK);
+
+  // Load saved values from local storage on mount
+  useEffect(() => {
+    if (userEmail) {
+      const savedValues = localStorage.getItem(`scribeFormValues-${userEmail}`);
+      if (savedValues) {
+        const parsedValues = JSON.parse(savedValues);
+        form.reset(parsedValues);
+        setCohereTopN(parsedValues.cohereTopN);
+        setCohereRelevanceThreshold(parsedValues.cohereRelevanceThreshold);
+        setPineconeTopK(parsedValues.pineconeTopK);
+      }
+    }
+  }, [form, userEmail]);
+
+  // Save values to local storage on change
+  useEffect(() => {
+    if (userEmail) {
+      const subscription = form.watch((values) => {
+        localStorage.setItem(
+          `scribeFormValues-${userEmail}`,
+          JSON.stringify(values)
+        );
+      });
+      return () => subscription.unsubscribe();
+    }
+  }, [form.watch, userEmail]);
 
   async function onSubmit(data: AdvancedDataAnalysisValues) {
     const scribeConfigData: ScribeConfigParams = {
@@ -66,6 +102,7 @@ export function ScribeForm() {
             </pre>
           ),
         });
+        updateSession();
       } else if (type === 'error') {
         toast({
           title: 'Error',
@@ -92,7 +129,7 @@ export function ScribeForm() {
                   name="cohereTopN"
                   render={({ field }) => (
                     <Slider
-                      value={[field.value]}
+                      value={[field.value || 10]}
                       onValueChange={(value) => {
                         field.onChange(value[0]);
                         setCohereTopN(value[0]);
@@ -125,7 +162,7 @@ export function ScribeForm() {
                   name="cohereRelevanceThreshold"
                   render={({ field }) => (
                     <Slider
-                      value={[field.value]}
+                      value={[field.value || 50]}
                       onValueChange={(value) => {
                         field.onChange(value[0]);
                         setCohereRelevanceThreshold(value[0]);
@@ -158,7 +195,7 @@ export function ScribeForm() {
                   name="pineconeTopK"
                   render={({ field }) => (
                     <Slider
-                      value={[field.value]}
+                      value={[field.value || 100]}
                       onValueChange={(value) => {
                         field.onChange(value[0]);
                         setPineconeTopK(value[0]);
