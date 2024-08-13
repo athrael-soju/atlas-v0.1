@@ -138,7 +138,7 @@ export function ForgeForm() {
         setChunkingStrategy(parsedValues.chunkingStrategy);
       }
     }
-  }, [form, userEmail]);
+  }, [form]);
 
   // Save values to local storage on change
   useEffect(() => {
@@ -176,7 +176,7 @@ export function ForgeForm() {
       } else if (type === 'error') {
         toast({
           title: 'Error',
-          description: `Failed to update: ${message}`,
+          description: `Failed to update forge: ${message}`,
           variant: 'destructive',
         });
       }

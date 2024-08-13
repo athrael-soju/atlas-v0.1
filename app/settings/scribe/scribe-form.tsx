@@ -62,7 +62,7 @@ export function ScribeForm() {
         setPineconeTopK(parsedValues.pineconeTopK);
       }
     }
-  }, [form, userEmail]);
+  }, [form]);
 
   // Save values to local storage on change
   useEffect(() => {
@@ -75,7 +75,7 @@ export function ScribeForm() {
       });
       return () => subscription.unsubscribe();
     }
-  }, [form.watch, userEmail]);
+  }, [form.watch]);
 
   async function onSubmit(data: AdvancedDataAnalysisValues) {
     const scribeConfigData: ScribeConfigParams = {
@@ -100,7 +100,7 @@ export function ScribeForm() {
       } else if (type === 'error') {
         toast({
           title: 'Error',
-          description: `Failed to update: ${message}`,
+          description: `Failed to update scribe: ${message}`,
           variant: 'destructive',
         });
       }
@@ -156,8 +156,9 @@ export function ScribeForm() {
                   name="cohereRelevanceThreshold"
                   render={({ field }) => (
                     <Slider
-                      value={[field.value || 50]}
+                      value={[field.value || 0]}
                       onValueChange={(value) => {
+                        console.log(field.value);
                         field.onChange(value[0]);
                         setCohereRelevanceThreshold(value[0]);
                       }}

@@ -156,7 +156,7 @@ export function ProfileForm() {
       } else if (type === 'error') {
         toast({
           title: 'Error',
-          description: `Failed to update: ${message}`,
+          description: `Failed to update profile: ${message}`,
           variant: 'destructive',
         });
       }
