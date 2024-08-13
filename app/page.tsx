@@ -2,10 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { CircleLoader } from 'react-spinners';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
-import { useKeyboardShortcut } from '@/lib/hooks/use-keyboard-shortcuts';
 import { useFileHandling } from '@/lib/hooks/use-file-handling';
 import { useMessaging } from '@/lib/hooks/use-messaging';
 import { useSpeech } from '@/lib/hooks/use-speech';
@@ -33,9 +31,10 @@ import { OnboardingCarousel } from '@/components/onboarding';
 import { AtlasUser, Purpose } from '@/lib/types';
 import { Header } from '@/components/header';
 import { SoundVisualizer } from '@/components/sound-visualizer';
+import Loading from './loading';
 
 export default function Page() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isUploadManagerVisible, setIsUploadManagerVisible] = useState(false);
   const { formRef, onKeyDown } = useEnterSubmit(setIsUploadManagerVisible);
@@ -77,16 +76,9 @@ export default function Page() {
 
   const { vad } = isSpeechEnabled ? useSpeech() : { vad: null };
 
-  // TODO: Implement a better loading spinner
-  // const HandleLoader = () => (
-  //   <div>
-  //     {isLoading && (
-  //       <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
-  //         <CircleLoader color="var(--spinner-color)" size={150} />
-  //       </div>
-  //     )}
-  //   </div>
-  // );
+  if (status === 'loading') {
+    return <Loading />;
+  }
 
   if (!session) {
     return (
@@ -111,7 +103,6 @@ export default function Page() {
     return (
       <div>
         <Header />
-        {/* <HandleLoader /> */}
         <div className="flex items-center justify-center p-24">
           <OnboardingCarousel
             userEmail={userEmail}
@@ -126,7 +117,6 @@ export default function Page() {
     return (
       <div>
         <Header />
-        {/* <HandleLoader /> */}
         <div className="pb-52 pt-4 md:pt-10">
           {messages.length ? (
             <ChatList messages={messages} />
