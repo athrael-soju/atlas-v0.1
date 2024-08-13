@@ -129,6 +129,7 @@ export interface ForgeConfigParams {
     chunkOverlap: number;
     partitioningStrategy: string;
     chunkingStrategy: string;
+    chunkBatch: number;
   };
 }
 

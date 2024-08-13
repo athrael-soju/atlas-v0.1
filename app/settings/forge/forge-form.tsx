@@ -44,6 +44,7 @@ const forgeFormSchema = z
     minChunkSize: z.number().min(0).max(1024).step(256),
     maxChunkSize: z.number().min(0).max(1024).step(256),
     chunkOverlap: z.number().min(0).max(256).step(1),
+    chunkBatch: z.number().min(50).max(150).step(50),
     partitioningStrategy: z.string({
       required_error: 'Please select a partitioning strategy.',
     }),
@@ -65,6 +66,7 @@ const defaultValues: Partial<ForgeFormValues> = {
   minChunkSize: 0,
   maxChunkSize: 1024,
   chunkOverlap: 0,
+  chunkBatch: 50,
 };
 
 const parsingProviders = [{ label: 'Unstructured.io', value: 'io' }] as const;
@@ -129,6 +131,7 @@ export function ForgeForm() {
   const [chunkingStrategy, setChunkingStrategy] = useState(
     defaultValues.chunkingStrategy ?? 'basic'
   );
+  const [chunkBatch, setChunkBatch] = useState(defaultValues.chunkBatch ?? 50);
 
   // Load saved values from local storage on mount
   useEffect(() => {
@@ -143,6 +146,7 @@ export function ForgeForm() {
         setParsingProvider(parsedValues.parsingProvider ?? 'io');
         setPartitioningStrategy(parsedValues.partitioningStrategy ?? 'fast');
         setChunkingStrategy(parsedValues.chunkingStrategy ?? 'basic');
+        setChunkBatch(parsedValues.chunkBatch ?? 50);
       }
     }
   }, [form, userEmail]);
@@ -514,6 +518,38 @@ export function ForgeForm() {
               </FormControl>
               <FormDescription>
                 Set the chunk overlap (0-256). Current value: {chunkOverlap}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="chunkBatch"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Chunk Batch</FormLabel>
+              <FormControl>
+                <Controller
+                  control={form.control}
+                  name="chunkBatch"
+                  render={({ field }) => (
+                    <Slider
+                      value={[field.value || 0]}
+                      onValueChange={(value) => {
+                        field.onChange(value[0]);
+                        setChunkBatch(value[0]);
+                      }}
+                      min={50}
+                      max={150}
+                      step={50}
+                      aria-label="Chunk Batch"
+                    />
+                  )}
+                />
+              </FormControl>
+              <FormDescription>
+                Set the chunk batch (50-150). Current value: {chunkBatch}
               </FormDescription>
               <FormMessage />
             </FormItem>

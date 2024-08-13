@@ -67,14 +67,9 @@ export async function processDocument(
     );
 
     // Upsert Document
-    // TODO: Add chunkBatch to config
     await measurePerformance(
       () =>
-        upsertDocument(
-          embedResponse.embeddings,
-          userEmail,
-          config.chunkBatch ?? 150
-        ),
+        upsertDocument(embedResponse.embeddings, userEmail, config.chunkBatch),
       `Upserting: '${file.name}'`,
       sendUpdate
     );

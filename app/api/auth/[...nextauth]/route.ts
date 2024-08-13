@@ -96,6 +96,7 @@ const createAnonymousUser = async (): Promise<CustomUser> => {
         chunkOverlap: 0,
         partitioningStrategy: 'fast',
         chunkingStrategy: 'basic',
+        chunkBatch: 50,
       },
     },
   };
@@ -212,7 +213,6 @@ const options: NextAuthOptions = {
       console.info(
         `signIn of ${user.name} from ${user?.provider ?? account?.provider}`
       );
-      // TODO: Check if this approach is sound.
       const defaultConfig: Partial<UserConfigParams> = {
         profile: {
           language: 'en',
@@ -231,6 +231,7 @@ const options: NextAuthOptions = {
           chunkOverlap: 0,
           partitioningStrategy: 'fast',
           chunkingStrategy: 'basic',
+          chunkBatch: 50,
         },
       };
 
