@@ -2,8 +2,9 @@ import { FormEvent, ReactNode, useState } from 'react';
 import { AssistantMessage, UserMessage } from '@/components/message';
 import { useUIState, useActions } from 'ai/rsc';
 import { AI } from '@/app/action';
-import { ForgeParams, MessageRole, Purpose } from '../types';
+import { AtlasUser, ForgeParams, MessageRole, Purpose } from '../types';
 import { handleScribe, handleSage } from '@/lib/utils/assistants';
+import { useSession } from 'next-auth/react';
 
 export const useMessaging = (
   userEmail: string,
@@ -13,22 +14,6 @@ export const useMessaging = (
   const [messages, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions<typeof AI>();
   const [inputValue, setInputValue] = useState<string>('');
-
-  const topK = parseInt(process.env.NEXT_PUBLIC_PINECONE_TOPK as string) || 100;
-  const topN = parseInt(process.env.NEXT_PUBLIC_COHERE_TOPN as string) || 10;
-
-  const forgeParams: ForgeParams = {
-    provider: (process.env.NEXT_PUBLIC_PARSING_PROVIDER as string) || 'local',
-    maxChunkSize:
-      parseInt(process.env.NEXT_PUBLIC_MAX_CHUNK_SIZE as string) || 1024,
-    minChunkSize:
-      parseInt(process.env.NEXT_PUBLIC_MIN_CHUNK_SIZE as string) || 256,
-    overlap: parseInt(process.env.NEXT_PUBLIC_OVERLAP as string) || 128,
-    chunkBatch: parseInt(process.env.NEXT_PUBLIC_CHUNK_BATCH as string) || 150,
-    parsingStrategy:
-      (process.env.NEXT_PUBLIC_UNSTRUCTURED_PARSING_STRATEGY as string) ||
-      'auto',
-  };
 
   const updateLastMessage = (role: MessageRole, content: string) => {
     setMessages((currentMessages) => {
@@ -67,8 +52,6 @@ export const useMessaging = (
         await handleScribe(
           userEmail,
           message,
-          topK,
-          topN,
           updateLastMessage,
           addNewMessage
         );
@@ -93,14 +76,11 @@ export const useMessaging = (
     if (!value) return;
 
     await submitMessage(value);
-
-    console.log('User message:', value);
   };
 
   return {
     messages,
     inputValue,
-    forgeParams,
     setInputValue,
     submitMessage,
     handleSubmit,

@@ -38,7 +38,9 @@ import { AtlasUser, ForgeConfigParams } from '@/lib/types';
 
 const forgeFormSchema = z
   .object({
-    parsingProvider: z.string({ required_error: 'Please select a provider.' }),
+    parsingProvider: z.string({
+      required_error: 'Please select a Parsing provider.',
+    }),
     minChunkSize: z.number().min(0).max(1024).step(256),
     maxChunkSize: z.number().min(0).max(1024).step(256),
     chunkOverlap: z.number().min(0).max(256).step(1),
@@ -103,12 +105,6 @@ export function ForgeForm() {
   const { data: session, update: updateSession } = useSession();
   const user = session?.user as AtlasUser;
   const userEmail = user?.email;
-  useEffect(() => {
-    const user = session?.user as AtlasUser;
-    if (user?.configuration) {
-      console.log(user.configuration);
-    }
-  }, [session]);
 
   const form = useForm<ForgeFormValues>({
     resolver: zodResolver(forgeFormSchema),
@@ -118,7 +114,15 @@ export function ForgeForm() {
   const [minChunkSize, setMinChunkSize] = useState(defaultValues.minChunkSize);
   const [maxChunkSize, setMaxChunkSize] = useState(defaultValues.maxChunkSize);
   const [chunkOverlap, setChunkOverlap] = useState(defaultValues.chunkOverlap);
-
+  const [parsingProvider, setParsingProvider] = useState(
+    defaultValues.parsingProvider
+  );
+  const [partitioningStrategy, setPartitioningStrategy] = useState(
+    defaultValues.partitioningStrategy
+  );
+  const [chunkingStrategy, setChunkingStrategy] = useState(
+    defaultValues.chunkingStrategy
+  );
   // Load saved values from local storage on mount
   useEffect(() => {
     if (userEmail) {
@@ -129,15 +133,21 @@ export function ForgeForm() {
         setMinChunkSize(parsedValues.minChunkSize);
         setMaxChunkSize(parsedValues.maxChunkSize);
         setChunkOverlap(parsedValues.chunkOverlap);
+        setParsingProvider(parsedValues.parsingProvider);
+        setPartitioningStrategy(parsedValues.partitioningStrategy);
+        setChunkingStrategy(parsedValues.chunkingStrategy);
       }
     }
-  }, [form]);
+  }, [form, userEmail]);
 
   // Save values to local storage on change
   useEffect(() => {
     if (userEmail) {
       const subscription = form.watch((values) => {
-        localStorage.setItem('forgeFormValues', JSON.stringify(values));
+        localStorage.setItem(
+          `forgeFormValues-${userEmail}`,
+          JSON.stringify(values)
+        );
       });
       return () => subscription.unsubscribe();
     }
@@ -271,7 +281,8 @@ export function ForgeForm() {
                       >
                         {field.value
                           ? partitioningStrategies.find(
-                              (strategy) => strategy.value === field.value
+                              (partitioningStrategy) =>
+                                partitioningStrategy.value === field.value
                             )?.label
                           : 'Select strategy'}
                         <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -284,28 +295,30 @@ export function ForgeForm() {
                       <CommandList>
                         <CommandEmpty>No strategy found.</CommandEmpty>
                         <CommandGroup>
-                          {partitioningStrategies.map((strategy) => (
-                            <CommandItem
-                              value={strategy.label}
-                              key={strategy.value}
-                              onSelect={() => {
-                                form.setValue(
-                                  'partitioningStrategy',
-                                  strategy.value
-                                );
-                              }}
-                            >
-                              <CheckIcon
-                                className={cn(
-                                  'mr-2 h-4 w-4',
-                                  strategy.value === field.value
-                                    ? 'opacity-100'
-                                    : 'opacity-0'
-                                )}
-                              />
-                              {strategy.label}
-                            </CommandItem>
-                          ))}
+                          {partitioningStrategies.map(
+                            (partitioningStrategy) => (
+                              <CommandItem
+                                value={partitioningStrategy.label}
+                                key={partitioningStrategy.value}
+                                onSelect={() => {
+                                  form.setValue(
+                                    'partitioningStrategy',
+                                    partitioningStrategy.value
+                                  );
+                                }}
+                              >
+                                <CheckIcon
+                                  className={cn(
+                                    'mr-2 h-4 w-4',
+                                    partitioningStrategy.value === field.value
+                                      ? 'opacity-100'
+                                      : 'opacity-0'
+                                  )}
+                                />
+                                {partitioningStrategy.label}
+                              </CommandItem>
+                            )
+                          )}
                         </CommandGroup>
                       </CommandList>
                     </Command>
@@ -343,7 +356,8 @@ export function ForgeForm() {
                       >
                         {field.value
                           ? chunkingStrategies.find(
-                              (strategy) => strategy.value === field.value
+                              (chunkingStrategy) =>
+                                chunkingStrategy.value === field.value
                             )?.label
                           : 'Select strategy'}
                         <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -356,26 +370,26 @@ export function ForgeForm() {
                       <CommandList>
                         <CommandEmpty>No strategy found.</CommandEmpty>
                         <CommandGroup>
-                          {chunkingStrategies.map((strategy) => (
+                          {chunkingStrategies.map((chunkingStrategy) => (
                             <CommandItem
-                              value={strategy.label}
-                              key={strategy.value}
+                              value={chunkingStrategy.label}
+                              key={chunkingStrategy.value}
                               onSelect={() => {
                                 form.setValue(
                                   'chunkingStrategy',
-                                  strategy.value
+                                  chunkingStrategy.value
                                 );
                               }}
                             >
                               <CheckIcon
                                 className={cn(
                                   'mr-2 h-4 w-4',
-                                  strategy.value === field.value
+                                  chunkingStrategy.value === field.value
                                     ? 'opacity-100'
                                     : 'opacity-0'
                                 )}
                               />
-                              {strategy.label}
+                              {chunkingStrategy.label}
                             </CommandItem>
                           ))}
                         </CommandGroup>

@@ -1,23 +1,10 @@
 import React from 'react';
 import { Dropzone } from './dropzone';
-import { ForgeParams, Purpose } from '@/lib/types';
-
-interface FileUploadManagerProps {
-  onChange: (newFiles: string[]) => void;
-  assistantSelected: Purpose;
-  userEmail: string;
-  forgeParams: ForgeParams;
-  uploadedFiles: string[];
-  isUploadCompleted: boolean;
-  setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
-  fetchFiles: (userEmail: string) => Promise<void>;
-  setIsUploading: React.Dispatch<React.SetStateAction<boolean>>;
-}
+import { FileUploadManagerProps } from '@/lib/types';
 
 export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
   userEmail,
   assistantSelected,
-  forgeParams,
   uploadedFiles,
   isUploadCompleted,
   onChange,
@@ -30,7 +17,6 @@ export const FileUploadManager: React.FC<FileUploadManagerProps> = ({
       <Dropzone
         userEmail={userEmail}
         assistantSelected={assistantSelected}
-        forgeParams={forgeParams}
         isUploadCompleted={isUploadCompleted}
         onChange={onChange}
         setIsUploadCompleted={setIsUploadCompleted}

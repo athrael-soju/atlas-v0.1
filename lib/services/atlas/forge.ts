@@ -17,7 +17,6 @@ const fsProvider = process.env.FILESYSTEM_PROVIDER ?? 'local';
 export async function processDocument(
   file: File,
   userEmail: string,
-  forgeParams: ForgeParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<{ success: boolean; fileName: string; error?: string }> {
   const dbInstance = await db();
@@ -31,14 +30,29 @@ export async function processDocument(
     );
     atlasFile = uploadResponse.file;
 
+    // Retrieve user configuration
+    const user = await measurePerformance(
+      () => dbInstance.getUser(userEmail as string),
+      'Retrieving forge configuration from DB',
+      sendUpdate
+    );
+
+    if (!user.configuration.forge) {
+      throw new Error('Forge configuration not found');
+    }
+
+    const config = user.configuration.forge as ForgeParams;
+
     // Parse File
     const parseResponse = await measurePerformance(
       () =>
         parse(
-          forgeParams.provider,
-          forgeParams.minChunkSize,
-          forgeParams.maxChunkSize,
-          forgeParams.overlap,
+          config.parsingProvider,
+          config.minChunkSize,
+          config.maxChunkSize,
+          config.chunkOverlap,
+          config.chunkingStrategy,
+          config.partitioningStrategy,
           atlasFile
         ),
       `Parsing: '${file.name}'`,
@@ -53,12 +67,13 @@ export async function processDocument(
     );
 
     // Upsert Document
+    // TODO: Add chunkBatch to config
     await measurePerformance(
       () =>
         upsertDocument(
           embedResponse.embeddings,
           userEmail,
-          forgeParams.chunkBatch
+          config.chunkBatch ?? 150
         ),
       `Upserting: '${file.name}'`,
       sendUpdate

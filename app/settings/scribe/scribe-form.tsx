@@ -39,12 +39,6 @@ export function ScribeForm() {
   const user = session?.user as AtlasUser;
   const userEmail = user?.email;
 
-  useEffect(() => {
-    if (user?.configuration) {
-      console.log(user.configuration);
-    }
-  }, [session]);
-
   const form = useForm<AdvancedDataAnalysisValues>({
     resolver: zodResolver(advancedDataAnalysisSchema),
     defaultValues,

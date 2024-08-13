@@ -72,14 +72,8 @@ export default function Page() {
     setIsUploadCompleted,
   } = useFileHandling(userEmail, purpose, setIsLoading);
 
-  const {
-    messages,
-    inputValue,
-    forgeParams,
-    setInputValue,
-    submitMessage,
-    handleSubmit,
-  } = useMessaging(userEmail!, spinner, purpose);
+  const { messages, inputValue, setInputValue, submitMessage, handleSubmit } =
+    useMessaging(userEmail!, spinner, purpose);
 
   const { vad } = isSpeechEnabled ? useSpeech() : { vad: null };
 
@@ -183,7 +177,6 @@ export default function Page() {
                       <FileUploadManager
                         userEmail={userEmail}
                         assistantSelected={assistantSelected}
-                        forgeParams={forgeParams}
                         uploadedFiles={uploadedFiles}
                         isUploadCompleted={isUploadCompleted}
                         onChange={handleFileChange}

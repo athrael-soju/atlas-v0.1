@@ -80,7 +80,7 @@ export async function updateUserSettings(
     'Retrieving user from DB',
     sendUpdate
   );
-  console.log('user', settings);
+
   const updateData: Partial<AtlasUser> = {
     configuration: {
       ...user.configuration,

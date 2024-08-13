@@ -247,7 +247,11 @@ const options: NextAuthOptions = {
       }
     },
     async signOut({ token }: { session: Session; token: JWT }): Promise<void> {
-      console.info(`signOut of ${token.name} from ${token.provider}`);
+      if (!token.name) {
+        console.error('No user name found in token');
+      } else {
+        console.info(`signOut of ${token.name} from ${token.provider}`);
+      }
     },
   },
   session: {

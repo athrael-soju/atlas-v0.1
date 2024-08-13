@@ -22,7 +22,6 @@ async function handleFileProcessing(
   file: File,
   userEmail: string,
   assistantSelected: Purpose,
-  forgeParams: ForgeParams,
   send: (type: string, message: string) => void
 ) {
   const { extensions, mimeTypes } = allowedFileTypes[assistantSelected];
@@ -37,7 +36,7 @@ async function handleFileProcessing(
   }
 
   if (assistantSelected === Purpose.Scribe) {
-    return processDocument(file, userEmail, forgeParams, send);
+    return processDocument(file, userEmail, send);
   } else if (assistantSelected === Purpose.Sage) {
     return processDocumentViaOpenAi(file, userEmail, send);
   } else {
@@ -61,23 +60,13 @@ async function processRequest(
     throw new Error('User email and files are required');
   }
 
-  const forgeParams = JSON.parse(
-    data.get('forgeParams') as string
-  ) as ForgeParams;
-
   if (!files.length) {
     throw new Error('No files uploaded');
   }
 
   const results = await Promise.allSettled(
     files.map((file) =>
-      handleFileProcessing(
-        file,
-        userEmail,
-        assistantSelected,
-        forgeParams,
-        send
-      )
+      handleFileProcessing(file, userEmail, assistantSelected, send)
         .then(() => ({ success: true }))
         .catch((error) => {
           failed++;

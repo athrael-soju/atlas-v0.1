@@ -78,12 +78,6 @@ export function ProfileForm() {
   const { data: session, update: updateSession } = useSession();
   const user = session?.user as AtlasUser;
   const userEmail = user?.email;
-  useEffect(() => {
-    const user = session?.user as AtlasUser;
-    if (user?.configuration) {
-      console.log(user.configuration);
-    }
-  }, [session]);
 
   const defaultValues: Partial<CombinedFormValues> = {
     bio: '',
@@ -132,7 +126,7 @@ export function ProfileForm() {
     if (userEmail) {
       const subscription = form.watch((values) => {
         localStorage.setItem(
-          'profileFormValues',
+          `profileFormValues-${userEmail}`,
           JSON.stringify({ ...values, dob: values.dob?.toISOString() })
         );
       });
