@@ -43,6 +43,10 @@ export interface ForgeParams {
   chunkBatch: number;
 }
 
+export interface CustomizationParams {
+  speech: boolean;
+}
+
 export interface SageParams {
   message: string;
 }
@@ -63,12 +67,18 @@ export interface CustodianParams {
   assistants: { sage: AssistantParams; scribe: AssistantParams };
 }
 
-export interface ArchivistParams {
+export interface FileActionParams {
   fileId?: string;
   purpose: Purpose;
 }
 
-export interface ArchivistOnboardingParams {
+export type ArchivistParams =
+  | FileActionParams
+  | OnboardingParams
+  | UserConfigParams
+  | CustomizationConfigParams;
+
+export interface OnboardingParams {
   userName: string;
   description: string;
   selectedAssistant: 'scribe' | 'sage';
@@ -102,39 +112,36 @@ export interface AtlasAssistant {
   settings: any;
 }
 
+export interface ProfileParams {
+  name?: string;
+  dob?: Date;
+  language?: string;
+  username?: string;
+  email?: string;
+  bio?: string;
+}
+
 export interface ProfileConfigParams {
-  profile: {
-    name?: string;
-    dob?: Date;
-    language?: string;
-    username?: string;
-    email?: string;
-    bio?: string;
-  };
+  profile: ProfileParams;
 }
 
 export interface ScribeConfigParams {
-  scribe: {
-    cohereTopN: number;
-    cohereRelevanceThreshold: number;
-    pineconeTopK: number;
-  };
+  scribe: ScribeParams;
+}
+
+export interface CustomizationConfigParams {
+  customization: CustomizationParams;
 }
 
 export interface ForgeConfigParams {
-  forge: {
-    parsingProvider: string;
-    minChunkSize: number;
-    maxChunkSize: number;
-    chunkOverlap: number;
-    partitioningStrategy: string;
-    chunkingStrategy: string;
-    chunkBatch: number;
-  };
+  forge: ForgeParams;
 }
 
 export type UserConfigParams = Partial<
-  ProfileConfigParams & ScribeConfigParams & ForgeConfigParams
+  ProfileConfigParams &
+    ScribeConfigParams &
+    ForgeConfigParams &
+    CustomizationConfigParams
 >;
 
 export interface AtlasUser {
@@ -151,6 +158,7 @@ export interface AtlasUser {
     profile?: ProfileConfigParams['profile'] | null;
     scribe?: ScribeConfigParams['scribe'] | null;
     forge?: ForgeConfigParams['forge'] | null;
+    customization?: CustomizationConfigParams['customization'] | null;
   };
 }
 

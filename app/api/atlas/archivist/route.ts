@@ -6,9 +6,10 @@ import {
   updateUserSettings,
 } from '@/lib/services/atlas/archivist';
 import {
-  ArchivistOnboardingParams,
+  OnboardingParams,
   ArchivistParams,
   UserConfigParams,
+  FileActionParams,
 } from '@/lib/types';
 import { getTotalTime } from '@/lib/utils/metrics';
 
@@ -28,29 +29,26 @@ function sendUpdate(
 async function handleAction(
   action: string,
   userEmail: string,
-  archivistParams:
-    | ArchivistParams
-    | ArchivistOnboardingParams
-    | UserConfigParams,
+  archivistParams: ArchivistParams,
   send: (type: string, message: string) => void
 ) {
   switch (action) {
     case 'retrieve-archives':
       return await retrieveArchives(
         userEmail,
-        archivistParams as ArchivistParams,
+        archivistParams as FileActionParams,
         send
       );
     case 'purge-archive':
       return await purgeArchive(
         userEmail,
-        archivistParams as ArchivistParams,
+        archivistParams as FileActionParams,
         send
       );
     case 'onboard-user':
       return await onboardUser(
         userEmail,
-        archivistParams as ArchivistOnboardingParams,
+        archivistParams as OnboardingParams,
         send
       );
     case 'update-settings':
@@ -71,9 +69,9 @@ async function processRequest(
   const data = await req.formData();
   const userEmail = data.get('userEmail') as string;
   const action = data.get('action') as string;
-  const archivistParams = JSON.parse(data.get('archivistParams') as string) as
-    | ArchivistParams
-    | ArchivistOnboardingParams;
+  const archivistParams = JSON.parse(
+    data.get('archivistParams') as string
+  ) as ArchivistParams;
 
   if (!userEmail || !action) {
     throw new Error('User email and action are required');

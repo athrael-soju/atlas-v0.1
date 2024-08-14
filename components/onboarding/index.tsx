@@ -21,7 +21,7 @@ import {
 } from './carousel';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { archivist } from '@/lib/client/atlas';
-import { ArchivistOnboardingParams, Purpose } from '@/lib/types';
+import { OnboardingParams, Purpose } from '@/lib/types';
 import { toast } from '../ui/use-toast';
 
 interface OnboardingCarouselProps {
@@ -56,7 +56,7 @@ export function OnboardingCarousel({
         throw new Error('Assistant not selected');
       }
       const action = 'onboard-user';
-      const onboardingParams: ArchivistOnboardingParams = {
+      const onboardingParams: OnboardingParams = {
         userName: username,
         description: description,
         selectedAssistant: assistant,

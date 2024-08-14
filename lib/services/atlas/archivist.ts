@@ -1,10 +1,10 @@
 import {
-  ArchivistOnboardingParams,
-  ArchivistParams,
+  OnboardingParams,
   AtlasFile,
   AtlasUser,
   Purpose,
   UserConfigParams,
+  FileActionParams,
 } from '@/lib/types';
 import { db } from '@/lib/services/db/mongodb';
 import { measurePerformance } from '@/lib/utils/metrics';
@@ -16,7 +16,7 @@ import { toAscii } from '@/lib/utils/formatting';
 
 export async function retrieveArchives(
   userEmail: string,
-  archivistParams: ArchivistParams,
+  archivistParams: FileActionParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const { purpose } = archivistParams;
@@ -32,7 +32,7 @@ export async function retrieveArchives(
 }
 export async function onboardUser(
   userEmail: string,
-  onboardingParams: ArchivistOnboardingParams,
+  onboardingParams: OnboardingParams,
   sendUpdate: (type: string, message: string) => void
 ) {
   const { userName, description, selectedAssistant } = onboardingParams;
@@ -99,7 +99,7 @@ export async function updateUserSettings(
 
 export async function purgeArchive(
   userEmail: string,
-  archivistParams: ArchivistParams,
+  archivistParams: FileActionParams,
   sendUpdate: (type: string, message: string) => void
 ): Promise<any> {
   const { fileId, purpose } = archivistParams;

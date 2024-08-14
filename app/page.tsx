@@ -47,18 +47,19 @@ export default function Page() {
   const [assistantSelected, setAssistantSelected] = useState<Purpose | null>(
     null
   );
-  const [isSpeechEnabled, setIsSpeechEnabled] = useState<boolean>(
-    process.env.NEXT_PUBLIC_SPEECH_ENABLED === 'true'
-  );
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState<boolean>(false);
 
   let purpose =
     (user?.preferences?.selectedAssistant as Purpose) ||
     (assistantSelected as Purpose);
 
   useEffect(() => {
-    if (user && user.preferences) {
+    if (user.preferences) {
       setIsOnboardingComplete(!!purpose);
       setAssistantSelected(purpose);
+    }
+    if (user.configuration) {
+      setIsSpeechEnabled(user.configuration.customization?.speech ?? false);
     }
   }, [user, purpose]);
 
