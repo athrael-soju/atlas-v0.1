@@ -1,6 +1,6 @@
 'use client';
 
-import { DNA } from 'react-loader-spinner';
+import { ColorRing } from 'react-loader-spinner';
 
 export default function Loading() {
   return (
@@ -13,13 +13,14 @@ export default function Loading() {
         width: '100vw',
       }}
     >
-      <DNA
+      <ColorRing
         visible={true}
-        height="350"
-        width="350"
-        ariaLabel="dna-loading"
+        height="250"
+        width="250"
+        ariaLabel="color-ring-loading"
         wrapperStyle={{}}
-        wrapperClass="dna-wrapper"
+        wrapperClass="color-ring-wrapper"
+        colors={['#e15b64', '#f47e60', '#f8b26a', '#abbd81', '#849b87']}
       />
     </div>
   );
