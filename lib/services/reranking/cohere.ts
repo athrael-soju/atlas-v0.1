@@ -32,7 +32,8 @@ ${doc.text || 'No content available'}
 export async function rerank(
   userMessage: string,
   queryResults: any[],
-  topN: number
+  cohereTopN: number,
+  cohereRelevanceThreshold: number
 ): Promise<string> {
   try {
     if (queryResults.length < 1) {
@@ -44,25 +45,21 @@ export async function rerank(
       documents: queryResults,
       rankFields: ['text', 'filename', 'page_number', 'filetype', 'languages'],
       query: userMessage,
-      topN: topN,
+      topN: cohereTopN,
       returnDocuments: true,
     });
 
     if (rerankResponse.results.length > 0) {
       // Filter results based on relevance score
-      const relevanceThreshold = parseFloat(
-        process.env.COHERE_RELEVANCE_THRESHOLD as string
-      );
-
       const filteredResults = rerankResponse.results.filter(
-        (result) => result.relevanceScore >= relevanceThreshold
+        (result) => result.relevanceScore >= cohereRelevanceThreshold
       );
 
       if (filteredResults.length > 0) {
         const formattedResults = filteredResults
           .map(formatResult)
           .join('\n---\n');
-        return `Context: The following are the top ${topN} most relevant documents based on the query "${userMessage}". Each document is separated by "---".\n\n${formattedResults}`;
+        return `Context: The following are the top ${cohereTopN} most relevant documents based on the query "${userMessage}". Each document is separated by "---".\n\n${formattedResults}`;
       } else {
         return 'Context: No relevant documents found with a relevance score of 0.75 or higher.';
       }

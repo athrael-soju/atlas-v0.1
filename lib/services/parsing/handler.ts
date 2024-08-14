@@ -2,15 +2,24 @@ import { parseUnstructured } from '@/lib/services/parsing/providers/unstructured
 import { AtlasFile } from '@/lib/types';
 
 export async function parse(
-  provider: string,
+  parsingProvider: string,
   minChunkSize: number,
   maxChunkSize: number,
-  overlap: number,
+  chunkOverlap: number,
+  chunkingStrategy: string,
+  partitioningStrategy: string,
   file: AtlasFile
 ): Promise<any[]> {
-  if (provider === 'unstructured') {
-    return await parseUnstructured(file, maxChunkSize, overlap);
+  if (parsingProvider === 'io') {
+    return await parseUnstructured(
+      minChunkSize,
+      maxChunkSize,
+      chunkOverlap,
+      chunkingStrategy,
+      partitioningStrategy,
+      file
+    );
   } else {
-    throw new Error(`Unsupported parsing provider: ${provider}`);
+    throw new Error(`Unsupported parsing provider: ${parsingProvider}`);
   }
 }

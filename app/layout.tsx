@@ -5,7 +5,6 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
-
 import { AI } from './action';
 import { Providers } from '@/components/providers';
 
@@ -14,6 +13,7 @@ const meta = {
   description:
     'Demo of an interactive assistant built using Next.js and Vercel AI SDK.',
 };
+
 export const metadata: Metadata = {
   ...meta,
   title: {

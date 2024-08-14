@@ -1,12 +1,9 @@
 'use client';
 
-import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { CircleLoader } from 'react-spinners';
 import { ChatScrollAnchor } from '@/lib/hooks/chat-scroll-anchor';
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit';
-import { useKeyboardShortcut } from '@/lib/hooks/use-keyboard-shortcuts';
 import { useFileHandling } from '@/lib/hooks/use-file-handling';
 import { useMessaging } from '@/lib/hooks/use-messaging';
 import { useSpeech } from '@/lib/hooks/use-speech';
@@ -34,14 +31,14 @@ import { OnboardingCarousel } from '@/components/onboarding';
 import { AtlasUser, Purpose } from '@/lib/types';
 import { Header } from '@/components/header';
 import { SoundVisualizer } from '@/components/sound-visualizer';
+import Loading from './loading';
 
 export default function Page() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isUploadManagerVisible, setIsUploadManagerVisible] = useState(false);
   const { formRef, onKeyDown } = useEnterSubmit(setIsUploadManagerVisible);
   const [isLoading, setIsLoading] = useState(false);
-  useKeyboardShortcut(inputRef);
 
   const user = session?.user as AtlasUser;
   const userEmail = user?.email ?? '';
@@ -74,27 +71,14 @@ export default function Page() {
     setIsUploadCompleted,
   } = useFileHandling(userEmail, purpose, setIsLoading);
 
-  const {
-    messages,
-    inputValue,
-    forgeParams,
-    setInputValue,
-    submitMessage,
-    handleSubmit,
-  } = useMessaging(userEmail!, spinner, purpose);
+  const { messages, inputValue, setInputValue, submitMessage, handleSubmit } =
+    useMessaging(userEmail!, spinner, purpose);
 
   const { vad } = isSpeechEnabled ? useSpeech() : { vad: null };
 
-  // TODO: Implement a better loading spinner
-  // const HandleLoader = () => (
-  //   <div>
-  //     {isLoading && (
-  //       <div className="fixed inset-0 bg-background bg-opacity-25 flex justify-center items-center z-50">
-  //         <CircleLoader color="var(--spinner-color)" size={150} />
-  //       </div>
-  //     )}
-  //   </div>
-  // );
+  if (status === 'loading') {
+    return <Loading />;
+  }
 
   if (!session) {
     return (
@@ -115,13 +99,10 @@ export default function Page() {
         </div>
       </div>
     );
-  }
-
-  if (!isOnboardingComplete) {
+  } else if (!isOnboardingComplete) {
     return (
       <div>
         <Header />
-        {/* <HandleLoader /> */}
         <div className="flex items-center justify-center p-24">
           <OnboardingCarousel
             userEmail={userEmail}
@@ -132,109 +113,107 @@ export default function Page() {
         </div>
       </div>
     );
-  }
-
-  return (
-    <div>
-      <Header />
-      {/* <HandleLoader /> */}
-      <div className="pb-52 pt-4 md:pt-10">
-        {messages.length ? (
-          <ChatList messages={messages} />
-        ) : (
-          <EmptyScreen assistantSelected={assistantSelected} />
+  } else {
+    return (
+      <div>
+        <Header />
+        <div className="pb-52 pt-4 md:pt-10">
+          {messages.length ? (
+            <ChatList messages={messages} />
+          ) : (
+            <EmptyScreen assistantSelected={assistantSelected} />
+          )}
+          <ChatScrollAnchor trackVisibility={true} />
+        </div>
+        {isSpeechEnabled && (
+          <SoundVisualizer
+            events={{
+              loading: vad?.loading ?? false,
+              errored: !!vad?.errored ?? false,
+              userSpeaking: vad?.userSpeaking ?? false,
+            }}
+          />
         )}
-        <ChatScrollAnchor trackVisibility={true} />
-      </div>
-      {isSpeechEnabled && (
-        <SoundVisualizer
-          events={{
-            loading: vad?.loading ?? false,
-            errored: !!vad?.errored ?? false,
-            userSpeaking: vad?.userSpeaking ?? false,
-          }}
-        />
-      )}
-      <div className="fixed inset-x-0 bottom-0 w-full">
-        <div className="mx-auto sm:max-w-2xl sm:px-4">
-          {!messages.length && <ExampleMessages onClick={submitMessage} />}
-          <div className="mb-4 grid gap-2 sm:gap-4 px-4 sm:px-0">
-            <form ref={formRef} onSubmit={handleSubmit}>
-              <div
-                className="relative p-1 rounded-lg w-full max-w-4xl mb-1"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    className="text-xl"
-                    onClick={() =>
-                      setIsUploadManagerVisible(!isUploadManagerVisible)
-                    }
-                  >
-                    {isUploadManagerVisible ? (
-                      <IconChevronUp />
-                    ) : (
-                      <IconChevronDown />
-                    )}
-                  </button>
-                </div>
+        <div className="fixed inset-x-0 bottom-0 w-full">
+          <div className="mx-auto sm:max-w-2xl sm:px-4">
+            {!messages.length && <ExampleMessages onClick={submitMessage} />}
+            <div className="mb-4 grid gap-2 sm:gap-4 px-4 sm:px-0">
+              <form ref={formRef} onSubmit={handleSubmit}>
                 <div
-                  className={`transition-opacity duration-500 ${
-                    isUploadManagerVisible ? 'opacity-100' : 'opacity-0'
-                  }`}
+                  className="relative p-1 rounded-lg w-full max-w-4xl mb-1"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  {isUploadManagerVisible && assistantSelected && (
-                    <FileUploadManager
-                      userEmail={userEmail}
-                      assistantSelected={assistantSelected}
-                      forgeParams={forgeParams}
-                      uploadedFiles={uploadedFiles}
-                      isUploadCompleted={isUploadCompleted}
-                      onChange={handleFileChange}
-                      setIsUploadCompleted={setIsUploadCompleted}
-                      fetchFiles={handleFetchFiles}
-                      setIsUploading={setIsLoading}
-                    />
-                  )}
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      className="text-xl"
+                      onClick={() =>
+                        setIsUploadManagerVisible(!isUploadManagerVisible)
+                      }
+                    >
+                      {isUploadManagerVisible ? (
+                        <IconChevronUp />
+                      ) : (
+                        <IconChevronDown />
+                      )}
+                    </button>
+                  </div>
+                  <div
+                    className={`transition-opacity duration-500 ${
+                      isUploadManagerVisible ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  >
+                    {isUploadManagerVisible && assistantSelected && (
+                      <FileUploadManager
+                        userEmail={userEmail}
+                        assistantSelected={assistantSelected}
+                        uploadedFiles={uploadedFiles}
+                        isUploadCompleted={isUploadCompleted}
+                        onChange={handleFileChange}
+                        setIsUploadCompleted={setIsUploadCompleted}
+                        fetchFiles={handleFetchFiles}
+                        setIsUploading={setIsLoading}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-              <MessageForm
-                inputValue={inputValue}
-                setInputValue={setInputValue}
-                onKeyDown={onKeyDown}
-                inputRef={inputRef}
-              />
-            </form>
+                <MessageForm
+                  inputValue={inputValue}
+                  setInputValue={setInputValue}
+                  onKeyDown={onKeyDown}
+                  inputRef={inputRef}
+                />
+              </form>
+            </div>
           </div>
         </div>
+        <div className="fixed left-0 top-1/2 transform -translate-y-1/2">
+          <Sheet>
+            <SheetTrigger>
+              <IconChevronRight onClick={() => handleFetchFiles()} />
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>File List</SheetTitle>
+                <SheetDescription>
+                  {/* Here you can find all files uploaded by your user account */}
+                </SheetDescription>
+              </SheetHeader>
+              {fileList?.length > 0 ? (
+                <DataTable
+                  userEmail={userEmail}
+                  files={fileList}
+                  purpose={purpose}
+                  handleFetchFiles={handleFetchFiles}
+                  setIsDeleting={setIsLoading}
+                />
+              ) : (
+                <div>No files uploaded yet.</div>
+              )}
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
-      <div className="fixed left-0 top-1/2 transform -translate-y-1/2">
-        <Sheet>
-          <SheetTrigger>
-            <IconChevronRight onClick={() => handleFetchFiles()} />
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>File List</SheetTitle>
-              <SheetDescription>
-                {/* Here you can find all files uploaded by your user account */}
-              </SheetDescription>
-            </SheetHeader>
-            {fileList?.length > 0 ? (
-              <DataTable
-                userEmail={userEmail}
-                files={fileList}
-                purpose={purpose}
-                handleFetchFiles={handleFetchFiles}
-                setIsDeleting={setIsLoading}
-              />
-            ) : (
-              <div>No files uploaded yet.</div>
-            )}
-          </SheetContent>
-        </Sheet>
-      </div>
-    </div>
-  );
+    );
+  }
 }

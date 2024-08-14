@@ -16,12 +16,25 @@ import { OpenAIError } from 'openai/error';
 
 export async function retrieveContext(
   userEmail: string,
-  scribeParams: ScribeParams,
+  message: string,
   sendUpdate: (type: string, message: string) => void
 ): Promise<{ success: boolean; userEmail: string; context: any }> {
-  const { message, topK, topN } = scribeParams;
-
   try {
+    const dbInstance = await db();
+
+    // Retrieve user configuration
+    const user = await measurePerformance(
+      () => dbInstance.getUser(userEmail as string),
+      'Retrieving forge configuration from DB',
+      sendUpdate
+    );
+
+    if (!user.configuration.forge) {
+      throw new Error('Forge configuration not found');
+    }
+
+    const config = user.configuration.scribe as ScribeParams;
+
     const embeddingResults = await measurePerformance(
       () => embedMessage(userEmail, message),
       'Embedding',
@@ -29,13 +42,19 @@ export async function retrieveContext(
     );
 
     const queryResults = await measurePerformance(
-      () => query(userEmail, embeddingResults, topK),
+      () => query(userEmail, embeddingResults, config.pineconeTopK),
       'Querying',
       sendUpdate
     );
 
     const rerankingContext = await measurePerformance(
-      () => rerank(message, queryResults.context, topN),
+      () =>
+        rerank(
+          message,
+          queryResults.context,
+          config.cohereTopN,
+          config.cohereRelevanceThreshold
+        ),
       'Reranking',
       sendUpdate
     );
@@ -202,28 +221,7 @@ const handleReadableStream = async (
       }
     });
     stream.on('messageDone', async (event) => {
-      // if (event.content[0].type === 'text') {
-      //   const { text } = event.content[0];
-      //   const { annotations } = text;
-      //   const citations: string[] = [];
-      //   let index = 0;
-      //   for (let annotation of annotations) {
-      //     text.value = text.value.replace(annotation.text, '[' + index + ']');
-      //     const { file_citation } = annotation as {
-      //       file_citation?: { file_id: string };
-      //     };
-      //     if (file_citation) {
-      //       const citedFile = await openai.files.retrieve(
-      //         file_citation.file_id
-      //       );
-      //       citations.push('[' + index + ']' + citedFile.filename);
-      //     }
-      //     index++;
-      //   }
-      //   // TODO: Test citations
-      //   // console.info(text.value);
-      //   // console.info(citations.join('\n'));
-      // }
+      // TODO: Add citations
     });
     stream.on('event', (event: AssistantStreamEvent) => {
       if (process.env.EVENT_DEBUG === 'true') {
@@ -237,7 +235,7 @@ const handleReadableStream = async (
         case 'thread.run.completed':
           sendUpdate(
             'notification',
-            `events_completed. usage: ${event.data.usage} characters`
+            `events_completed. prompt tokens: ${event.data.usage?.prompt_tokens}. completion tokens: ${event.data.usage?.completion_tokens}. total tokens: ${event.data.usage?.total_tokens}`
           );
           break;
         case 'thread.run.incomplete':

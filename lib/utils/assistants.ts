@@ -5,8 +5,6 @@ import { toast } from '@/components/ui/use-toast';
 export const handleScribe = async (
   userEmail: string,
   message: string,
-  topK: number,
-  topN: number,
   updateLastMessage: (role: MessageRole, content: string) => void,
   addNewMessage: (role: MessageRole, content: React.ReactNode) => void
 ) => {
@@ -14,7 +12,7 @@ export const handleScribe = async (
   let currentMessage: string = '';
 
   try {
-    await scribe(userEmail, message, topK, topN, (event) => {
+    await scribe(userEmail, message, (event) => {
       const { type, message } = JSON.parse(event?.replace('data: ', ''));
       switch (type) {
         case 'text_created':

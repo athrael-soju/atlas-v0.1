@@ -2,7 +2,9 @@ import {
   ArchivistOnboardingParams,
   ArchivistParams,
   AtlasFile,
+  AtlasUser,
   Purpose,
+  UserConfigParams,
 } from '@/lib/types';
 import { db } from '@/lib/services/db/mongodb';
 import { measurePerformance } from '@/lib/utils/metrics';
@@ -60,10 +62,39 @@ export async function onboardUser(
     sendUpdate
   );
 
-  if (!onboardingUpdated) {
-    throw new Error('DB update unsuccessful');
+  return onboardingUpdated;
+}
+
+export async function updateUserSettings(
+  userEmail: string,
+  settings: Partial<UserConfigParams>,
+  sendUpdate: (type: string, message: string) => void
+) {
+  if (!userEmail || !settings) {
+    throw new Error('User email and settings are required');
   }
-  return selectedAssistant;
+  const dbInstance = await db();
+
+  const user = await measurePerformance(
+    () => dbInstance.getUser(userEmail as string),
+    'Retrieving user from DB',
+    sendUpdate
+  );
+
+  const updateData: Partial<AtlasUser> = {
+    configuration: {
+      ...user.configuration,
+      ...settings,
+    },
+  };
+
+  const updatedUser = await measurePerformance(
+    () => dbInstance.updateUser(user.email as string, updateData),
+    'Updating user settings in DB',
+    sendUpdate
+  );
+
+  return updatedUser;
 }
 
 export async function purgeArchive(

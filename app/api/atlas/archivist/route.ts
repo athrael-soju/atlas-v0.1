@@ -3,8 +3,13 @@ import {
   retrieveArchives,
   purgeArchive,
   onboardUser,
+  updateUserSettings,
 } from '@/lib/services/atlas/archivist';
-import { ArchivistOnboardingParams, ArchivistParams } from '@/lib/types';
+import {
+  ArchivistOnboardingParams,
+  ArchivistParams,
+  UserConfigParams,
+} from '@/lib/types';
 import { getTotalTime } from '@/lib/utils/metrics';
 
 export const runtime = 'nodejs';
@@ -23,7 +28,10 @@ function sendUpdate(
 async function handleAction(
   action: string,
   userEmail: string,
-  archivistParams: ArchivistParams | ArchivistOnboardingParams,
+  archivistParams:
+    | ArchivistParams
+    | ArchivistOnboardingParams
+    | UserConfigParams,
   send: (type: string, message: string) => void
 ) {
   switch (action) {
@@ -43,6 +51,12 @@ async function handleAction(
       return await onboardUser(
         userEmail,
         archivistParams as ArchivistOnboardingParams,
+        send
+      );
+    case 'update-settings':
+      return await updateUserSettings(
+        userEmail,
+        archivistParams as UserConfigParams,
         send
       );
     default:

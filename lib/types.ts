@@ -28,18 +28,19 @@ export interface Page {
 }
 
 export interface ScribeParams {
-  message: string;
-  topK: number;
-  topN: number;
+  cohereTopN: number;
+  cohereRelevanceThreshold: number;
+  pineconeTopK: number;
 }
 
 export interface ForgeParams {
-  provider: string;
+  parsingProvider: string;
   maxChunkSize: number;
   minChunkSize: number;
-  overlap: number;
+  chunkOverlap: number;
+  chunkingStrategy: string;
+  partitioningStrategy: string;
   chunkBatch: number;
-  parsingStrategy: string;
 }
 
 export interface SageParams {
@@ -98,7 +99,43 @@ export interface AtlasAssistant {
   threadId: string;
   purpose: Purpose;
   files?: AtlasFile[];
+  settings: any;
 }
+
+export interface ProfileConfigParams {
+  profile: {
+    name?: string;
+    dob?: Date;
+    language?: string;
+    username?: string;
+    email?: string;
+    bio?: string;
+  };
+}
+
+export interface ScribeConfigParams {
+  scribe: {
+    cohereTopN: number;
+    cohereRelevanceThreshold: number;
+    pineconeTopK: number;
+  };
+}
+
+export interface ForgeConfigParams {
+  forge: {
+    parsingProvider: string;
+    minChunkSize: number;
+    maxChunkSize: number;
+    chunkOverlap: number;
+    partitioningStrategy: string;
+    chunkingStrategy: string;
+    chunkBatch: number;
+  };
+}
+
+export type UserConfigParams = Partial<
+  ProfileConfigParams & ScribeConfigParams & ForgeConfigParams
+>;
 
 export interface AtlasUser {
   id: string;
@@ -110,6 +147,11 @@ export interface AtlasUser {
     description: string | null;
     selectedAssistant: 'sage' | 'scribe' | null;
   };
+  configuration: {
+    profile?: ProfileConfigParams['profile'] | null;
+    scribe?: ScribeConfigParams['scribe'] | null;
+    forge?: ForgeConfigParams['forge'] | null;
+  };
 }
 
 export interface MessageFormProps {
@@ -119,11 +161,21 @@ export interface MessageFormProps {
   inputRef: React.RefObject<HTMLTextAreaElement>;
 }
 
+export interface FileUploadManagerProps {
+  onChange: (newFiles: string[]) => void;
+  assistantSelected: Purpose;
+  userEmail: string;
+  uploadedFiles: string[];
+  isUploadCompleted: boolean;
+  setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
+  fetchFiles: (userEmail: string) => Promise<void>;
+  setIsUploading: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
 export interface DropzoneProps {
   onChange: (newFiles: string[]) => void;
   userEmail: string;
   assistantSelected: Purpose;
-  forgeParams: ForgeParams;
   isUploadCompleted: boolean;
   setIsUploadCompleted: React.Dispatch<React.SetStateAction<boolean>>;
   setIsUploading: React.Dispatch<React.SetStateAction<boolean>>;

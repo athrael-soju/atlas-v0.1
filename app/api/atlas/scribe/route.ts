@@ -18,12 +18,12 @@ function sendUpdate(
 
 async function handleConsultation(
   userEmail: string,
-  scribeParams: ScribeParams,
+  message: string,
   send: (type: string, message: string) => void
 ) {
-  const retrieveResponse = await retrieveContext(userEmail, scribeParams, send);
+  const retrieveResponse = await retrieveContext(userEmail, message, send);
   const consultationParams: ConsultationParams = {
-    message: scribeParams.message,
+    message: message,
     context: retrieveResponse.context,
   };
   await consult(userEmail, Purpose.Scribe, consultationParams, send);
@@ -35,15 +35,13 @@ async function processRequest(
 ) {
   const data = await req.formData();
   const userEmail = data.get('userEmail') as string;
-  const scribeParams = JSON.parse(
-    data.get('scribeParams') as string
-  ) as ScribeParams;
+  const message = data.get('message') as string;
 
-  if (!userEmail || !scribeParams.message) {
+  if (!userEmail || !message) {
     throw new Error('User email and message are required');
   }
 
-  await handleConsultation(userEmail, scribeParams, send);
+  await handleConsultation(userEmail, message, send);
 }
 
 export async function POST(req: NextRequest): Promise<Response> {

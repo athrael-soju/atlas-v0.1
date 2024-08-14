@@ -7,10 +7,10 @@ import { forge } from '@/lib/client/atlas';
 import { DropzoneProps } from '@/lib/types';
 import { useToast } from '@/components/ui/use-toast';
 import { allowedFileTypes } from '@/lib/utils/allowed-file-types';
+
 export function Dropzone({
   userEmail,
   assistantSelected,
-  forgeParams,
   isUploadCompleted,
   onChange,
   setIsUploadCompleted,
@@ -130,7 +130,7 @@ export function Dropzone({
         handleFileInfo(message);
       };
 
-      await forge(files, userEmail, assistantSelected, forgeParams, onUpdate);
+      await forge(files, userEmail, assistantSelected, onUpdate);
     } catch (error: any) {
       setError((error as Error).message);
       toast({

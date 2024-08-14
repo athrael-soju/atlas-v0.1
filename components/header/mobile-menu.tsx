@@ -9,7 +9,7 @@ import {
 } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { classNames, products, callsToAction } from './user-menu';
-
+import { useRouter } from 'next/navigation';
 interface MobileMenuProps {
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
@@ -25,6 +25,12 @@ export default function MobileMenu({
   handleLogin,
   handleLogout,
 }: Readonly<MobileMenuProps>) {
+  const router = useRouter();
+
+  function handleSettingsMenu(): void {
+    router.push('/settings/profile');
+  }
+
   return (
     <Dialog
       className="lg:hidden"
@@ -78,7 +84,12 @@ export default function MobileMenu({
                   </>
                 )}
               </Disclosure>
-
+              <button
+                onClick={handleSettingsMenu}
+                className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+              >
+                Settings
+              </button>
               <button
                 type="button"
                 className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"

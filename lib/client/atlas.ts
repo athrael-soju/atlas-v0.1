@@ -1,8 +1,8 @@
 import {
-  ForgeParams,
   ArchivistOnboardingParams,
   ArchivistParams,
   Purpose,
+  UserConfigParams,
 } from '@/lib/types';
 
 const readStream = async (
@@ -49,14 +49,12 @@ export const forge = async (
   files: FileList,
   userEmail: string,
   assistantSelected: Purpose,
-  forgeParams: ForgeParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   Array.from(files).forEach((file) => formData.append('files', file));
   formData.append('userEmail', userEmail);
   formData.append('assistantSelected', assistantSelected);
-  formData.append('forgeParams', JSON.stringify(forgeParams));
 
   try {
     const response = await fetch('/api/atlas/forge', {
@@ -73,13 +71,11 @@ export const forge = async (
 export const scribe = async (
   userEmail: string,
   message: string,
-  topK: number,
-  topN: number,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();
   formData.append('userEmail', userEmail);
-  formData.append('scribeParams', JSON.stringify({ message, topK, topN }));
+  formData.append('message', message);
   try {
     const response = await fetch(`/api/atlas/scribe`, {
       method: 'POST',
@@ -116,7 +112,10 @@ export const sage = async (
 export const archivist = async (
   userEmail: string,
   action: string,
-  archivistParams: ArchivistParams | ArchivistOnboardingParams,
+  archivistParams:
+    | ArchivistParams
+    | ArchivistOnboardingParams
+    | UserConfigParams,
   onUpdate: (message: string) => void
 ): Promise<void> => {
   const formData = new FormData();

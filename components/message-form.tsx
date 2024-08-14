@@ -1,6 +1,10 @@
 import React from 'react';
 import Textarea from 'react-textarea-autosize';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Button } from './ui/button';
 import { IconArrowElbow, IconPlus } from './ui/icons';
 import { MessageFormProps } from '@/lib/types';
