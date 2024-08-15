@@ -15,6 +15,10 @@ const sidebarNavItems = [
     href: '/settings/profile',
   },
   {
+    title: 'Customization',
+    href: '/settings/customization',
+  },  
+  {
     title: 'The Forge',
     href: '/settings/forge',
   },

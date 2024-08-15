@@ -5,7 +5,7 @@ export const useSpeech = () => {
   const player = usePlayer();
 
   const vad = useMicVAD({
-    startOnLoad: true,
+    startOnLoad: false, // Disable auto-start
     onSpeechEnd: async (audio) => {
       player.stop();
       const wav = utils.encodeWAV(audio);
@@ -21,7 +21,7 @@ export const useSpeech = () => {
 
       player.play(response.body!, () => {
         const isFirefox = navigator.userAgent.includes('Firefox');
-        if (isFirefox) vad.start();
+        if (isFirefox) vad.start(); // Restart VAD if necessary
       });
     },
     workletURL: '/vad.worklet.bundle.min.js',
@@ -45,7 +45,10 @@ export const useSpeech = () => {
     },
   });
 
+  // Return the VAD instance along with start and stop controls
   return {
     vad,
+    startVAD: vad.start, // Manually start VAD
+    stopVAD: vad.pause, // Manually stop VAD
   };
 };

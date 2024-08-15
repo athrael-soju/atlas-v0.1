@@ -39,26 +39,38 @@ export default function Page() {
   const [isUploadManagerVisible, setIsUploadManagerVisible] = useState(false);
   const { formRef, onKeyDown } = useEnterSubmit(setIsUploadManagerVisible);
   const [isLoading, setIsLoading] = useState(false);
-
-  const user = session?.user as AtlasUser;
-  const userEmail = user?.email ?? '';
-
+  const [user, setUser] = useState<AtlasUser | null>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [assistantSelected, setAssistantSelected] = useState<Purpose | null>(
     null
   );
-  const [isSpeechEnabled, setIsSpeechEnabled] = useState<boolean>(
-    process.env.NEXT_PUBLIC_SPEECH_ENABLED === 'true'
-  );
+  const [isSpeechEnabled, setIsSpeechEnabled] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (session?.user) {
+      setUser(session.user as AtlasUser);
+      setUserEmail(session.user.email || '');
+    }
+    if (user?.configuration) {
+      setIsSpeechEnabled(user.configuration.customization?.speech ?? false);
+    }
+    if (user?.preferences) {
+      setAssistantSelected(user.preferences.selectedAssistant as Purpose);
+    }
+  }, [session]);
 
   let purpose =
     (user?.preferences?.selectedAssistant as Purpose) ||
     (assistantSelected as Purpose);
 
   useEffect(() => {
-    if (user && user.preferences) {
+    if (user?.preferences) {
       setIsOnboardingComplete(!!purpose);
       setAssistantSelected(purpose);
+    }
+    if (user?.configuration) {
+      setIsSpeechEnabled(user.configuration.customization?.speech ?? false);
     }
   }, [user, purpose]);
 
@@ -74,7 +86,15 @@ export default function Page() {
   const { messages, inputValue, setInputValue, submitMessage, handleSubmit } =
     useMessaging(userEmail!, spinner, purpose);
 
-  const { vad } = isSpeechEnabled ? useSpeech() : { vad: null };
+  const { vad, startVAD, stopVAD } = useSpeech();
+
+  useEffect(() => {
+    if (isSpeechEnabled) {
+      startVAD();
+    } else {
+      stopVAD();
+    }
+  }, [isSpeechEnabled, startVAD, stopVAD]);
 
   if (status === 'loading') {
     return <Loading />;
@@ -125,12 +145,12 @@ export default function Page() {
           )}
           <ChatScrollAnchor trackVisibility={true} />
         </div>
-        {isSpeechEnabled && (
+        {isSpeechEnabled && vad && (
           <SoundVisualizer
             events={{
-              loading: vad?.loading ?? false,
-              errored: !!vad?.errored ?? false,
-              userSpeaking: vad?.userSpeaking ?? false,
+              loading: vad.loading ?? false,
+              errored: !!vad.errored ?? false,
+              userSpeaking: vad.userSpeaking ?? false,
             }}
           />
         )}

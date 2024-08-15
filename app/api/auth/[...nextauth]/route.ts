@@ -21,7 +21,12 @@ import {
 } from 'unique-names-generator';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { randomUUID } from 'crypto';
-import { AtlasFile, AtlasUser, UserConfigParams } from '@/lib/types';
+import {
+  AtlasFile,
+  AtlasUser,
+  CustomizationConfigParams,
+  UserConfigParams,
+} from '@/lib/types';
 import { toAscii } from '@/lib/utils/formatting';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -48,6 +53,7 @@ interface CustomUser extends User {
     selectedAssistant: 'sage' | 'scribe' | null;
   };
   configuration?: UserConfigParams;
+  customization?: CustomizationConfigParams;
 }
 
 interface CustomSession extends Session {
@@ -97,6 +103,9 @@ const createAnonymousUser = async (): Promise<CustomUser> => {
         partitioningStrategy: 'fast',
         chunkingStrategy: 'basic',
         chunkBatch: 50,
+      },
+      customization: {
+        speech: false,
       },
     },
   };
@@ -232,6 +241,9 @@ const options: NextAuthOptions = {
           partitioningStrategy: 'fast',
           chunkingStrategy: 'basic',
           chunkBatch: 50,
+        },
+        customization: {
+          speech: false,
         },
       };
 
