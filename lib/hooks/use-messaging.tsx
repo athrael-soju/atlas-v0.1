@@ -2,9 +2,8 @@ import { FormEvent, ReactNode, useState } from 'react';
 import { AssistantMessage, UserMessage } from '@/components/message';
 import { useUIState, useActions } from 'ai/rsc';
 import { AI } from '@/app/action';
-import { AtlasUser, ForgeParams, MessageRole, Purpose } from '../types';
+import { MessageRole, Purpose } from '../types';
 import { handleScribe, handleSage } from '@/lib/utils/assistants';
-import { useSession } from 'next-auth/react';
 
 export const useMessaging = (
   userEmail: string,
@@ -25,12 +24,18 @@ export const useMessaging = (
     });
   };
 
-  const addNewMessage = (role: MessageRole, content: ReactNode) => {
+  const addNewMessage = (
+    role: MessageRole,
+    content: ReactNode,
+    purpose: Purpose
+  ) => {
     setMessages((currentMessages) => [
       ...currentMessages,
       {
         id: Date.now(),
         display: <AssistantMessage role={role} message={content} />,
+        role: 'assistant',
+        name: purpose,
       },
     ]);
   };
@@ -42,12 +47,14 @@ export const useMessaging = (
       {
         id: Date.now(),
         display: <UserMessage text={message} />,
+        role: 'user',
+        name: userEmail,
       },
     ]);
     let context = '';
     // Use Assistants API
     if (process.env.NEXT_PUBLIC_INFERENCE_MODEL === 'assistant') {
-      addNewMessage(MessageRole.Spinner, spinner);
+      addNewMessage(MessageRole.Spinner, spinner, purpose);
       if (purpose === Purpose.Scribe) {
         await handleScribe(
           userEmail,

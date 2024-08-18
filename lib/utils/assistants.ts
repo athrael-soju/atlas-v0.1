@@ -1,12 +1,16 @@
 import { scribe, sage } from '../client/atlas';
-import { MessageRole } from '../types';
+import { Purpose, MessageRole } from '../types';
 import { toast } from '@/components/ui/use-toast';
 
 export const handleScribe = async (
   userEmail: string,
   message: string,
   updateLastMessage: (role: MessageRole, content: string) => void,
-  addNewMessage: (role: MessageRole, content: React.ReactNode) => void
+  addNewMessage: (
+    role: MessageRole,
+    content: React.ReactNode,
+    purpose: Purpose
+  ) => void
 ) => {
   let firstRun = true;
   let currentMessage: string = '';
@@ -21,7 +25,7 @@ export const handleScribe = async (
             firstRun = false;
           } else {
             currentMessage = '';
-            addNewMessage(MessageRole.Text, '');
+            addNewMessage(MessageRole.Text, '', Purpose.Scribe);
           }
           break;
         case 'text':
@@ -51,7 +55,11 @@ export const handleSage = async (
   userEmail: string,
   message: string,
   updateLastMessage: (role: MessageRole, content: string) => void,
-  addNewMessage: (role: MessageRole, content: React.ReactNode) => void
+  addNewMessage: (
+    role: MessageRole,
+    content: React.ReactNode,
+    purpose: Purpose
+  ) => void
 ) => {
   let firstRun = true;
   let currentMessage: string = '',
@@ -66,7 +74,7 @@ export const handleSage = async (
             firstRun = false;
           } else {
             currentMessage = '';
-            addNewMessage(MessageRole.Text, '');
+            addNewMessage(MessageRole.Text, '', Purpose.Sage);
           }
           currentRole = MessageRole.Text;
           break;
@@ -88,7 +96,7 @@ export const handleSage = async (
             firstRun = false;
           } else {
             currentMessage = '';
-            addNewMessage(MessageRole.Code, '');
+            addNewMessage(MessageRole.Code, '', Purpose.Sage);
           }
           currentRole = MessageRole.Code;
           break;

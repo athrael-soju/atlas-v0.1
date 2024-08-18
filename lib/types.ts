@@ -78,6 +78,16 @@ export type ArchivistParams =
   | UserConfigParams
   | CustomizationConfigParams;
 
+export interface AiResponseParams {
+  message: string;
+}
+
+export interface VoiceParams {
+  message: Blob;
+}
+
+export type HeraldParams = AiResponseParams | VoiceParams;
+
 export interface OnboardingParams {
   userName: string;
   description: string;

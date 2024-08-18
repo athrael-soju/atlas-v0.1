@@ -86,7 +86,7 @@ export default function Page() {
   const { messages, inputValue, setInputValue, submitMessage, handleSubmit } =
     useMessaging(userEmail!, spinner, purpose);
 
-  const { vad, startVAD, stopVAD } = useSpeech();
+  const { vad, startVAD, stopVAD } = useSpeech(submitMessage);
 
   useEffect(() => {
     if (isSpeechEnabled) {
@@ -94,7 +94,7 @@ export default function Page() {
     } else {
       stopVAD();
     }
-  }, [isSpeechEnabled, startVAD, stopVAD]);
+  }, [vad, startVAD, stopVAD]);
 
   if (status === 'loading') {
     return <Loading />;

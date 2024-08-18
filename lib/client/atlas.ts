@@ -1,4 +1,9 @@
-import { ArchivistParams, Purpose } from '@/lib/types';
+import {
+  AiResponseParams,
+  ArchivistParams,
+  Purpose,
+  VoiceParams,
+} from '@/lib/types';
 
 const readStream = async (
   response: Response,
@@ -116,6 +121,32 @@ export const archivist = async (
   formData.append('archivistParams', JSON.stringify(archivistParams));
   try {
     const response = await fetch('/api/atlas/archivist', {
+      method: 'POST',
+      body: formData,
+    });
+
+    await readStream(response, onUpdate);
+  } catch (error) {
+    onUpdate(`Error: ${error}`);
+  }
+};
+
+export const herald = async (
+  action: string,
+  heraldParams: VoiceParams | AiResponseParams,
+  onUpdate: (message: string) => void
+): Promise<void> => {
+  const formData = new FormData();
+  formData.append('action', action);
+
+  if (heraldParams.message instanceof Blob) {
+    formData.append('file', heraldParams.message, 'audio.wav');
+  }
+  if (typeof heraldParams.message === 'string') {
+    formData.append('message', heraldParams.message);
+  }
+  try {
+    const response = await fetch('/api/atlas/herald', {
       method: 'POST',
       body: formData,
     });
