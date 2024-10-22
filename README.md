@@ -61,9 +61,13 @@ Before you begin, ensure you have the following installed:
 3. Set up the environment variables (see below for required variables).
 4. Make requests to the API endpoints in order to create the assistants and update the database. You can use postman or curl to make these requests. The following are the endpoints to use:
    1. Summon:
-   ![alt text](image-1.png)
-   1. Dismiss:
-   ![alt text](image.png)
+      
+      ![image](https://github.com/user-attachments/assets/d5f41159-51d1-4c74-9d02-aed8affc96ab)
+   3. Dismiss:
+      
+      ![image](https://github.com/user-attachments/assets/661b9d16-0c79-41f5-8b78-541c5b992404)
+
+   
 
 ## Environment Variables
 
