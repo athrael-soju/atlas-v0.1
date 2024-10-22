@@ -11,3 +11,4 @@ node_modules
 app/api/hyperion/__pycache__/*
 .vercel
 vercel.json
+.env*.local
